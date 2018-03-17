@@ -30,6 +30,7 @@ shinyServer(function(input, output,session) {
   #Structure Initialization
   D <- get(load('a.RData'))
   DiscreteData <- D
+  trueData<<-DiscreteData
   bn.hc.boot <- boot.strength(data = DiscreteData,R = 5,m =ceiling(nrow(DiscreteData)*0.7) ,algorithm = "hc")
   bn.hc.boot.pruned <- bn.hc.boot[bn.hc.boot$strength > 0.5 & bn.hc.boot$direction >0.5,]
   bn.hc.boot.average <- cextend(averaged.network(bn.hc.boot.pruned))
@@ -60,7 +61,7 @@ shinyServer(function(input, output,session) {
   shapeVectorAssoc<- rep('dot',length(unique(c(assocNetworkprune[,1],assocNetworkprune[,2]))))
   output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),EvidenceNode,EventNode,2,'layout_nicely',shapeVectorAssoc)})
   #Tables
-  updateSelectInput(session,"tableName",choices = c("Data","Association Graph","Bayesian Graph","Cross Validation Results"))
+  updateSelectInput(session,"tableName",choices = c("Data","Association Graph","Bayesian Graph","Cross Validation Results","blacklist edges","whitelist edges"))
   output$tableOut<- DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10))
   #Validation
   bn.validate<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average)
@@ -73,50 +74,139 @@ shinyServer(function(input, output,session) {
   rownames(predError)<-nodeNames
   colnames(predError)<-"Classification Error"
   output$valLoss<-renderText({bn.validate[[1]]$loss})
+  #blacklist/whitelist
+  blacklistC<-c()
+  whitelistC<-c()
+  for(i in colnames(DiscreteData))
+  {
+    for(j in colnames(DiscreteData))
+    {
+      if(i!=j)
+      {
+        blacklistC<-rbind(blacklistC,c(i,j))
+        whitelistC<-rbind(whitelistC,c(i,j))
+      }
+    }
+  }
+  colnames(blacklistC)<-c("from","to")
+  colnames(whitelistC)<-c("from","to")
+  blacklistTrue<<-blacklistC
+  whitelistTrue<<-whitelistC
+  blacklistEdges<-c()
+  whitelistEdges<-c()
   observeEvent(input$tableName,{
-    if(input$tableName=="Data")
-    {
-      output$tableOut<- DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10))
-    }
-    else if(input$tableName == "Association Graph")
-    {
-      output$tableOut<- DT::renderDataTable({assocNetwork},options = list(scrollX = TRUE,pageLength = 10))
-    }
-    else if(input$tableName=="Bayesian Graph")
-    {
-      output$tableOut<- DT::renderDataTable({NetworkGraph},options = list(scrollX = TRUE,pageLength = 10))
-    }
-    else if(input$tableName=="Cross Validation Results")
-    {
-      output$tableOut<- DT::renderDataTable({predError},options = list(scrollX = TRUE,pageLength = 10))
-    }
+    tryCatch({
+      if(input$tableName=="Data")
+      {
+        output$tableOut<- DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
+      }
+      else if(input$tableName == "Association Graph")
+      {
+        output$tableOut<- DT::renderDataTable({assocNetwork},options = list(scrollX = TRUE,pageLength = 10))
+      }
+      else if(input$tableName=="Bayesian Graph")
+      {
+        output$tableOut<- DT::renderDataTable({NetworkGraph},options = list(scrollX = TRUE,pageLength = 10))
+      }
+      else if(input$tableName=="Cross Validation Results")
+      {
+        output$tableOut<- DT::renderDataTable({predError},options = list(scrollX = TRUE,pageLength = 10))
+      }
+      else if(input$tableName=="blacklist edges")
+      {
+        output$tableOut<- DT::renderDataTable({blacklistC},options = list(scrollX = TRUE,pageLength = 10))
+      }
+      else if(input$tableName=="whitelist edges")
+      {
+        output$tableOut<- DT::renderDataTable({whitelistC},options = list(scrollX = TRUE,pageLength = 10))
+      }
+    },error=function(e){
+      shinyalert(e)
+    })
+
+  })
+  observeEvent(input$subsetBTN,{
+    tryCatch({
+      if(input$tableName=="blacklist edges")
+      {
+        blacklistEdges<<-blacklistC[input$tableOut_rows_selected,]
+        if(length(blacklistEdges)>0)
+        {
+          blacklistC<<-blacklistEdges
+        }
+        output$tableOut<- DT::renderDataTable({blacklistC},options = list(scrollX = TRUE,pageLength = 10))
+      }
+      else if(input$tableName=="whitelist edges")
+      {
+        whitelistEdges<<-whitelistC[input$tableOut_rows_selected,]
+        if(length(whitelistEdges)>0)
+        {
+          whitelistC<<-whitelistEdges
+        }
+        output$tableOut<- DT::renderDataTable({whitelistC},options = list(scrollX = TRUE,pageLength = 10))
+      }
+    },error=function(e){
+      shinyalert(e)
+    })
+  })
+  observeEvent(input$resetBTN,{
+    tryCatch({
+      if(input$tableName=="blacklist edges")
+      {
+        blacklistC<<-blacklistTrue
+        output$tableOut<- DT::renderDataTable({blacklistC},options = list(scrollX = TRUE,pageLength = 10))
+      }
+      else if(input$tableName=="whitelist edges")
+      {
+        whitelistC<<-whitelistTrue
+        output$tableOut<- DT::renderDataTable({whitelistC},options = list(scrollX = TRUE,pageLength = 10))
+      }
+    },error=function(e){
+      shinyalert(e)
+    })
   })
   observeEvent(input$start,{
-    updateTabItems(session, "sidebarMenu", "Structure")
+    withProgress(message = "Loading", value = 0, {
+      updateTabItems(session, "sidebarMenu", "Structure")
+      })
     })
   observeEvent(input$threshold,{
-    assocNetworkprune<<- assocNetwork[which(assocNetwork[,3]>input$threshold),]
-    shapeVectorAssoc<<- rep('dot',length(unique(c(assocNetworkprune[,1],assocNetworkprune[,2]))))
-    output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),EvidenceNode,EventNode,input$degree,input$graph_layout,shapeVectorAssoc)})
+    tryCatch({
+      assocNetworkprune<<- assocNetwork[which(assocNetwork[,3]>input$threshold),]
+      shapeVectorAssoc<<- rep('dot',length(unique(c(assocNetworkprune[,1],assocNetworkprune[,2]))))
+      output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),EvidenceNode,EventNode,input$degree,input$graph_layout,shapeVectorAssoc)})
+    },error=function(e){
+      shinyalert(e)
+    })
   })
   observeEvent(input$association,{
-    assocNetwork<<-custom.association(DiscreteData,input$assocType)
-    assocNetworkprune<<- assocNetwork[which(assocNetwork[,3]>input$threshold),]
-    shapeVectorAssoc<<- rep('dot',length(unique(c(assocNetworkprune[,1],assocNetworkprune[,2]))))
-    output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),EvidenceNode,EventNode,input$degree,input$graph_layout,shapeVectorAssoc)})
+    tryCatch({
+      assocNetwork<<-custom.association(DiscreteData,input$assocType)
+      assocNetworkprune<<- assocNetwork[which(assocNetwork[,3]>input$threshold),]
+      shapeVectorAssoc<<- rep('dot',length(unique(c(assocNetworkprune[,1],assocNetworkprune[,2]))))
+      output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),EvidenceNode,EventNode,input$degree,input$graph_layout,shapeVectorAssoc)})
+    },error=function(e){
+      shinyalert(e)
+    })
+
   })
   observeEvent(input$calLoss,{
-    withProgress(message = "Validating Model", value = 0, {
-    bn.validate<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,method = input$crossFunc)
-    predError<<-c()
-    for(n in nodeNames)
-    {
-      targetLoss<<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,loss = input$lossFunc,method = input$crossFunc,loss.args = list(target = n))
-      predError<<-rbind(predError,targetLoss[[1]]$loss)
-    }
-    rownames(predError)<<-nodeNames
-    colnames(predError)<<-"Classification Error"
-    output$valLoss<<-renderText({bn.validate[[1]]$loss})})
+    tryCatch({
+      withProgress(message = "Validating Model", value = 0, {
+        bn.validate<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,method = input$crossFunc)
+        predError<<-c()
+        for(n in nodeNames)
+        {
+          targetLoss<<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,loss = input$lossFunc,method = input$crossFunc,loss.args = list(target = n))
+          predError<<-rbind(predError,targetLoss[[1]]$loss)
+        }
+        rownames(predError)<<-nodeNames
+        colnames(predError)<<-"Classification Error"
+        output$valLoss<<-renderText({bn.validate[[1]]$loss})})
+    },error=function(e){
+      shinyalert(e)
+    })
+
   })
   #Data Frame From User
   observeEvent(input$dataFile,{
@@ -134,8 +224,10 @@ shinyServer(function(input, output,session) {
           {
             tryCatch({
               DiscreteData <<- get(load(inFile$datapath))
+              trueData<<-DiscreteData
               },error = function(e){
                 DiscreteData<<- readRDS(inFile$datapath)
+                trueData<<-DiscreteData
               })
           }
           else
@@ -148,7 +240,8 @@ shinyServer(function(input, output,session) {
         {
           if(file_ext(inFile$datapath) == "csv")
           {
-            DiscreteData <<- read.csv(inFile$datapath,stringsAsFactors = T)
+            DiscreteData <<- read.csv(inFile$datapath,stringsAsFactors = T,na.strings = c("NA","na","Na","nA","","?","-"))
+            trueData<<-DiscreteData
           }
           else
           {
@@ -158,6 +251,26 @@ shinyServer(function(input, output,session) {
         check.discrete(DiscreteData)
         check.NA(DiscreteData)
         DiscreteData<<-as.data.frame(DiscreteData)
+        #Reset APP
+        blacklistC<<-c()
+        whitelistC<<-c()
+        for(i in colnames(DiscreteData))
+        {
+          for(j in colnames(DiscreteData))
+          {
+            if(i!=j)
+            {
+              blacklistC<<-rbind(blacklistC,c(i,j))
+              whitelistC<<-rbind(whitelistC,c(i,j))
+            }
+          }
+        }
+        colnames(blacklistC)<<-c("from","to")
+        colnames(whitelistC)<<-c("from","to")
+        blacklistTrue<<-blacklistC
+        whitelistCTrue<<-whitelistC
+        blacklistEdges<<-c()
+        whitelistEdges<<-c()
         },error = function(e){
              shinyalert(c("Error in loading data: ",toString(e)), type = "error")
            })
@@ -179,6 +292,7 @@ shinyServer(function(input, output,session) {
         tempDiscreteData[,which(lapply(tempDiscreteData,nlevels)<2)] = NULL
         tempDiscreteData <- droplevels(tempDiscreteData)
         DiscreteData <<-tempDiscreteData
+        trueData<<-DiscreteData
       })},error = function(e){
         print("error0")
         print(e)
@@ -200,6 +314,7 @@ shinyServer(function(input, output,session) {
         }
       }
       DiscreteData <<- missRanger(DiscreteData,maxiter = 2,num.tree = 100)
+      trueData<<-DiscreteData
       check.discrete(DiscreteData)
       check.NA(DiscreteData)
     })}, error = function(e){
@@ -304,7 +419,7 @@ shinyServer(function(input, output,session) {
       progress$set(message = "Learning network structure", value = 0)
 
       # Get the selected learning algorithm from the user and learn the network
-      bn.hc.boot <<- boot.strength(data = DiscreteData, R = input$boot, m = ceiling(nrow(DiscreteData)*input$SampleSize), algorithm = input$alg)
+      bn.hc.boot <<- boot.strength(data = DiscreteData, R = input$boot, m = ceiling(nrow(DiscreteData)*input$SampleSize), algorithm = input$alg,algorithm.args=list(blacklist=blacklistEdges,whitelist=whitelistEdges))
       bn.hc.boot.pruned <<- bn.hc.boot[bn.hc.boot$strength > input$edgeStrength & bn.hc.boot$direction > input$directionStrength,]
       bn.hc.boot.average <<- cextend(averaged.network(bn.hc.boot.pruned))
       bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod2)
@@ -372,55 +487,55 @@ shinyServer(function(input, output,session) {
       # Get the selected learning algorithm from the user and learn the network
       if(input$alg == 'hc')
       {
-        bn.hc.boot.average <<- cextend(bnlearn::hc(DiscreteData))
+        bn.hc.boot.average <<- cextend(bnlearn::hc(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
       }
       else if(input$alg =="pc.stable")
       {
-        bn.hc.boot.average <<- cextend(bnlearn::pc.stable(DiscreteData))
+        bn.hc.boot.average <<- cextend(bnlearn::pc.stable(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
       }
       else if(input$alg == 'tabu')
       {
-        bn.hc.boot.average <<- cextend(bnlearn::tabu(DiscreteData))
+        bn.hc.boot.average <<- cextend(bnlearn::tabu(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
       }
       else if(input$alg == 'gs')
       {
-        bn.hc.boot.average <<- bnlearn::gs(DiscreteData)
+        bn.hc.boot.average <<- bnlearn::gs(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges)
       }
       else if(input$alg == 'iamb')
       {
-        bn.hc.boot.average <<- cextend(bnlearn::iamb(DiscreteData))
+        bn.hc.boot.average <<- cextend(bnlearn::iamb(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
       }
       else if(input$alg == 'fast.iamb')
       {
-        bn.hc.boot.average <<- cextend(bnlearn::fast.iamb(DiscreteData))
+        bn.hc.boot.average <<- cextend(bnlearn::fast.iamb(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
       }
       else if(input$alg=='inter.iamb')
       {
-        bn.hc.boot.average <<- cextend(bnlearn::inter.iamb(DiscreteData))
+        bn.hc.boot.average <<- cextend(bnlearn::inter.iamb(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
       }
       else if(input$alg == 'mmhc')
       {
-        bn.hc.boot.average <<- cextend(bnlearn::mmhc(DiscreteData))
+        bn.hc.boot.average <<- cextend(bnlearn::mmhc(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
       }
       else if(input$alg == 'rsmax2')
       {
-        bn.hc.boot.average <<- cextend(bnlearn::rsmax2(DiscreteData))
+        bn.hc.boot.average <<- cextend(bnlearn::rsmax2(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
       }
       else if(input$alg == 'mmpc')
       {
-        bn.hc.boot.average <<- cextend(bnlearn::mmpc(DiscreteData))
+        bn.hc.boot.average <<- cextend(bnlearn::mmpc(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
       }
       else if(input$alg == 'si.hiton.pc')
       {
-        bn.hc.boot.average <<- cextend(bnlearn::si.hiton.pc(DiscreteData))
+        bn.hc.boot.average <<- cextend(bnlearn::si.hiton.pc(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
       }
       else if(input$alg == 'aracne')
       {
-        bn.hc.boot.average <<- cextend(bnlearn::aracne(DiscreteData))
+        bn.hc.boot.average <<- cextend(bnlearn::aracne(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
       }
       else
       {
-        bn.hc.boot.average <<- cextend(bnlearn::chow.liu(DiscreteData))
+        bn.hc.boot.average <<- cextend(bnlearn::chow.liu(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
       }
       #bn.hc.boot.average <<- bnlearn::hc(DiscreteData)
       bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod2)

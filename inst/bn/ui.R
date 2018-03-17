@@ -133,21 +133,20 @@ dashboardPage(skin = "blue",
                                                                                 div(id="dataDiscretize",
                                                                                     shiny::h4('Discretize Data'),
                                                                                     h5('Discretization Type:'),
-                                                                                    shiny::selectInput('dtype',label = NULL,c("interval","quantile","frequency","cluster","hybrid")),
-                                                                                    actionButton('discretize',"Discretize")
+                                                                                    shiny::fluidRow(column(6,shiny::selectInput('dtype',label = NULL,c("interval","quantile","frequency","cluster","hybrid"))),column(6,actionButton('discretize',"Discretize")))
+                                                                                    #h5("subset columns in data using the tables")
+
                                                                               )),
                                                                               shiny::conditionalPanel(
                                                                                 condition = "input.dataOptions=='Explore'",
                                                                                 h5("Association Network"),
-                                                                                shiny::selectInput('assocType',label = NULL,c("cramer's V","Cohen's D","Goodman Kruskal lambda","Tschuprow's T")),
-                                                                                actionButton('association',"Build")
+                                                                                shiny::fluidRow(column(6,shiny::selectInput('assocType',label = NULL,c("cramer's V","Cohen's D","Goodman Kruskal lambda","Tschuprow's T"))),column(6,actionButton('association',"Build")))
+                                                                                #h5("subset association networks using the tables")
                                                                               )
                                                                               )
                                                                           ),
                                                                  tabPanel("Learning",
                                                                           status = "primary",
-
-
                                                                           shiny::h4("Structure"),
                                                                           shinyWidgets::radioGroupButtons(inputId = "net",
                                                                                                           choices = c("Learn" = 2,
@@ -160,11 +159,14 @@ dashboardPage(skin = "blue",
                                                                           # Conditional panel for uploading structure
                                                                           shiny::conditionalPanel(
                                                                             condition = "input.net==3",
+                                                                            h5("Validation Method"),
                                                                             shiny::selectInput('crossFunc',label = NULL,choices = c("k-fold","hold-out")),
+                                                                            h5("Parameter Fitting Method"),
                                                                             shiny::selectInput('paramMethod3',label = NULL,choices = c("Maximum Likelihood parameter estimation" = "mle","Bayesian parameter estimation" = "bayes")),
+                                                                            h5("Loss function"),
                                                                             shiny::selectInput('lossFunc',label = NULL,choices = c("pred","pred-lw")),
                                                                             shiny::actionButton("calLoss","Cross Validate"),
-                                                                            h5("Log-Likelihood Loss"),
+                                                                            h5("Log-Likelihood Loss of the learned model"),
                                                                             shiny::verbatimTextOutput("valLoss")
 
                                                                           ),
@@ -239,9 +241,9 @@ dashboardPage(skin = "blue",
                                                                                         value = 0.5),
                                                                             h5("Parameter Learning Type"),
                                                                             selectizeInput("paramMethod2",label = NULL,choices = c("Maximum Likelihood parameter estimation" = "mle","Bayesian parameter estimation" = "bayes")),
-
-                                                                            actionButton('learnBtn', 'Learn'),
-                                                                            actionButton('learnSBtn','Learn simple'),
+                                                                            h5("Use the tables to select edges to whitelist & blacklist"),
+                                                                            actionButton('learnBtn', 'Bootstrap'),
+                                                                            actionButton('learnSBtn','Direct'),
                                                                             hr(),
                                                                             shiny::h5("Save learned structure"),
                                                                             actionButton('saveBtn','Save'),
@@ -346,7 +348,7 @@ dashboardPage(skin = "blue",
                                                                           selectInput("paramSelect",label = NULL,""),
                                                                           withSpinner(plotOutput("parameterPlot",height = "600px")),color="#2E86C1"),
                                                                  tabPanel("Tables",
-                                                                          selectInput("tableName",label = NULL,""),
+                                                                          shiny::fluidRow(shiny::column(4,selectInput("tableName",label = NULL,"")),shiny::column(2,actionButton("subsetBTN","subset")),shiny::column(1,actionButton("resetBTN","reset"))),
                                                                           withSpinner(DT::dataTableOutput("tableOut")),color = "#2E86C1")
                                                                  )
                                                           )
