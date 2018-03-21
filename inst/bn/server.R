@@ -16,6 +16,10 @@ library('rcompanion')
 library('psych')
 library('DescTools')
 library("DT")
+library("linkcomm")
+library('igraph')
+library("parallel")
+library("snow")
 source('error.bar.R')
 source('graph.custom.R')
 source('graph.custom.assoc.R')
@@ -23,6 +27,7 @@ source('custom.discretize.R')
 source('check.NA.R')
 source('check.discrete.R')
 source('custom.association.R')
+source('custom.Modules.R')
 
 shinyServer(function(input, output,session) {
   #Data upload limit
@@ -42,6 +47,10 @@ shinyServer(function(input, output,session) {
   EventNode <- nodeNames[1]
   EvidenceNode <- c()
   output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,2,'layout_nicely')})
+  #Module Initilization
+  communities<-custom.Modules(NetworkGraph,bn.hc.boot.pruned[,3])
+  names(communities)<-paste("Module",c(1:length(communities)),sep=" ")
+  updateSelectInput(session,"moduleSelection",choices = c("graph",names(communities)))
   #App Initialization
   inserted  <- c()
   insertedV <- c()
@@ -55,6 +64,8 @@ shinyServer(function(input, output,session) {
   output$distPlot<- renderPlot(validate("Built infrence plot will be displayed"))
   #Sanity check
   sanity<-1
+  confidence<-1
+  check<-1
   #Association Network
   assocNetwork<-custom.association(DiscreteData,"cramer's V")
   assocNetworkprune<- assocNetwork[which(assocNetwork[,3]>0.3),]
@@ -94,6 +105,12 @@ shinyServer(function(input, output,session) {
   whitelistTrue<<-whitelistC
   blacklistEdges<-c()
   whitelistEdges<-c()
+  #Nth degree neighbors
+  graph<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
+  #Inference tab
+  updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
+  #parallel
+  #updateMaterialSwitch(session,"parallel",value = F)
   observeEvent(input$tableName,{
     tryCatch({
       if(input$tableName=="Data")
@@ -165,6 +182,17 @@ shinyServer(function(input, output,session) {
       shinyalert(e)
     })
   })
+  observeEvent(input$listFile,{
+    file=input$listFile
+    if(input$listType=="Blacklist")
+    {
+      blacklistEdges=read.csv(file$datapath,stringsAsFactors = T,na.strings = c("NA","na","Na","nA","","?","-"))
+    }
+    else
+    {
+      whitelistEdges=read.csv(file$datapath,stringsAsFactors = T,na.strings = c("NA","na","Na","nA","","?","-"))
+    }
+  })
   observeEvent(input$start,{
     withProgress(message = "Loading", value = 0, {
       updateTabItems(session, "sidebarMenu", "Structure")
@@ -193,16 +221,33 @@ shinyServer(function(input, output,session) {
   observeEvent(input$calLoss,{
     tryCatch({
       withProgress(message = "Validating Model", value = 0, {
-        bn.validate<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,method = input$crossFunc)
-        predError<<-c()
-        for(n in nodeNames)
+        if(input$parallel==T)
         {
-          targetLoss<<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,loss = input$lossFunc,method = input$crossFunc,loss.args = list(target = n))
-          predError<<-rbind(predError,targetLoss[[1]]$loss)
+          bn.validate<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,method = input$crossFunc,cluster = cl)
+          predError<<-c()
+          for(n in nodeNames)
+          {
+            targetLoss<<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,loss = input$lossFunc,method = input$crossFunc,loss.args = list(target = n),cluster = cl)
+            predError<<-rbind(predError,targetLoss[[1]]$loss)
+          }
+          rownames(predError)<<-nodeNames
+          colnames(predError)<<-"Classification Error"
+          output$valLoss<<-renderText({bn.validate[[1]]$loss})
         }
-        rownames(predError)<<-nodeNames
-        colnames(predError)<<-"Classification Error"
-        output$valLoss<<-renderText({bn.validate[[1]]$loss})})
+        else
+        {
+          bn.validate<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,method = input$crossFunc)
+          predError<<-c()
+          for(n in nodeNames)
+          {
+            targetLoss<<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,loss = input$lossFunc,method = input$crossFunc,loss.args = list(target = n))
+            predError<<-rbind(predError,targetLoss[[1]]$loss)
+          }
+          rownames(predError)<<-nodeNames
+          colnames(predError)<<-"Classification Error"
+          output$valLoss<<-renderText({bn.validate[[1]]$loss})
+        }
+        })
     },error=function(e){
       shinyalert(e)
     })
@@ -353,7 +398,14 @@ shinyServer(function(input, output,session) {
                        })
 
                        #print("2")
-                       bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod)
+                       if(input$parallel==T)
+                       {
+                         bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod,cluster = cl)
+                       }
+                       else
+                       {
+                         bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod)
+                       }
                        print("Learned Structure loaded")
                        for(elem in 1:length(inserted))
                        {
@@ -392,6 +444,12 @@ shinyServer(function(input, output,session) {
                                                                           "ellipse", "database", "text", "diamond"))
                        updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
                        updateSelectInput(session,'paramSelect',choices = nodeNames)
+                       communities<<-custom.Modules(NetworkGraph,rep(1,length(NetworkGraph[,1])))
+                       names(communities)<<-paste("Module",c(1:length(communities)),sep=" ")
+                       updateSelectInput(session,"moduleSelection",choices = c("graph",names(communities)))
+                       graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
+                       updateSelectInput(session,"neighbornodes",choices = "")
+                       updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
                      },error = function(e){
                        print("error 1")
                        shinyalert(toString(e), type = "error")
@@ -419,10 +477,20 @@ shinyServer(function(input, output,session) {
       progress$set(message = "Learning network structure", value = 0)
 
       # Get the selected learning algorithm from the user and learn the network
-      bn.hc.boot <<- boot.strength(data = DiscreteData, R = input$boot, m = ceiling(nrow(DiscreteData)*input$SampleSize), algorithm = input$alg,algorithm.args=list(blacklist=blacklistEdges,whitelist=whitelistEdges))
-      bn.hc.boot.pruned <<- bn.hc.boot[bn.hc.boot$strength > input$edgeStrength & bn.hc.boot$direction > input$directionStrength,]
-      bn.hc.boot.average <<- cextend(averaged.network(bn.hc.boot.pruned))
-      bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod2)
+      if(input$parallel==T)
+      {
+        bn.hc.boot <<- boot.strength(data = DiscreteData, R = input$boot, m = ceiling(nrow(DiscreteData)*input$SampleSize), algorithm = input$alg,algorithm.args=list(blacklist=blacklistEdges,whitelist=whitelistEdges),cluster = cl)
+        bn.hc.boot.pruned <<- bn.hc.boot[bn.hc.boot$strength > input$edgeStrength & bn.hc.boot$direction > input$directionStrength,]
+        bn.hc.boot.average <<- cextend(averaged.network(bn.hc.boot.pruned))
+        bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod2,cluster = cl)
+      }
+      else
+      {
+        bn.hc.boot <<- boot.strength(data = DiscreteData, R = input$boot, m = ceiling(nrow(DiscreteData)*input$SampleSize), algorithm = input$alg,algorithm.args=list(blacklist=blacklistEdges,whitelist=whitelistEdges))
+        bn.hc.boot.pruned <<- bn.hc.boot[bn.hc.boot$strength > input$edgeStrength & bn.hc.boot$direction > input$directionStrength,]
+        bn.hc.boot.average <<- cextend(averaged.network(bn.hc.boot.pruned))
+        bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod2)
+      }
       print("Structure learning done")
       for(elem in 1:length(inserted))
       {
@@ -462,6 +530,12 @@ shinyServer(function(input, output,session) {
                                                          "ellipse", "database", "text", "diamond"))
       updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
       updateSelectInput(session,'paramSelect',choices = nodeNames)
+      communities<<-custom.Modules(NetworkGraph,bn.hc.boot.pruned[,3])
+      names(communities)<<-paste("Module",c(1:length(communities)),sep=" ")
+      updateSelectInput(session,"moduleSelection",choices = c("graph",names(communities)))
+      graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
+      updateSelectInput(session,"neighbornodes",choices = "")
+      updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
     },error = function(e){
       print("error 2")
       shinyalert(toString(e), type = "error")
@@ -485,6 +559,120 @@ shinyServer(function(input, output,session) {
       progress$set(message = "Learning network structure", value = 0)
 
       # Get the selected learning algorithm from the user and learn the network
+      if(input$parallel==T)
+      {
+        if(input$alg == 'hc')
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::hc(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges,cluster = cl))
+        }
+        else if(input$alg =="pc.stable")
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::pc.stable(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges,cluster = cl))
+        }
+        else if(input$alg == 'tabu')
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::tabu(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges,cluster = cl))
+        }
+        else if(input$alg == 'gs')
+        {
+          bn.hc.boot.average <<- bnlearn::gs(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges,cluster=cl)
+        }
+        else if(input$alg == 'iamb')
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::iamb(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges,cluster=cl))
+        }
+        else if(input$alg == 'fast.iamb')
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::fast.iamb(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges,cluster=cl))
+        }
+        else if(input$alg=='inter.iamb')
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::inter.iamb(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges,cluster=cl))
+        }
+        else if(input$alg == 'mmhc')
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::mmhc(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges,cluster=cl))
+        }
+        else if(input$alg == 'rsmax2')
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::rsmax2(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges,cluster = cl))
+        }
+        else if(input$alg == 'mmpc')
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::mmpc(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges,cluster = cl))
+        }
+        else if(input$alg == 'si.hiton.pc')
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::si.hiton.pc(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges,cluster = cl))
+        }
+        else if(input$alg == 'aracne')
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::aracne(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges,cluster = cl))
+        }
+        else
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::chow.liu(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges,cluster = cl))
+        }
+        #bn.hc.boot.average <<- bnlearn::hc(DiscreteData)
+        bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod2,cluster=cl)
+      }
+      else
+      {
+        if(input$alg == 'hc')
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::hc(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
+        }
+        else if(input$alg =="pc.stable")
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::pc.stable(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
+        }
+        else if(input$alg == 'tabu')
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::tabu(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
+        }
+        else if(input$alg == 'gs')
+        {
+          bn.hc.boot.average <<- bnlearn::gs(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges)
+        }
+        else if(input$alg == 'iamb')
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::iamb(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
+        }
+        else if(input$alg == 'fast.iamb')
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::fast.iamb(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
+        }
+        else if(input$alg=='inter.iamb')
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::inter.iamb(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
+        }
+        else if(input$alg == 'mmhc')
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::mmhc(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
+        }
+        else if(input$alg == 'rsmax2')
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::rsmax2(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
+        }
+        else if(input$alg == 'mmpc')
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::mmpc(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
+        }
+        else if(input$alg == 'si.hiton.pc')
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::si.hiton.pc(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
+        }
+        else if(input$alg == 'aracne')
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::aracne(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
+        }
+        else
+        {
+          bn.hc.boot.average <<- cextend(bnlearn::chow.liu(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
+        }
+        #bn.hc.boot.average <<- bnlearn::hc(DiscreteData)
+        bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod2)
+      }
       if(input$alg == 'hc')
       {
         bn.hc.boot.average <<- cextend(bnlearn::hc(DiscreteData,blacklist=blacklistEdges,whitelist=whitelistEdges))
@@ -578,6 +766,12 @@ shinyServer(function(input, output,session) {
                                                          "ellipse", "database", "text", "diamond"))
       updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
       updateSelectInput(session,'paramSelect',choices = nodeNames)
+      communities<<-custom.Modules(NetworkGraph,rep(1,length(NetworkGraph[,1])))
+      names(communities)<<-paste("Module",c(1:length(communities)),sep=" ")
+      updateSelectInput(session,"moduleSelection",choices = c("graph",names(communities)))
+      graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
+      updateSelectInput(session,"neighbornodes",choices = "")
+      updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
     },error = function(e){
       print("error 3")
       shinyalert(toString(e), type = "error")
@@ -596,10 +790,28 @@ shinyServer(function(input, output,session) {
     })
 
   })
-
+  observeEvent(input$parallel,{
+    print(input$parallel)
+    if(input$parallel==TRUE)
+    {
+      print("start")
+      check<<-2
+      print(input$clusters)
+      cl <<- makeCluster(strtoi(input$clusters), type = "SOCK")
+      print("clusters done")
+    }
+    else
+    {
+      if(check==2)
+      {
+        stopCluster(cl)
+        ckeck<<-1
+      }
+    }
+  })
   observeEvent(input$insertBtn, {
     tryCatch({
-      nodeNames = names(bn.hc.boot.average$nodes)
+      #nodeNames = names(bn.hc.boot.average$nodes)
       btn <<- input$insertBtn
       id <- paste0('Evidence', btn)
       idL <- paste("Evidence", btn)
@@ -654,8 +866,21 @@ shinyServer(function(input, output,session) {
     rvs$evidenceObserve <<- rvs$evidenceObserve[-length(inserted)]
     rvs$valueObserve <<- rvs$valueObserve[-length(insertedV)]
   })
+  observeEvent(input$event,{
+    #print(input$event)
+    if(input$event=="")
+    {
+      updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
+    }
+    else
+    {
+      updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,input$event]),value = nlevels(DiscreteData[,input$event]))
+    }
+
+  })
   observeEvent(input$plotBtn,{
     tryCatch({
+      confidence<<-1
       str1 <<- ""
       count =1
       for(elem in inserted)
@@ -692,6 +917,7 @@ shinyServer(function(input, output,session) {
   })
   observeEvent(input$plotStrengthBtn,{
     tryCatch({
+      confidence<<-2
       probT = c()
       for(i in 1:input$plotStrengthBtn)
       {
@@ -733,6 +959,90 @@ shinyServer(function(input, output,session) {
     })
 
   })
+  observeEvent(input$sortPlot,{
+    if(confidence==1)
+    {
+      tryCatch({
+        confidence<<-1
+        str1 <<- ""
+        count =1
+        for(elem in inserted)
+        {
+          vid = insertedV[which(inserted == elem)]
+          str1 <<- paste0(str1,"(", input[[elem]], "=='", input[[vid]], "')")
+          if(count!=length(inserted))
+          {
+            str1 <<- paste0(str1," & ")
+          }
+          count = count + 1
+        }
+        probs = sort(prop.table(table(cpdist(bn.hc.boot.fit,input$event,evidence = eval(parse(text = str1))))),decreasing = T)[1:input$NumBar]
+        output$distPlot = renderPlot({par(mar=c(5,3,3,3))
+          par(oma=c(5,3,3,3))
+          barx<-barplot(probs,
+                        col = "lightblue",
+                        main = paste("Conditional Probabilities on ",input$event),
+                        border = NA,
+                        xlab = "",
+                        ylab = "Probabilities",
+                        ylim = c(0,1),
+                        las=2)
+          text(x = barx,y = round(probs,digits = 4),label = round(probs,digits = 4), pos = 3, cex = 0.8, col = "black")
+        })
+
+
+      },error = function(e){
+        print("error 5")
+        shinyalert(toString(e), type = "error")
+        #output$distPlot<- renderPlot({validate(e)})
+      })
+    }
+    else
+    {
+      tryCatch({
+        confidence<<-2
+        probT = c()
+        for(i in 1:input$plotStrengthBtn)
+        {
+          str1 <<- ""
+          count =1
+          for(elem in inserted)
+          {
+            vid = insertedV[which(inserted == elem)]
+            str1 <<- paste0(str1,"(", input[[elem]], "=='", input[[vid]], "')")
+            if(count!=length(inserted))
+            {
+              str1 <<- paste0(str1," & ")
+            }
+            count = count + 1
+          }
+          probs = prop.table(table(cpdist(bn.hc.boot.fit,input$event,evidence = eval(parse(text = str1)))))
+          probT = rbind(probT,probs)
+        }
+        ee = 1
+        ee$mean = colMeans(probT)
+        ee$sd = apply(probT, 2, sd)
+        nm = names(sort(ee$mean,decreasing = T))[1:input$NumBar]
+        output$distPlot = renderPlot({par(mar=c(5,3,3,3))
+          par(oma=c(5,3,3,3))
+          barx <-barplot(ee$mean[nm],
+                         col = "lightblue",
+                         main = paste("Conditional Probabilities on ",input$event),
+                         border = NA,
+                         xlab = "",
+                         ylab = "Probabilities",
+                         ylim = c(0,1),
+                         las=2)
+          text(x = barx,y = round(ee$mean[nm],digits = 4),label = round(ee$mean[nm],digits = 4), pos = 3, cex = 0.8, col = "black")
+          error.bar(barx,ee$mean[nm], 1.96*ee$sd[nm]/sqrt(input$plotStrengthBtn))})
+
+      },error = function(e){
+        print("error 6")
+        shinyalert(toString(e), type = "error")
+        output$distPlot<- renderPlot({validate(e)})
+      })
+    }
+  })
   observeEvent(input$saveBtn,{
     tryCatch({
       save(bn.hc.boot.average,file = input$path)
@@ -743,17 +1053,17 @@ shinyServer(function(input, output,session) {
     })
 
   })
-  observeEvent(input$secondSaveBtn,{
-    tryCatch({
-      print("save")
-      save(bn.hc.boot.average,file = input$path)
+  #observeEvent(input$secondSaveBtn,{
+  #  tryCatch({
+  #    print("save")
+  #    save(bn.hc.boot.average,file = input$path)
+  #
+  #  },error = function(e){
+  #    shinyalert(toString(e), type = "error")
 
-    },error = function(e){
-      shinyalert(toString(e), type = "error")
+  #  })
 
-    })
-
-  })
+  #})
   observeEvent(input$saveBtn2,{
     tryCatch({
       write.csv(NetworkGraph,file = input$path2,row.names = FALSE)
@@ -763,6 +1073,118 @@ shinyServer(function(input, output,session) {
       shinyalert(toString(e), type = "error")
 
     })
+  })
+  observeEvent(input$moduleSelection,{
+    if(input$moduleSelection!='graph')
+    {
+      selectedNodes<<-communities[[input$moduleSelection]]
+      print(selectedNodes)
+      from<-c()
+      to<-c()
+      for(i in 1:length(NetworkGraph[,1]))
+      {
+        if(is.element(NetworkGraph[i,1],selectedNodes))
+        {
+          from<-c(from,i)
+        }
+        if(is.element(NetworkGraph[i,2],selectedNodes))
+        {
+          to<-c(to,i)
+        }
+      }
+      print(from)
+      print(to)
+      print(intersect(from,to))
+      pruneGraph<<-NetworkGraph[intersect(from,to),]
+      shapeVector<<-rep('dot',length(communities[[input$moduleSelection]]))
+      for(elem in 1:length(inserted))
+      {
+        removeUI(
+          ## pass in appropriate div id
+          selector = paste0('#', inserted[elem])
+        )
+
+      }
+      inserted <<- c()
+      for(elem2 in 1:length(insertedV))
+      {
+        removeUI(
+          ## pass in appropriate div id
+          selector = paste0('#', insertedV[elem2])
+        )
+
+      }
+      print(pruneGraph)
+      insertedV <<- c()
+      rvs$evidence <<- c()
+      rvs$value <<- c()
+      rvs$evidenceObserve <<- c()
+      rvs$valueObserve <<- c()
+      output$distPlot <<- renderPlot(NULL)
+      nodeNames <<- selectedNodes
+      EventNode <<- nodeNames[1]
+      EvidenceNode <<- c()
+      shapeVector<<- rep('dot',length(nodeNames))
+      updateSelectInput(session,'event',choices = nodeNames)
+      output$netPlot<-renderVisNetwork({graph.custom(pruneGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
+      updateSelectInput(session,'event',choices = nodeNames)
+      updateSelectizeInput(session,'varselect',choices = nodeNames)
+      updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                        "ellipse", "database", "text", "diamond"))
+      updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                         "ellipse", "database", "text", "diamond"))
+      updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+      updateSelectInput(session,'paramSelect',choices = nodeNames)
+      graph<<-graph_from_edgelist(as.matrix(pruneGraph),directed = TRUE)
+      updateSelectInput(session,"neighbornodes",choices = "")
+      updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
+
+    }
+    else
+    {
+      insertedV <<- c()
+      rvs$evidence <<- c()
+      rvs$value <<- c()
+      rvs$evidenceObserve <<- c()
+      rvs$valueObserve <<- c()
+      output$distPlot <<- renderPlot(NULL)
+      NetworkGraph <<- data.frame(directed.arcs(bn.hc.boot.average))
+      nodeNames <<- names(bn.hc.boot.average$nodes)
+      EventNode <<- nodeNames[1]
+      EvidenceNode <<- c()
+      shapeVector<<- rep('dot',length(nodeNames))
+      updateSelectInput(session,'event',choices = nodeNames)
+      output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
+      updateSelectInput(session,'event',choices = nodeNames)
+      updateSelectizeInput(session,'varselect',choices = nodeNames)
+      updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                        "ellipse", "database", "text", "diamond"))
+      updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                         "ellipse", "database", "text", "diamond"))
+      updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+      updateSelectInput(session,'paramSelect',choices = nodeNames)
+      graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
+      updateSelectInput(session,"neighbornodes",choices = "")
+      updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
+    }
+  })
+  observeEvent(input$current_node_id,{
+    if(!is.null(input$current_node_id))
+    {
+      if(input$degreeN>1)
+      {
+        nlist<<-ego(graph,input$degreeN,nodes = input$current_node_id, mode = c("all", "out", "in"),mindist = 0)
+        nlistP<<-ego(graph,input$degreeN-1,nodes = input$current_node_id, mode = c("all", "out", "in"),mindist = 0)
+        diffList<<-setdiff(nlist,nlistP)
+        updateSelectInput(session,"neighbornodes",choices = diffList[[1]]$name)
+      }
+      else
+      {
+        nlist<<-ego(graph,input$degreeN,nodes = input$current_node_id, mode = c("all", "out", "in"),mindist = 0)
+        updateSelectInput(session,"neighbornodes",choices = nlist[[1]]$name)
+      }
+
+    }
   })
   observeEvent(input$degree,{
     tryCatch({
@@ -782,6 +1204,7 @@ shinyServer(function(input, output,session) {
       output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
       assocNetworkprune<<- assocNetwork[which(assocNetwork[,3]>input$threshold),]
       output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),EvidenceNode,EventNode,input$degree,input$graph_layout,shapeVectorAssoc)})
+      updateSelectInput(session,"neighbornodes",choices = "")
     },error = function(e){
       shinyalert(toString(e), type = "error")
 
@@ -807,6 +1230,7 @@ shinyServer(function(input, output,session) {
       output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
       assocNetworkprune<<- assocNetwork[which(assocNetwork[,3]>input$threshold),]
       output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),EvidenceNode,EventNode,input$degree,input$graph_layout,shapeVectorAssoc)})
+      updateSelectInput(session,"neighbornodes",choices = "")
     },error = function(e){
       shinyalert(toString(e), type = "error")
 
@@ -829,6 +1253,7 @@ shinyServer(function(input, output,session) {
         EventNode = input$event
       }
       output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
+      updateSelectInput(session,"neighbornodes",choices = "")
       },error = function(e){
       shinyalert(toString(e), type = "error")
 
@@ -854,6 +1279,7 @@ shinyServer(function(input, output,session) {
       }
       output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
       output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),EvidenceNode,EventNode,input$degree,input$graph_layout,shapeVectorAssoc)})
+      updateSelectInput(session,"neighbornodes",choices = "")
     },error = function(e){
       shinyalert(toString(e), type = "error")
 
@@ -883,6 +1309,7 @@ shinyServer(function(input, output,session) {
       }
       output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
       output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),EvidenceNode,EventNode,input$degree,input$graph_layout,shapeVectorAssoc)})
+      updateSelectInput(session,"neighbornodes",choices = "")
     },error = function(e){
       shinyalert(toString(e), type = "error")
 

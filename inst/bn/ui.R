@@ -91,9 +91,6 @@ dashboardPage(skin = "blue",
                                                                    div(style="text-align:center",
                                                                        actionButton("start", "Start Here", style  = "background-color:#2E86C1;color:white;height:50px;font-size:20px", width = '300px', align = "center")
                                                                    )
-
-
-
                                                                )
 
                                                       )),
@@ -104,6 +101,9 @@ dashboardPage(skin = "blue",
                                                           offset = -10,
                                                           style='padding:0px;margin:0px',
                                                           tabBox(width=12,id="control_tabs",
+                                                                 tabPanel("App",
+                                                                          shiny::fluidRow(column(3,materialSwitch(inputId = "parallel", label = "go parallel", status = "primary", right = FALSE)),column(6,selectInput("clusters",choices = c(1:20),label = "#clusters")))
+                                                                          ),
                                                                  tabPanel("Data",
                                                                           div(id = "data",
                                                                               shinyWidgets::radioGroupButtons(inputId = "dataOptions",
@@ -111,6 +111,7 @@ dashboardPage(skin = "blue",
                                                                                                               selected = "Upload",
                                                                                                               justified = FALSE
                                                                                                               ),
+
                                                                               shiny::conditionalPanel(
                                                                                 condition = "input.dataOptions == 'Upload'",
                                                                                 shiny::h4("Upload Data:"),
@@ -241,7 +242,8 @@ dashboardPage(skin = "blue",
                                                                                         value = 0.5),
                                                                             h5("Parameter Learning Type"),
                                                                             selectizeInput("paramMethod2",label = NULL,choices = c("Maximum Likelihood parameter estimation" = "mle","Bayesian parameter estimation" = "bayes")),
-                                                                            h5("Use the tables to select edges to whitelist & blacklist"),
+                                                                            h5("Use the tables to select edges to whitelist & blacklist or upload edge list below"),
+                                                                            shiny::fluidRow(shiny::column(6,selectInput("listType",label = NULL,choices = c("Blacklist","Whitelist"))),shiny::column(6,shiny::fileInput('listFile',label = NULL,accept = c('.csv')))),
                                                                             actionButton('learnBtn', 'Bootstrap'),
                                                                             actionButton('learnSBtn','Direct'),
                                                                             hr(),
@@ -255,37 +257,44 @@ dashboardPage(skin = "blue",
                                                                           #status = "primary",
                                                                           div(id="graph",
                                                                               h5('group of variables:'),
-                                                                              shiny::fluidRow(shiny::column(6,selectizeInput('varselect',label = NULL,"",multiple = T)),
-                                                                                              shiny::column(6,selectInput('varshape',label = NULL,""))
+                                                                              shiny::fluidRow(shiny::column(6,selectizeInput('varselect',label = "Variables","",multiple = T)),
+                                                                                              shiny::column(6,selectInput('varshape',label = "Shape",""))
                                                                               ),
                                                                               actionButton('group','Group Variables'),
                                                                               hr(),
                                                                               h5('vector of index:'),
-                                                                              shiny::fluidRow(shiny::column(6,textInput('varselectvector',label = NULL)),
-                                                                                              shiny::column(6,selectInput('varshape2',label = NULL,""))
+                                                                              shiny::fluidRow(shiny::column(6,textInput('varselectvector',label = "Variables")),
+                                                                                              shiny::column(6,selectInput('varshape2',label = "Shape",""))
                                                                               ),
                                                                               actionButton('group2','Group Variables'),
                                                                               div(id = "graphChain",
                                                                                   h4("Chain of Neighbours"),
                                                                                   sliderInput("degree", label = NULL,
-                                                                                              min = 1, max = 5,
+                                                                                              min = 1, max = 10,
+                                                                                              value = 2
+                                                                                  )),
+                                                                              div(id = "NChain",
+                                                                                  h4("Nth Neighbours"),
+                                                                                  sliderInput("degreeN", label = NULL,
+                                                                                              min = 1, max = 10,
                                                                                               value = 2
                                                                                   )),
                                                                               hr(),
                                                                               div(id="graphLayout",
-                                                                                  h4("Select Layout"),
+                                                                                  h4("Select Graph Layout"),
                                                                                   shiny::selectInput('graph_layout',label = NULL,"layout_nicely")),
                                                                               hr(),
                                                                               div(id="graphSave",
-                                                                                  h4("Save Network Graph"),
-                                                                                  actionButton('saveBtn2','Save'),
                                                                                   h5('Enter Directory with file Name:'),
-                                                                                  textInput('path2',label = NULL, value = "file type .csv", width = NULL, placeholder = "R code for vector of indices"))
+                                                                                  textInput('path2',label = NULL, value = "file type .csv", width = NULL, placeholder = "R code for vector of indices")),
+                                                                                  h4("Save Network Graph"),
+                                                                                  actionButton('saveBtn2','Save')
+
                                                                           )),
                                                                  tabPanel("Inference",
                                                                           status = "primary",
                                                                           shiny::h4("Display inference plot"),
-                                                                          shiny::fluidRow(shiny::column(3,actionButton('plotBtn', 'Simple')),shiny::column(4,actionButton('plotStrengthBtn', 'Confidence'))),
+                                                                          shiny::fluidRow(shiny::column(5,actionButton('plotBtn', 'Simple Plot')),shiny::column(4,actionButton('plotStrengthBtn', 'Confidence Plot'))),
                                                                           hr(),
                                                                           shiny::h4("No of iterations for confidence plot"),
                                                                           sliderInput("numInterval", label = NULL,
@@ -320,32 +329,34 @@ dashboardPage(skin = "blue",
                                                                  width = 12,
 
                                                                  tabPanel("Network Graph",
-
+                                                                          shiny::fluidRow(shiny::column(6,shiny::selectInput("moduleSelection",label = "Module","graph")),shiny::column(3,shiny::selectInput("neighbornodes",label = "Nth Neighbor List",choices = ""))),
                                                                           div(style = "position:absolute;right:1em;margin-right:10px;",
-                                                                              bsButton('graphBtn', '', icon = icon("refresh"),style = "default"),
-                                                                              bsButton('secondSaveBtn', '', icon = icon("save"),style="default")
+                                                                              bsButton('graphBtn', '', icon = icon("refresh"),style = "default")
+                                                                              #bsButton('secondSaveBtn', '', icon = icon("save"),style="default")
 
                                                                           ),
 
                                                                           bsPopover('GraphBtn', trigger = "hover", title = "Update", content = "Reloads the network graph", placement = "left", options = list(container = "body")),
-                                                                          bsPopover('secondSaveBtn', trigger = "hover", title = "Save",
-                                                                                    content = "Saves graph to XYZ file. Go to Graph tab for more options",
-                                                                                    placement = "bottom", options = list(container = "body")),
+                                                                          #bsPopover('secondSaveBtn', trigger = "hover", title = "Save",
+                                                                                    #content = "Saves graph to XYZ file. Go to Graph tab for more options",
+                                                                                    #placement = "bottom", options = list(container = "body")),
                                                                           br(),
                                                                           withSpinner(visNetworkOutput("netPlot",height = "600px"), color= "#2E86C1")
                                                                          ),
                                                                  tabPanel("Association Graph",
-                                                                          sliderInput("threshold", label = NULL,
+                                                                          sliderInput("threshold", label = "Association Threshold",
                                                                                       min = 0, max = 1,
-                                                                                      value = 0.5
+                                                                                      value = 1
                                                                           ),
                                                                           withSpinner(visNetworkOutput("assocPlot",height = "600px"), color= "#2E86C1")
                                                                           ),
 
                                                                  tabPanel("Inference Plot",
+                                                                          sliderInput("NumBar", label = "No. of bars",min = 0, max = 1,value = 1,step=1),
+                                                                          actionButton("sortPlot","Sort X-axis"),
                                                                           withSpinner(plotOutput("distPlot",height = "600px")), color="#2E86C1"),
                                                                  tabPanel('Prevalence',
-                                                                          selectInput("paramSelect",label = NULL,""),
+                                                                          selectInput("paramSelect",label = "Variable",""),
                                                                           withSpinner(plotOutput("parameterPlot",height = "600px")),color="#2E86C1"),
                                                                  tabPanel("Tables",
                                                                           shiny::fluidRow(shiny::column(4,selectInput("tableName",label = NULL,"")),shiny::column(2,actionButton("subsetBTN","subset")),shiny::column(1,actionButton("resetBTN","reset"))),
