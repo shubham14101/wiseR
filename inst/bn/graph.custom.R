@@ -25,7 +25,9 @@ graph.custom <- function(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNo
              visIgraphLayout(layout = Tlayout)%>%
              visEvents(select = "function(nodes) {
                 Shiny.onInputChange('current_node_id', nodes.nodes);
-                       ;}")
+                       ;}")%>%
+             visExport(type = "png", name = "bayesian network",
+                       float = "right", label = "Save network", background = "white", style= "")
            )
   },error=function(e){
     print(e)

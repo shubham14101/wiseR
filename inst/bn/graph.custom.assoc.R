@@ -23,7 +23,10 @@ graph.custom.assoc <- function(assocNetwork,nodeNames,EvidenceNode,EventNode,Nde
              visOptions(highlightNearest = list(enabled =TRUE, degree = Ndegree,hover = T, hideColor = 'rgba(200,200,200,0)'), nodesIdSelection =
                           list(enabled = TRUE, style = 'width: 100px; height: 20px;background: #f8f8f8;border:none;outline:none;'))%>%
              visInteraction(navigationButtons = TRUE)%>%
-             visIgraphLayout(layout = Tlayout))
+             visIgraphLayout(layout = Tlayout)%>%
+             visExport(type = "png", name = "association network",
+                       float = "right", label = "Save network", background = "white", style= "")
+           )
   },error=function(e){
     print(e)
   })

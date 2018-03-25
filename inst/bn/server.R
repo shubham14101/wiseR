@@ -20,6 +20,7 @@ library("linkcomm")
 library('igraph')
 library("parallel")
 library("snow")
+library("shinyBS")
 source('error.bar.R')
 source('graph.custom.R')
 source('graph.custom.assoc.R')
@@ -30,6 +31,7 @@ source('custom.association.R')
 source('custom.Modules.R')
 
 shinyServer(function(input, output,session) {
+  withProgress(message = "Loading", value = 0, {
   #Data upload limit
   options(shiny.maxRequestSize=1500*1024^2)
   #Structure Initialization
@@ -86,31 +88,14 @@ shinyServer(function(input, output,session) {
   colnames(predError)<-"Classification Error"
   output$valLoss<-renderText({bn.validate[[1]]$loss})
   #blacklist/whitelist
-  blacklistC<-c()
-  whitelistC<-c()
-  for(i in colnames(DiscreteData))
-  {
-    for(j in colnames(DiscreteData))
-    {
-      if(i!=j)
-      {
-        blacklistC<-rbind(blacklistC,c(i,j))
-        whitelistC<-rbind(whitelistC,c(i,j))
-      }
-    }
-  }
-  colnames(blacklistC)<-c("from","to")
-  colnames(whitelistC)<-c("from","to")
-  blacklistTrue<<-blacklistC
-  whitelistTrue<<-whitelistC
   blacklistEdges<-c()
   whitelistEdges<-c()
   #Nth degree neighbors
   graph<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
   #Inference tab
   updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
-  #parallel
-  #updateMaterialSwitch(session,"parallel",value = F)
+  })
+  #observe events
   observeEvent(input$tableName,{
     tryCatch({
       if(input$tableName=="Data")
@@ -131,72 +116,54 @@ shinyServer(function(input, output,session) {
       }
       else if(input$tableName=="blacklist edges")
       {
-        output$tableOut<- DT::renderDataTable({blacklistC},options = list(scrollX = TRUE,pageLength = 10))
+        output$tableOut<- DT::renderDataTable({blacklistEdges},options = list(scrollX = TRUE,pageLength = 10))
       }
       else if(input$tableName=="whitelist edges")
       {
-        output$tableOut<- DT::renderDataTable({whitelistC},options = list(scrollX = TRUE,pageLength = 10))
+        output$tableOut<- DT::renderDataTable({whitelistEdges},options = list(scrollX = TRUE,pageLength = 10))
       }
     },error=function(e){
       shinyalert(e)
     })
 
   })
-  observeEvent(input$subsetBTN,{
-    tryCatch({
-      if(input$tableName=="blacklist edges")
-      {
-        blacklistEdges<<-blacklistC[input$tableOut_rows_selected,]
-        if(length(blacklistEdges)>0)
-        {
-          blacklistC<<-blacklistEdges
-        }
-        output$tableOut<- DT::renderDataTable({blacklistC},options = list(scrollX = TRUE,pageLength = 10))
-      }
-      else if(input$tableName=="whitelist edges")
-      {
-        whitelistEdges<<-whitelistC[input$tableOut_rows_selected,]
-        if(length(whitelistEdges)>0)
-        {
-          whitelistC<<-whitelistEdges
-        }
-        output$tableOut<- DT::renderDataTable({whitelistC},options = list(scrollX = TRUE,pageLength = 10))
-      }
-    },error=function(e){
-      shinyalert(e)
-    })
-  })
-  observeEvent(input$resetBTN,{
-    tryCatch({
-      if(input$tableName=="blacklist edges")
-      {
-        blacklistC<<-blacklistTrue
-        output$tableOut<- DT::renderDataTable({blacklistC},options = list(scrollX = TRUE,pageLength = 10))
-      }
-      else if(input$tableName=="whitelist edges")
-      {
-        whitelistC<<-whitelistTrue
-        output$tableOut<- DT::renderDataTable({whitelistC},options = list(scrollX = TRUE,pageLength = 10))
-      }
-    },error=function(e){
-      shinyalert(e)
-    })
-  })
   observeEvent(input$listFile,{
-    file=input$listFile
-    if(input$listType=="Blacklist")
-    {
-      blacklistEdges=read.csv(file$datapath,stringsAsFactors = T,na.strings = c("NA","na","Na","nA","","?","-"))
-    }
-    else
-    {
-      whitelistEdges=read.csv(file$datapath,stringsAsFactors = T,na.strings = c("NA","na","Na","nA","","?","-"))
-    }
+    tryCatch({
+      file=input$listFile
+      if(input$listType=="Blacklist")
+      {
+        blacklistEdges=read.csv(file$datapath,stringsAsFactors = T,na.strings = c("NA","na","Na","nA","","?","-"))
+        if(dim(blacklistEdges)[2]!=2)
+        {
+          blacklistEdges<<-c()
+          shinyalert("Please upload a .csv file containg edges in format 'from' and 'to'")
+        }
+        else if(!(unique(blacklistEdges[,1],blacklistEdges[,2]) %in% colnames(DiscreteData)))
+        {
+          blacklistEdges<<-c()
+          shinyalert("please upload a correct file containg only nodes as observed in the data")
+        }
+      }
+      else
+      {
+        whitelistEdges=read.csv(file$datapath,stringsAsFactors = T,na.strings = c("NA","na","Na","nA","","?","-"))
+        if(dim(whitelistEdges)[2]!=2)
+        {
+          whitelistEdges<<-c()
+          shinyalert("Please upload a .csv file containg edges in format 'from' and 'to'")
+        }
+        else if(!(unique(blacklistEdges[,1],blacklistEdges[,2]) %in% colnames(DiscreteData)))
+        {
+          whitelistEdges<<-c()
+          shinyalert("please upload a correct file containg only nodes as observed in the data")
+        }
+      }
+    },error=function(e){
+      shinyalert(e)
+    })
   })
   observeEvent(input$start,{
-    withProgress(message = "Loading", value = 0, {
       updateTabItems(session, "sidebarMenu", "Structure")
-      })
     })
   observeEvent(input$threshold,{
     tryCatch({
@@ -253,6 +220,46 @@ shinyServer(function(input, output,session) {
     })
 
   })
+  output$downloadData <- downloadHandler(
+    filename = function() {
+      paste(input$tableName, ".csv", sep = "")
+    },
+    content = function(file) {
+      print(file)
+      if(input$tableName=="Data")
+      {
+        write.csv(DiscreteData,file,row.names = F)
+      }
+      else if(input$tableName == "Association Graph")
+      {
+        write.csv(assocNetwork, file,row.names = F)
+      }
+      else if(input$tableName=="Bayesian Graph")
+      {
+        write.csv(NetworkGraph, file,row.names = F)
+      }
+      else if(input$tableName=="Cross Validation Results")
+      {
+        write.csv(predError, file,row.names=F)
+      }
+      else if(input$tableName=="blacklist edges")
+      {
+        write.csv(blacklistC, file,row.names = F)
+      }
+      else if(input$tableName=="whitelist edges")
+      {
+        write.csv(whitelistC, file,row.names=F)
+      }
+    }
+  )
+  output$saveBtn<-downloadHandler(
+    filename = function() {
+      paste('structure', ".RData", sep = "")
+    },
+    content = function(file) {
+      save(bn.hc.boot.average,file)
+    }
+  )
   #Data Frame From User
   observeEvent(input$dataFile,{
     inFile <- input$dataFile
@@ -297,23 +304,6 @@ shinyServer(function(input, output,session) {
         check.NA(DiscreteData)
         DiscreteData<<-as.data.frame(DiscreteData)
         #Reset APP
-        blacklistC<<-c()
-        whitelistC<<-c()
-        for(i in colnames(DiscreteData))
-        {
-          for(j in colnames(DiscreteData))
-          {
-            if(i!=j)
-            {
-              blacklistC<<-rbind(blacklistC,c(i,j))
-              whitelistC<<-rbind(whitelistC,c(i,j))
-            }
-          }
-        }
-        colnames(blacklistC)<<-c("from","to")
-        colnames(whitelistC)<<-c("from","to")
-        blacklistTrue<<-blacklistC
-        whitelistCTrue<<-whitelistC
         blacklistEdges<<-c()
         whitelistEdges<<-c()
         },error = function(e){
@@ -896,7 +886,7 @@ shinyServer(function(input, output,session) {
       probs = prop.table(table(cpdist(bn.hc.boot.fit,input$event,evidence = eval(parse(text = str1)))))
       output$distPlot = renderPlot({par(mar=c(5,3,3,3))
         par(oma=c(5,3,3,3))
-        barx<-barplot(probs,
+        barx<<-barplot(probs,
                 col = "lightblue",
                 main = paste("Conditional Probabilities on ",input$event),
                 border = NA,
@@ -941,7 +931,7 @@ shinyServer(function(input, output,session) {
       ee$sd = apply(probT, 2, sd)
       output$distPlot = renderPlot({par(mar=c(5,3,3,3))
         par(oma=c(5,3,3,3))
-        barx <-barplot(ee$mean,
+        barx <<-barplot(ee$mean,
                        col = "lightblue",
                        main = paste("Conditional Probabilities on ",input$event),
                        border = NA,
@@ -979,7 +969,7 @@ shinyServer(function(input, output,session) {
         probs = sort(prop.table(table(cpdist(bn.hc.boot.fit,input$event,evidence = eval(parse(text = str1))))),decreasing = T)[1:input$NumBar]
         output$distPlot = renderPlot({par(mar=c(5,3,3,3))
           par(oma=c(5,3,3,3))
-          barx<-barplot(probs,
+          barx<<-barplot(probs,
                         col = "lightblue",
                         main = paste("Conditional Probabilities on ",input$event),
                         border = NA,
@@ -1025,7 +1015,7 @@ shinyServer(function(input, output,session) {
         nm = names(sort(ee$mean,decreasing = T))[1:input$NumBar]
         output$distPlot = renderPlot({par(mar=c(5,3,3,3))
           par(oma=c(5,3,3,3))
-          barx <-barplot(ee$mean[nm],
+          barx <<-barplot(ee$mean[nm],
                          col = "lightblue",
                          main = paste("Conditional Probabilities on ",input$event),
                          border = NA,
@@ -1042,37 +1032,6 @@ shinyServer(function(input, output,session) {
         output$distPlot<- renderPlot({validate(e)})
       })
     }
-  })
-  observeEvent(input$saveBtn,{
-    tryCatch({
-      save(bn.hc.boot.average,file = input$path)
-
-    },error = function(e){
-      shinyalert(toString(e), type = "error")
-
-    })
-
-  })
-  #observeEvent(input$secondSaveBtn,{
-  #  tryCatch({
-  #    print("save")
-  #    save(bn.hc.boot.average,file = input$path)
-  #
-  #  },error = function(e){
-  #    shinyalert(toString(e), type = "error")
-
-  #  })
-
-  #})
-  observeEvent(input$saveBtn2,{
-    tryCatch({
-      write.csv(NetworkGraph,file = input$path2,row.names = FALSE)
-
-
-    },error = function(e){
-      shinyalert(toString(e), type = "error")
-
-    })
   })
   observeEvent(input$moduleSelection,{
     if(input$moduleSelection!='graph')
@@ -1138,7 +1097,7 @@ shinyServer(function(input, output,session) {
       graph<<-graph_from_edgelist(as.matrix(pruneGraph),directed = TRUE)
       updateSelectInput(session,"neighbornodes",choices = "")
       updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
-
+      saveGraph<<-pruneGraph
     }
     else
     {
@@ -1166,6 +1125,7 @@ shinyServer(function(input, output,session) {
       graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
       updateSelectInput(session,"neighbornodes",choices = "")
       updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
+      saveGraph<<-NetworkGraph
     }
   })
   observeEvent(input$current_node_id,{
@@ -1175,8 +1135,8 @@ shinyServer(function(input, output,session) {
       {
         nlist<<-ego(graph,input$degreeN,nodes = input$current_node_id, mode = c("all", "out", "in"),mindist = 0)
         nlistP<<-ego(graph,input$degreeN-1,nodes = input$current_node_id, mode = c("all", "out", "in"),mindist = 0)
-        diffList<<-setdiff(nlist,nlistP)
-        updateSelectInput(session,"neighbornodes",choices = diffList[[1]]$name)
+        diffList<<-setdiff(nlist[[1]]$name,nlistP[[1]]$name)
+        updateSelectInput(session,"neighbornodes",choices = diffList)
       }
       else
       {
@@ -1259,6 +1219,28 @@ shinyServer(function(input, output,session) {
 
     })
 
+  })
+  observeEvent(input$graphBtn2,{
+    tryCatch({
+      for(elem in inserted)
+      {
+        EvidenceNode = c(EvidenceNode,input[[elem]])
+      }
+      if(sanity==1)
+      {
+        EventNode = nodeNames[1]
+        sanity=sanity + 1
+      }
+      else
+      {
+        EventNode = input$event
+      }
+      assocNetworkprune<<- assocNetwork[which(assocNetwork[,3]>input$threshold),]
+      output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),EvidenceNode,EventNode,input$degree,input$graph_layout,shapeVectorAssoc)})
+    },error = function(e){
+      shinyalert(toString(e), type = "error")
+
+    })
   })
   observeEvent(input$group,{
     tryCatch({
