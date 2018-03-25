@@ -37,7 +37,6 @@ shinyServer(function(input, output,session) {
   #Structure Initialization
   D <- get(load('a.RData'))
   DiscreteData <- D
-  trueData<<-DiscreteData
   bn.hc.boot <- boot.strength(data = DiscreteData,R = 5,m =ceiling(nrow(DiscreteData)*0.7) ,algorithm = "hc")
   bn.hc.boot.pruned <- bn.hc.boot[bn.hc.boot$strength > 0.5 & bn.hc.boot$direction >0.5,]
   bn.hc.boot.average <- cextend(averaged.network(bn.hc.boot.pruned))
@@ -167,9 +166,20 @@ shinyServer(function(input, output,session) {
     })
   observeEvent(input$threshold,{
     tryCatch({
-      assocNetworkprune<<- assocNetwork[which(assocNetwork[,3]>input$threshold),]
-      shapeVectorAssoc<<- rep('dot',length(unique(c(assocNetworkprune[,1],assocNetworkprune[,2]))))
-      output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),EvidenceNode,EventNode,input$degree,input$graph_layout,shapeVectorAssoc)})
+      if(check.NA(DiscreteData))
+      {
+        shinyalert("Please impute missingness in the data first",type="info")
+      }
+      else if(check.discrete(DiscreteData))
+      {
+        shinyalert("Please discritize the data first",type="info")
+      }
+      else
+      {
+        assocNetworkprune<<- assocNetwork[which(assocNetwork[,3]>input$threshold),]
+        shapeVectorAssoc<<- rep('dot',length(unique(c(assocNetworkprune[,1],assocNetworkprune[,2]))))
+        output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),EvidenceNode,EventNode,input$degree,input$graph_layout,shapeVectorAssoc)})
+      }
     },error=function(e){
       shinyalert(toString(e), type = "error")
     })
@@ -275,10 +285,8 @@ shinyServer(function(input, output,session) {
           {
             tryCatch({
               DiscreteData <<- get(load(inFile$datapath))
-              trueData<<-DiscreteData
               },error = function(e){
                 DiscreteData<<- readRDS(inFile$datapath)
-                trueData<<-DiscreteData
               })
           }
           else
@@ -292,7 +300,6 @@ shinyServer(function(input, output,session) {
           if(file_ext(inFile$datapath) == "csv")
           {
             DiscreteData <<- read.csv(inFile$datapath,stringsAsFactors = T,na.strings = c("NA","na","Na","nA","","?","-"))
-            trueData<<-DiscreteData
           }
           else
           {
@@ -326,7 +333,6 @@ shinyServer(function(input, output,session) {
         tempDiscreteData[,which(lapply(tempDiscreteData,nlevels)<2)] = NULL
         tempDiscreteData <- droplevels(tempDiscreteData)
         DiscreteData <<-tempDiscreteData
-        trueData<<-DiscreteData
       })},error = function(e){
         type <- toString(input$dtype)
         messageString <- paste(c("Error is discretising using method ", type, ". Try using other method or upload pre-discretised data."), collapse = '')
@@ -345,8 +351,7 @@ shinyServer(function(input, output,session) {
           DiscreteData[,n]<<-as.factor(DiscreteData[,n])
         }
       }
-      DiscreteData <<- missRanger(DiscreteData,maxiter = 2,num.tree = 100)
-      trueData<<-DiscreteData
+      DiscreteData <<- missRanger(DiscreteData,maxiter = 1,num.tree = 100)
       check.discrete(DiscreteData)
       check.NA(DiscreteData)
     })}, error = function(e){
@@ -360,14 +365,14 @@ shinyServer(function(input, output,session) {
 
   # Get the data selection from user
   observeEvent(input$structFile,{# Get the uploaded file from user
-       if(sum(is.na(DiscreteData))>0)
-       {
+        if(check.NA(DiscreteData))
+        {
           shinyalert("Please impute missingness in the data first",type="info")
-       }
-       else if(sum(lapply(DiscreteData,is.numeric))>0)
-       {
-         shinyalert("Please discritize the data first",type="info")
-       }
+        }
+        else if(check.discrete(DiscreteData))
+        {
+          shinyalert("Please discritize the data first",type="info")
+        }
        else
        {
          inFile <- input$structFile
@@ -453,11 +458,11 @@ shinyServer(function(input, output,session) {
 
   # Learn the structure of the network
   observeEvent(input$learnBtn, {
-    if(sum(is.na(DiscreteData))>0)
+    if(check.NA(DiscreteData))
     {
       shinyalert("Please impute missingness in the data first",type="info")
     }
-    else if(sum(lapply(DiscreteData,is.numeric))>0)
+    else if(check.discrete(DiscreteData))
     {
       shinyalert("Please discritize the data first",type="info")
     }
@@ -541,11 +546,11 @@ shinyServer(function(input, output,session) {
     }
   })
   observeEvent(input$learnSBtn, {
-    if(sum(is.na(DiscreteData))>0)
+    if(check.NA(DiscreteData))
     {
       shinyalert("Please impute missingness in the data first",type="info")
     }
-    else if(sum(lapply(DiscreteData,is.numeric))>0)
+    else if(check.discrete(DiscreteData))
     {
       shinyalert("Please discritize the data first",type="info")
     }
