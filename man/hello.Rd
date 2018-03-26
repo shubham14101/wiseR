@@ -1,12 +1,11 @@
-\name{hello}
-\alias{hello}
-\title{Hello, World!}
+\name{ShinyBN}
+\title{Interactive Bayesian Learning Dashboard}
 \usage{
-hello()
+shinybn()
 }
 \description{
-Prints 'Hello, world!'.
+paper link,github link
 }
 \examples{
-hello()
+The app is initialized to explore the Alarm Data avaialable in package 'bnlearn'
 }

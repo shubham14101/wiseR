@@ -32,8 +32,10 @@ source('custom.Modules.R')
 
 shinyServer(function(input, output,session) {
   withProgress(message = "Initializing Dashboard", value = 0, {
-  #Data upload limit
+  #Data upload limit and other options
   options(shiny.maxRequestSize=1500*1024^2)
+  options(warn=-1)
+  options("getSymbols.warning4.0"=FALSE)
   #Structure Initialization
   D <- get(load('a.RData'))
   DiscreteData <- D
