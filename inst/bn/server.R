@@ -188,26 +188,27 @@ shinyServer(function(input, output,session) {
     })
   })
   observeEvent(input$association,{
-    tryCatch({
-      if(check.NA(DiscreteData))
-      {
-        shinyalert("Please impute missingness in the data first",type="info")
-      }
-      else if(check.discrete(DiscreteData))
-      {
-        shinyalert("Please discritize the data first",type="info")
-      }
-      else
-      {
-        assocNetwork<<-custom.association(DiscreteData,input$assocType)
-        assocNetworkprune<<- assocNetwork[which(assocNetwork[,3]>input$threshold),]
-        output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$degree,input$graph_layout)})
-        assocReset<<-2
-      }
-    },error=function(e){
-      shinyalert(toString(e), type = "error")
+    withProgress(message = "Building Association Graph", value = 0, {
+      tryCatch({
+        if(check.NA(DiscreteData))
+        {
+          shinyalert("Please impute missingness in the data first",type="info")
+        }
+        else if(check.discrete(DiscreteData))
+        {
+          shinyalert("Please discritize the data first",type="info")
+        }
+        else
+        {
+          assocNetwork<<-custom.association(DiscreteData,input$assocType)
+          assocNetworkprune<<- assocNetwork[which(assocNetwork[,3]>input$threshold),]
+          output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$degree,input$graph_layout)})
+          assocReset<<-2
+        }
+      },error=function(e){
+        shinyalert(toString(e), type = "error")
+      })
     })
-
   })
   observeEvent(input$calLoss,{
     tryCatch({
@@ -861,61 +862,65 @@ shinyServer(function(input, output,session) {
     }
   })
   observeEvent(input$parallel,{
-    tryCatch({
-      if(input$parallel==TRUE)
-      {
-        check<<-2
-        cl <<- makeCluster(strtoi(input$clusters), type = "SOCK")
-        shinyalert("Parallel clusters successfully created",type="success")
-      }
-      else
-      {
-        if(check==2)
+    withProgress(message = "Building Clusters", value = 0, {
+      tryCatch({
+        if(input$parallel==TRUE)
         {
-          stopCluster(cl)
-          ckeck<<-1
+          check<<-2
+          cl <<- makeCluster(strtoi(input$clusters), type = "SOCK")
+          shinyalert("Parallel clusters successfully created",type="success")
         }
-      }
-    },error=function(e){
-      shinyalert(toString(e), type = "error")
+        else
+        {
+          if(check==2)
+          {
+            stopCluster(cl)
+            ckeck<<-1
+          }
+        }
+      },error=function(e){
+        shinyalert(toString(e), type = "error")
+      })
     })
   })
   observeEvent(input$insertBtn, {
-    if(reset==2)
-    {
-      tryCatch({
-        btn <<- input$insertBtn
-        id <- paste0('Evidence', btn)
-        idL <- paste("Evidence", btn)
-        idV <- paste0('Value', btn)
-        idVL <- paste("Value", btn)
-        insertUI(selector = '#placeholder1',
-                 ui = tags$div(selectInput(id,'Evidence',nodeNames),
-                               id = id
-                 )
-        )
-        insertUI(selector = '#placeholder2',
-                 ui = tags$div(selectInput(idV,'Value',levels(DiscreteData[,nodeNames[1]])),
-                               id = idV
-                 )
-        )
-        inserted <<- c(id, inserted)
-        insertedV <<- c(idV,insertedV)
-        rvs$evidence <<- c(rvs$evidence,id)
-        rvs$value <<- c(rvs$value,id)
-        rvs$evidenceObserve <<- c(rvs$evidenceObserve,observeEvent(input[[id]],{
-          tryCatch({
-            valID = insertedV[which(inserted == id)]
-            updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
-          },error = function(e){
-            shinyalert(toString("Please learn structure or upload structure on new data uploaded to make infrences"), type = "error")
-          })
-        }))
+    withProgress(message = "Inserting Evidence", value = 0, {
+      if(reset==2)
+      {
+        tryCatch({
+          btn <<- input$insertBtn
+          id <- paste0('Evidence', btn)
+          idL <- paste("Evidence", btn)
+          idV <- paste0('Value', btn)
+          idVL <- paste("Value", btn)
+          insertUI(selector = '#placeholder1',
+                   ui = tags$div(selectInput(id,'Evidence',nodeNames),
+                                 id = id
+                   )
+          )
+          insertUI(selector = '#placeholder2',
+                   ui = tags$div(selectInput(idV,'Value',levels(DiscreteData[,nodeNames[1]])),
+                                 id = idV
+                   )
+          )
+          inserted <<- c(id, inserted)
+          insertedV <<- c(idV,insertedV)
+          rvs$evidence <<- c(rvs$evidence,id)
+          rvs$value <<- c(rvs$value,id)
+          rvs$evidenceObserve <<- c(rvs$evidenceObserve,observeEvent(input[[id]],{
+            tryCatch({
+              valID = insertedV[which(inserted == id)]
+              updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
+            },error = function(e){
+              shinyalert(toString("Please learn structure or upload structure on new data uploaded to make infrences"), type = "error")
+            })
+          }))
 
-      },error = function(e){
-        shinyalert(toString(e), type = "error")
-      })
-    }
+        },error = function(e){
+          shinyalert(toString(e), type = "error")
+        })
+      }
+    })
   })
 
   observeEvent(input$removeBtn, {
@@ -959,88 +964,8 @@ shinyServer(function(input, output,session) {
     }
   })
   observeEvent(input$plotBtn,{
-    if(reset==2)
-    {
-      tryCatch({
-        confidence<<-1
-        str1 <<- ""
-        count =1
-        for(elem in inserted)
-        {
-          vid = insertedV[which(inserted == elem)]
-          str1 <<- paste0(str1,"(", input[[elem]], "=='", input[[vid]], "')")
-          if(count!=length(inserted))
-          {
-            str1 <<- paste0(str1," & ")
-          }
-          count = count + 1
-        }
-        probs = prop.table(table(cpdist(bn.hc.boot.fit,input$event,evidence = eval(parse(text = str1)))))
-        output$distPlot = renderPlot({par(mar=c(5,3,3,3))
-          par(oma=c(5,3,3,3))
-          barx<<-barplot(probs,
-                         col = "lightblue",
-                         main = paste("Conditional Probabilities on ",input$event),
-                         border = NA,
-                         xlab = "",
-                         ylab = "Probabilities",
-                         ylim = c(0,1),
-                         las=2)
-          text(x = barx,y = round(probs,digits = 4),label = round(probs,digits = 4), pos = 3, cex = 0.8, col = "black")
-        })
-      },error = function(e){
-        shinyalert(toString(e), type = "error")
-      })
-    }
-  })
-  observeEvent(input$plotStrengthBtn,{
-    if(reset==2)
-    {
-      tryCatch({
-        confidence<<-2
-        probT = c()
-        for(i in 1:input$plotStrengthBtn)
-        {
-          str1 <<- ""
-          count =1
-          for(elem in inserted)
-          {
-            vid = insertedV[which(inserted == elem)]
-            str1 <<- paste0(str1,"(", input[[elem]], "=='", input[[vid]], "')")
-            if(count!=length(inserted))
-            {
-              str1 <<- paste0(str1," & ")
-            }
-            count = count + 1
-          }
-          probs = prop.table(table(cpdist(bn.hc.boot.fit,input$event,evidence = eval(parse(text = str1)))))
-          probT = rbind(probT,probs)
-        }
-        ee = 1
-        ee$mean = colMeans(probT)
-        ee$sd = apply(probT, 2, sd)
-        output$distPlot = renderPlot({par(mar=c(5,3,3,3))
-          par(oma=c(5,3,3,3))
-          barx <<-barplot(ee$mean,
-                          col = "lightblue",
-                          main = paste("Conditional Probabilities on ",input$event),
-                          border = NA,
-                          xlab = "",
-                          ylab = "Probabilities",
-                          ylim = c(0,1),
-                          las=2)
-          text(x = barx,y = round(ee$mean,digits = 4),label = round(ee$mean,digits = 4), pos = 3, cex = 0.8, col = "black")
-          error.bar(barx,ee$mean, 1.96*ee$sd/sqrt(input$plotStrengthBtn))})
-
-      },error = function(e){
-        shinyalert(toString(e), type = "error")
-      })
-    }
-  })
-  observeEvent(input$sortPlot,{
-    if(reset==2)
-    {
-      if(confidence==1)
+    withProgress(message = "Learning Inference", value = 0, {
+      if(reset==2)
       {
         tryCatch({
           confidence<<-1
@@ -1056,7 +981,7 @@ shinyServer(function(input, output,session) {
             }
             count = count + 1
           }
-          probs = sort(prop.table(table(cpdist(bn.hc.boot.fit,input$event,evidence = eval(parse(text = str1))))),decreasing = T)[1:input$NumBar]
+          probs = prop.table(table(cpdist(bn.hc.boot.fit,input$event,evidence = eval(parse(text = str1)))))
           output$distPlot = renderPlot({par(mar=c(5,3,3,3))
             par(oma=c(5,3,3,3))
             barx<<-barplot(probs,
@@ -1069,13 +994,15 @@ shinyServer(function(input, output,session) {
                            las=2)
             text(x = barx,y = round(probs,digits = 4),label = round(probs,digits = 4), pos = 3, cex = 0.8, col = "black")
           })
-
-
         },error = function(e){
           shinyalert(toString(e), type = "error")
         })
       }
-      else
+    })
+  })
+  observeEvent(input$plotStrengthBtn,{
+    withProgress(message = "Learning Inference", value = 0, {
+      if(reset==2)
       {
         tryCatch({
           confidence<<-2
@@ -1100,10 +1027,9 @@ shinyServer(function(input, output,session) {
           ee = 1
           ee$mean = colMeans(probT)
           ee$sd = apply(probT, 2, sd)
-          nm = names(sort(ee$mean,decreasing = T))[1:input$NumBar]
           output$distPlot = renderPlot({par(mar=c(5,3,3,3))
             par(oma=c(5,3,3,3))
-            barx <<-barplot(ee$mean[nm],
+            barx <<-barplot(ee$mean,
                             col = "lightblue",
                             main = paste("Conditional Probabilities on ",input$event),
                             border = NA,
@@ -1111,107 +1037,194 @@ shinyServer(function(input, output,session) {
                             ylab = "Probabilities",
                             ylim = c(0,1),
                             las=2)
-            text(x = barx,y = round(ee$mean[nm],digits = 4),label = round(ee$mean[nm],digits = 4), pos = 3, cex = 0.8, col = "black")
-            error.bar(barx,ee$mean[nm], 1.96*ee$sd[nm]/sqrt(input$plotStrengthBtn))})
+            text(x = barx,y = round(ee$mean,digits = 4),label = round(ee$mean,digits = 4), pos = 3, cex = 0.8, col = "black")
+            error.bar(barx,ee$mean, 1.96*ee$sd/sqrt(input$plotStrengthBtn))})
 
         },error = function(e){
           shinyalert(toString(e), type = "error")
         })
       }
-    }
+    })
   })
-  observeEvent(input$moduleSelection,{
-    if(reset==2)
-    {
-      tryCatch({
-        if(input$moduleSelection!='graph')
+  observeEvent(input$sortPlot,{
+    withProgress(message = "Learning Inference", value = 0, {
+      if(reset==2)
+      {
+        if(confidence==1)
         {
-          selectedNodes<<-communities[[input$moduleSelection]]
-          from<-c()
-          to<-c()
-          for(i in 1:length(NetworkGraph[,1]))
-          {
-            if(is.element(NetworkGraph[i,1],selectedNodes))
+          tryCatch({
+            confidence<<-1
+            str1 <<- ""
+            count =1
+            for(elem in inserted)
             {
-              from<-c(from,i)
+              vid = insertedV[which(inserted == elem)]
+              str1 <<- paste0(str1,"(", input[[elem]], "=='", input[[vid]], "')")
+              if(count!=length(inserted))
+              {
+                str1 <<- paste0(str1," & ")
+              }
+              count = count + 1
             }
-            if(is.element(NetworkGraph[i,2],selectedNodes))
-            {
-              to<-c(to,i)
-            }
-          }
-          pruneGraph<<-NetworkGraph[intersect(from,to),]
-          shapeVector<<-rep('dot',length(communities[[input$moduleSelection]]))
-          for(elem in 1:length(inserted))
-          {
-            removeUI(
-              selector = paste0('#', inserted[elem])
-            )
+            probs = sort(prop.table(table(cpdist(bn.hc.boot.fit,input$event,evidence = eval(parse(text = str1))))),decreasing = T)[1:input$NumBar]
+            output$distPlot = renderPlot({par(mar=c(5,3,3,3))
+              par(oma=c(5,3,3,3))
+              barx<<-barplot(probs,
+                             col = "lightblue",
+                             main = paste("Conditional Probabilities on ",input$event),
+                             border = NA,
+                             xlab = "",
+                             ylab = "Probabilities",
+                             ylim = c(0,1),
+                             las=2)
+              text(x = barx,y = round(probs,digits = 4),label = round(probs,digits = 4), pos = 3, cex = 0.8, col = "black")
+            })
 
-          }
-          inserted <<- c()
-          for(elem2 in 1:length(insertedV))
-          {
-            removeUI(
-              selector = paste0('#', insertedV[elem2])
-            )
 
-          }
-          insertedV <<- c()
-          rvs$evidence <<- c()
-          rvs$value <<- c()
-          rvs$evidenceObserve <<- c()
-          rvs$valueObserve <<- c()
-          output$distPlot <<- renderPlot(NULL)
-          nodeNames <<- selectedNodes
-          EventNode <<- nodeNames[1]
-          EvidenceNode <<- c()
-          shapeVector<<- rep('dot',length(nodeNames))
-          updateSelectInput(session,'event',choices = nodeNames)
-          output$netPlot<-renderVisNetwork({graph.custom(pruneGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
-          updateSelectInput(session,'event',choices = nodeNames)
-          updateSelectizeInput(session,'varselect',choices = nodeNames)
-          updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
-                                                            "ellipse", "database", "text", "diamond"))
-          updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
-                                                             "ellipse", "database", "text", "diamond"))
-          updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
-          updateSelectInput(session,'paramSelect',choices = nodeNames)
-          graph<<-graph_from_edgelist(as.matrix(pruneGraph),directed = TRUE)
-          updateSelectInput(session,"neighbornodes",choices = "")
-          updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
+          },error = function(e){
+            shinyalert(toString(e), type = "error")
+          })
         }
         else
         {
-          insertedV <<- c()
-          rvs$evidence <<- c()
-          rvs$value <<- c()
-          rvs$evidenceObserve <<- c()
-          rvs$valueObserve <<- c()
-          output$distPlot <<- renderPlot(NULL)
-          NetworkGraph <<- data.frame(directed.arcs(bn.hc.boot.average))
-          nodeNames <<- names(bn.hc.boot.average$nodes)
-          EventNode <<- nodeNames[1]
-          EvidenceNode <<- c()
-          shapeVector<<- rep('dot',length(nodeNames))
-          updateSelectInput(session,'event',choices = nodeNames)
-          output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
-          updateSelectInput(session,'event',choices = nodeNames)
-          updateSelectizeInput(session,'varselect',choices = nodeNames)
-          updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
-                                                            "ellipse", "database", "text", "diamond"))
-          updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
-                                                             "ellipse", "database", "text", "diamond"))
-          updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
-          updateSelectInput(session,'paramSelect',choices = nodeNames)
-          graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
-          updateSelectInput(session,"neighbornodes",choices = "")
-          updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
+          tryCatch({
+            confidence<<-2
+            probT = c()
+            for(i in 1:input$plotStrengthBtn)
+            {
+              str1 <<- ""
+              count =1
+              for(elem in inserted)
+              {
+                vid = insertedV[which(inserted == elem)]
+                str1 <<- paste0(str1,"(", input[[elem]], "=='", input[[vid]], "')")
+                if(count!=length(inserted))
+                {
+                  str1 <<- paste0(str1," & ")
+                }
+                count = count + 1
+              }
+              probs = prop.table(table(cpdist(bn.hc.boot.fit,input$event,evidence = eval(parse(text = str1)))))
+              probT = rbind(probT,probs)
+            }
+            ee = 1
+            ee$mean = colMeans(probT)
+            ee$sd = apply(probT, 2, sd)
+            nm = names(sort(ee$mean,decreasing = T))[1:input$NumBar]
+            output$distPlot = renderPlot({par(mar=c(5,3,3,3))
+              par(oma=c(5,3,3,3))
+              barx <<-barplot(ee$mean[nm],
+                              col = "lightblue",
+                              main = paste("Conditional Probabilities on ",input$event),
+                              border = NA,
+                              xlab = "",
+                              ylab = "Probabilities",
+                              ylim = c(0,1),
+                              las=2)
+              text(x = barx,y = round(ee$mean[nm],digits = 4),label = round(ee$mean[nm],digits = 4), pos = 3, cex = 0.8, col = "black")
+              error.bar(barx,ee$mean[nm], 1.96*ee$sd[nm]/sqrt(input$plotStrengthBtn))})
+
+          },error = function(e){
+            shinyalert(toString(e), type = "error")
+          })
         }
-      },error=function(e){
-        shinyalert(toString(e), type = "error")
-      })
-    }
+      }
+    })
+  })
+  observeEvent(input$moduleSelection,{
+    withProgress(message = "Loading Module", value = 0, {
+      if(reset==2)
+      {
+        tryCatch({
+          if(input$moduleSelection!='graph')
+          {
+            selectedNodes<<-communities[[input$moduleSelection]]
+            from<-c()
+            to<-c()
+            for(i in 1:length(NetworkGraph[,1]))
+            {
+              if(is.element(NetworkGraph[i,1],selectedNodes))
+              {
+                from<-c(from,i)
+              }
+              if(is.element(NetworkGraph[i,2],selectedNodes))
+              {
+                to<-c(to,i)
+              }
+            }
+            pruneGraph<<-NetworkGraph[intersect(from,to),]
+            shapeVector<<-rep('dot',length(communities[[input$moduleSelection]]))
+            for(elem in 1:length(inserted))
+            {
+              removeUI(
+                selector = paste0('#', inserted[elem])
+              )
+
+            }
+            inserted <<- c()
+            for(elem2 in 1:length(insertedV))
+            {
+              removeUI(
+                selector = paste0('#', insertedV[elem2])
+              )
+
+            }
+            insertedV <<- c()
+            rvs$evidence <<- c()
+            rvs$value <<- c()
+            rvs$evidenceObserve <<- c()
+            rvs$valueObserve <<- c()
+            output$distPlot <<- renderPlot(NULL)
+            nodeNames <<- selectedNodes
+            EventNode <<- nodeNames[1]
+            EvidenceNode <<- c()
+            shapeVector<<- rep('dot',length(nodeNames))
+            updateSelectInput(session,'event',choices = nodeNames)
+            output$netPlot<-renderVisNetwork({graph.custom(pruneGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
+            updateSelectInput(session,'event',choices = nodeNames)
+            updateSelectizeInput(session,'varselect',choices = nodeNames)
+            updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                              "ellipse", "database", "text", "diamond"))
+            updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                               "ellipse", "database", "text", "diamond"))
+            updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+            updateSelectInput(session,'paramSelect',choices = nodeNames)
+            graph<<-graph_from_edgelist(as.matrix(pruneGraph),directed = TRUE)
+            updateSelectInput(session,"neighbornodes",choices = "")
+            updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
+          }
+          else
+          {
+            insertedV <<- c()
+            rvs$evidence <<- c()
+            rvs$value <<- c()
+            rvs$evidenceObserve <<- c()
+            rvs$valueObserve <<- c()
+            output$distPlot <<- renderPlot(NULL)
+            NetworkGraph <<- data.frame(directed.arcs(bn.hc.boot.average))
+            nodeNames <<- names(bn.hc.boot.average$nodes)
+            EventNode <<- nodeNames[1]
+            EvidenceNode <<- c()
+            shapeVector<<- rep('dot',length(nodeNames))
+            updateSelectInput(session,'event',choices = nodeNames)
+            output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
+            updateSelectInput(session,'event',choices = nodeNames)
+            updateSelectizeInput(session,'varselect',choices = nodeNames)
+            updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                              "ellipse", "database", "text", "diamond"))
+            updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                               "ellipse", "database", "text", "diamond"))
+            updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+            updateSelectInput(session,'paramSelect',choices = nodeNames)
+            graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
+            updateSelectInput(session,"neighbornodes",choices = "")
+            updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
+          }
+        },error=function(e){
+          shinyalert(toString(e), type = "error")
+        })
+      }
+    })
   })
   observeEvent(input$current_node_id,{
     if(reset==2)
