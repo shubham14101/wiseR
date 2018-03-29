@@ -37,65 +37,68 @@ shinyServer(function(input, output,session) {
   options(warn=-1)
   options("getSymbols.warning4.0"=FALSE)
   #Structure Initialization
-  D <- get(load('a.RData'))
-  DiscreteData <- D
-  bn.hc.boot <- boot.strength(data = DiscreteData,R = 5,m =ceiling(nrow(DiscreteData)*0.7) ,algorithm = "hc")
-  bn.hc.boot.pruned <- bn.hc.boot[bn.hc.boot$strength > 0.5 & bn.hc.boot$direction >0.5,]
-  bn.hc.boot.average <- cextend(averaged.network(bn.hc.boot.pruned))
-  bn.hc.boot.fit <- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = 'bayes')
-  #Graph Initialization
-  NetworkGraph <- data.frame(directed.arcs(bn.hc.boot.average))
-  nodeNames <- names(bn.hc.boot.average$nodes)
-  shapeVector<- rep('dot',length(nodeNames))
-  EventNode <- nodeNames[1]
-  EvidenceNode <- c()
-  output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,2,'layout_nicely')})
-  #Module Initilization
-  communities<-custom.Modules(NetworkGraph,bn.hc.boot.pruned[,3])
-  names(communities)<-paste("Module",c(1:length(communities)),sep=" ")
-  updateSelectInput(session,"moduleSelection",choices = c("graph",names(communities)))
-  #App Initialization
-  inserted  <- c()
-  insertedV <- c()
-  rvs <<- reactiveValues(evidence = list(),values = list(),evidenceObserve = list(),valueObserve = list())
-  updateSelectInput(session,'event',choices = nodeNames)
-  updateSelectizeInput(session,'varselect',choices = nodeNames)
-  updateSelectInput(session,'paramSelect',choices = nodeNames)
-  updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
-  updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
-  updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
-  output$distPlot<- renderPlot(validate("Built infrence plot will be displayed"))
+  DiscreteData <- get(load('a.RData'))
   #Sanity check
   sanity<-1
   confidence<-1
   check<-1
-  reset<-2
-  assocReset<-2
-  #Association Network
-  assocNetwork<-custom.association(DiscreteData,"cramer's V")
-  assocNetworkprune<- assocNetwork[which(assocNetwork[,3]>0.1),]
-  output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),2,'layout_nicely')})
-  #Tables
-  updateSelectInput(session,"tableName",choices = c("Data","Association Graph","Bayesian Graph","Cross Validation Results","blacklist edges","whitelist edges"))
-  output$tableOut<- DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10))
-  #Validation
-  bn.validate<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average)
-  predError<-c()
-  for(n in nodeNames)
-  {
-    targetLoss<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,loss = "pred",loss.args = list(target = n))
-    predError<-rbind(predError,targetLoss[[1]]$loss)
-  }
-  rownames(predError)<-nodeNames
-  colnames(predError)<-"Classification Error"
-  output$valLoss<-renderText({bn.validate[[1]]$loss})
-  #blacklist/whitelist
+  #Initialization
+  reset<-1
+  assocReset<-1
   blacklistEdges<-c()
   whitelistEdges<-c()
-  #Nth degree neighbors
-  graph<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
-  #Inference tab
-  updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
+  NetworkGraph <- NULL
+  assocNetwork<-NULL
+  predError<-NULL
+  for(elem in 1:length(inserted))
+  {
+    removeUI(
+      ## pass in appropriate div id
+      selector = paste0('#', inserted[elem])
+    )
+
+  }
+  inserted <- c()
+  for(elem2 in 1:length(insertedV))
+  {
+    removeUI(
+      ## pass in appropriate div id
+      selector = paste0('#', insertedV[elem2])
+    )
+
+  }
+  insertedV <- c()
+  rvs$evidence <- c()
+  rvs$value <- c()
+  rvs$evidenceObserve <- c()
+  rvs$valueObserve <- c()
+  nodeNames <- c()
+  EventNode <- c()
+  EvidenceNode <- c()
+  shapeVector<- c()
+  communities<-NULL
+  graph<-NULL
+  updateSelectInput(session,'event',choices = "")
+  updateSelectizeInput(session,'varselect',choices = "")
+  updateSelectizeInput(session,'Avarselect',choices = "")
+  updateSelectInput(session,'paramSelect',choices = "")
+  updateSelectInput(session,"tableName",choices = c("Data","Association Graph","Bayesian Graph","Cross Validation Results","blacklist edges","whitelist edges"))
+  updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
+  updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
+  updateSelectInput(session,'Avarshape',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
+  updateSelectInput(session,'Avarshape2',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
+  updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+  updateSelectInput(session,'Agraph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+  updateSelectInput(session,"moduleSelection",choices = "")
+  updateSelectInput(session,"AmoduleSelection",choices = "")
+  updateSelectInput(session,"neighbornodes",choices = "")
+  updateSelectInput(session,"Aneighbornodes",choices = "")
+  updateSliderInput(session,"NumBar",min = 1, max = 2,value = 1)
+  output$valLoss<-renderText({0})
+  output$assocPlot<-renderVisNetwork({validate("Please build an association plot on the data")})
+  output$netPlot<-renderVisNetwork({validate("Please do structure learning on the data")})
+  output$parameterPlot<-renderPlot({validate("Please do structure learning on the data")})
+  output$distPlot<-renderPlot({validate("Please do structure learning on the data and then derive inferences")})
   })
   #observe events
   observeEvent(input$tableName,{
@@ -182,7 +185,11 @@ shinyServer(function(input, output,session) {
         else
         {
           assocNetworkprune<<- assocNetwork[which(assocNetwork[,3]>input$threshold),]
-          output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$degree,input$graph_layout)})
+          shapeVectorAssoc<<- rep('dot',length(unique(c(assocNetworkprune[,1],assocNetworkprune[,2]))))
+          updateSelectizeInput(session,'Avarselect',choices = unique(c(assocNetworkprune[,1],assocNetworkprune[,2])))
+          output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$Adegree,input$Agraph_layout,shapeVectorAssoc)})
+          Agraph<<-graph_from_edgelist(as.matrix(assocNetworkprune[,1:2]),directed = F)
+          updateSelectInput(session,"Aneighbornodes",choices = "")
         }
       }
     },error=function(e){
@@ -204,8 +211,12 @@ shinyServer(function(input, output,session) {
         {
           assocNetwork<<-custom.association(DiscreteData,input$assocType)
           assocNetworkprune<<- assocNetwork[which(assocNetwork[,3]>input$threshold),]
-          output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$degree,input$graph_layout)})
+          shapeVectorAssoc<<- rep('dot',length(unique(c(assocNetworkprune[,1],assocNetworkprune[,2]))))
+          updateSelectizeInput(session,'Avarselect',choices = unique(c(assocNetworkprune[,1],assocNetworkprune[,2])))
+          output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$Adegree,input$Agraph_layout,shapeVectorAssoc)})
           assocReset<<-2
+          updateSelectInput(session,"Aneighbornodes",choices = "")
+          Agraph<<-graph_from_edgelist(as.matrix(assocNetworkprune[,1:2]),directed = F)
         }
       },error=function(e){
         shinyalert(toString(e), type = "error")
@@ -219,7 +230,7 @@ shinyServer(function(input, output,session) {
         withProgress(message = "Validating Model", value = 0, {
           if(input$parallel==T)
           {
-            bn.validate<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,method = input$crossFunc,cluster = cl)
+            bn.validate<<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,method = input$crossFunc,cluster = cl)
             predError<<-c()
             for(n in nodeNames)
             {
@@ -232,7 +243,7 @@ shinyServer(function(input, output,session) {
           }
           else
           {
-            bn.validate<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,method = input$crossFunc)
+            bn.validate<<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,method = input$crossFunc)
             predError<<-c()
             for(n in nodeNames)
             {
@@ -335,10 +346,10 @@ shinyServer(function(input, output,session) {
         blacklistEdges<<-c()
         whitelistEdges<<-c()
         output$valLoss<<-renderText({0})
-        output$assocPlot<<-renderVisNetwork(NULL)
-        output$netPlot<<-renderVisNetwork(NULL)
-        output$parameterPlot<<-renderPlot(NULL)
-        output$distPlot<<-renderPlot(NULL)
+        output$assocPlot<<-renderVisNetwork({validate("Please build an association plot on the data")})
+        output$netPlot<<-renderVisNetwork({validate("Please do structure learning on the data")})
+        output$parameterPlot<<-renderPlot({validate("Please do structure learning on the data")})
+        output$distPlot<<-renderPlot({validate("Please do structure learning on the data and then derive inferences")})
         NetworkGraph <<- NULL
         assocNetwork<<-NULL
         predError<<-NULL
@@ -373,8 +384,10 @@ shinyServer(function(input, output,session) {
         updateSelectInput(session,'paramSelect',choices = "")
         communities<<-NULL
         updateSelectInput(session,"moduleSelection",choices = "")
+        updateSelectInput(session,"Aneighbornodes",choices = "")
         graph<<-NULL
         updateSelectInput(session,"neighbornodes",choices = "")
+        updateSelectInput(session,"Aneighbornodes",choices = "")
         updateSliderInput(session,"NumBar",min = 1, max = 2,value = 1)
         },error = function(e){
              shinyalert(c("Error in loading data: ",toString(e)), type = "error")
@@ -504,9 +517,6 @@ shinyServer(function(input, output,session) {
                                                                   "ellipse", "database", "text", "diamond"))
                updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
                updateSelectInput(session,'paramSelect',choices = nodeNames)
-               communities<<-custom.Modules(NetworkGraph,rep(1,length(NetworkGraph[,1])))
-               names(communities)<<-paste("Module",c(1:length(communities)),sep=" ")
-               updateSelectInput(session,"moduleSelection",choices = c("graph",names(communities)))
                graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
                updateSelectInput(session,"neighbornodes",choices = "")
                updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
@@ -599,9 +609,7 @@ shinyServer(function(input, output,session) {
                                                            "ellipse", "database", "text", "diamond"))
         updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
         updateSelectInput(session,'paramSelect',choices = nodeNames)
-        communities<<-custom.Modules(NetworkGraph,bn.hc.boot.pruned[,3])
-        names(communities)<<-paste("Module",c(1:length(communities)),sep=" ")
-        updateSelectInput(session,"moduleSelection",choices = c("graph",names(communities)))
+        updateSelectInput(session,"moduleSelection",choices = "graph")
         graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
         updateSelectInput(session,"neighbornodes",choices = "")
         updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
@@ -841,9 +849,7 @@ shinyServer(function(input, output,session) {
                                                            "ellipse", "database", "text", "diamond"))
         updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
         updateSelectInput(session,'paramSelect',choices = nodeNames)
-        communities<<-custom.Modules(NetworkGraph,rep(1,length(NetworkGraph[,1])))
-        names(communities)<<-paste("Module",c(1:length(communities)),sep=" ")
-        updateSelectInput(session,"moduleSelection",choices = c("graph",names(communities)))
+        updateSelectInput(session,"moduleSelection",choices = "graph")
         graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
         updateSelectInput(session,"neighbornodes",choices = "")
         updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
@@ -1143,18 +1149,19 @@ shinyServer(function(input, output,session) {
             selectedNodes<<-communities[[input$moduleSelection]]
             from<-c()
             to<-c()
-            for(i in 1:length(NetworkGraph[,1]))
+            for(i in 1:length(data.frame(directed.arcs(bn.hc.boot.average))[,1]))
             {
-              if(is.element(NetworkGraph[i,1],selectedNodes))
+              if(is.element(data.frame(directed.arcs(bn.hc.boot.average))[i,1],selectedNodes))
               {
                 from<-c(from,i)
               }
-              if(is.element(NetworkGraph[i,2],selectedNodes))
+              if(is.element(data.frame(directed.arcs(bn.hc.boot.average))[i,2],selectedNodes))
               {
                 to<-c(to,i)
               }
             }
-            pruneGraph<<-NetworkGraph[intersect(from,to),]
+            pruneGraph<<-data.frame(directed.arcs(bn.hc.boot.average))[intersect(from,to),]
+            NetworkGraph<<-pruneGraph
             shapeVector<<-rep('dot',length(communities[[input$moduleSelection]]))
             for(elem in 1:length(inserted))
             {
@@ -1253,6 +1260,40 @@ shinyServer(function(input, output,session) {
       })
     }
   })
+  observeEvent(input$Acurrent_node_id,{
+    if(assocReset==2)
+    {
+      tryCatch({
+        if(!is.null(input$Acurrent_node_id))
+        {
+          if(input$AdegreeN>1)
+          {
+            nlist<<-ego(Agraph,input$AdegreeN,nodes = input$Acurrent_node_id, mode = c("all", "out", "in"),mindist = 0)
+            nlistP<<-ego(Agraph,input$AdegreeN-1,nodes = input$Acurrent_node_id, mode = c("all", "out", "in"),mindist = 0)
+            diffList<<-setdiff(nlist[[1]]$name,nlistP[[1]]$name)
+            updateSelectInput(session,"Aneighbornodes",choices = diffList)
+          }
+          else
+          {
+            nlist<<-ego(Agraph,input$AdegreeN,nodes = input$Acurrent_node_id, mode = c("all", "out", "in"),mindist = 0)
+            updateSelectInput(session,"Aneighbornodes",choices = setdiff(nlist[[1]]$name,input$Acurrent_node_id))
+          }
+
+        }
+      },error=function(e){
+        shinyalert(toString(e), type = "error")
+      })
+    }
+
+  })
+  observeEvent(input$Bcommunities,{
+    if(reset==2)
+    {
+      communities<<-custom.Modules(NetworkGraph,rep(1,length(NetworkGraph[,1])))
+      names(communities)<<-paste("Module",c(1:length(communities)),sep=" ")
+      updateSelectInput(session,"moduleSelection",choices = c("graph",names(communities)))
+    }
+  })
   observeEvent(input$degree,{
     if(reset==2)
     {
@@ -1277,10 +1318,12 @@ shinyServer(function(input, output,session) {
 
       })
     }
+  })
+  observeEvent(input$Adegree,{
     if(assocReset==2)
     {
-      assocNetworkprune<<- assocNetwork[which(assocNetwork[,3]>input$threshold),]
-      output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$degree,input$graph_layout)})
+      output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$Adegree,input$Agraph_layout,shapeVectorAssoc)})
+      updateSelectInput(session,"Aneighbornodes",choices = "")
     }
   })
   observeEvent(input$graph_layout,{
@@ -1307,10 +1350,12 @@ shinyServer(function(input, output,session) {
 
       })
     }
+  })
+  observeEvent(input$Agraph_layout,{
     if(assocReset==2)
     {
-      assocNetworkprune<<- assocNetwork[which(assocNetwork[,3]>input$threshold),]
-      output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$degree,input$graph_layout)})
+      output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$Adegree,input$Agraph_layout,shapeVectorAssoc)})
+      updateSelectInput(session,"Aneighbornodes",choices = "")
     }
   })
   observeEvent(input$graphBtn,{
@@ -1343,7 +1388,8 @@ shinyServer(function(input, output,session) {
     {
       tryCatch({
         assocNetworkprune<<- assocNetwork[which(assocNetwork[,3]>input$threshold),]
-        output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$degree,input$graph_layout)})
+        output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$Adegree,input$Agraph_layout,shapeVectorAssoc)})
+        updateSelectInput(session,"Aneighbornodes",choices = "")
       },error = function(e){
         shinyalert(toString(e), type = "error")
 
@@ -1376,7 +1422,23 @@ shinyServer(function(input, output,session) {
       })
     }
   })
-
+  observeEvent(input$Agroup,{
+    if(assocReset==2)
+    {
+      shapeVectorAssoc[which(unique(c(assocNetworkprune[,1],assocNetworkprune[,2])) %in% input$Avarselect)] <<- input$Avarshape
+      output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$Adegree,input$Agraph_layout,shapeVectorAssoc)})
+      updateSelectInput(session,"Aneighbornodes",choices = "")
+    }
+  })
+  observeEvent(input$Agroup2,{
+    if(assocReset==2)
+    {
+      shapeVectorAssoc<<-shapeVectorAssoc[1:length(unique(c(assocNetworkprune[,1],assocNetworkprune[,2])))]
+      shapeVectorAssoc[eval(parse(text = input$Avarselectvector))] <<- input$Avarshape2
+      output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$Adegree,input$Agraph_layout,shapeVectorAssoc)})
+      updateSelectInput(session,"Aneighbornodes",choices = "")
+    }
+  })
   observeEvent(input$group2,{
     if(reset==2)
     {

@@ -1,4 +1,4 @@
-graph.custom.assoc <- function(assocNetwork,nodeNames,Ndegree,Tlayout)
+graph.custom.assoc <- function(assocNetwork,nodeNames,Ndegree,Tlayout,shapeVector)
 {
   tryCatch({
     nodes <- data.frame(name = nodeNames)
@@ -6,7 +6,8 @@ graph.custom.assoc <- function(assocNetwork,nodeNames,Ndegree,Tlayout)
     nodes$group <- "not in use"
     visNodes<- data.frame(id = nodeNames,
                           label = nodeNames,
-                          group = nodes$group)
+                          group = nodes$group,
+                          shape = shapeVector)
     visEdges<- data.frame(from = assocNetwork[,1],
                           to = assocNetwork[,2],
                           title = assocNetwork[,3])
@@ -20,7 +21,10 @@ graph.custom.assoc <- function(assocNetwork,nodeNames,Ndegree,Tlayout)
              visInteraction(navigationButtons = TRUE)%>%
              visIgraphLayout(layout = Tlayout)%>%
              visExport(type = "png", name = "association network",
-                       float = "right", label = "Save network", background = "white", style= "")
+                       float = "right", label = "Save network", background = "white", style= "")%>%
+             visEvents(select = "function(nodes) {
+                       Shiny.onInputChange('Acurrent_node_id', nodes.nodes);
+                       ;}")
            )
   },error=function(e){
     print(e)
