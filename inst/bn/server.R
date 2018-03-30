@@ -42,32 +42,12 @@ shinyServer(function(input, output,session) {
   sanity<-1
   confidence<-1
   check<-1
-  #Initialization
   reset<-1
   assocReset<-1
-  blacklistEdges<-c()
-  whitelistEdges<-c()
-  NetworkGraph <- NULL
-  assocNetwork<-NULL
-  predError<-NULL
-  for(elem in 1:length(inserted))
-  {
-    removeUI(
-      ## pass in appropriate div id
-      selector = paste0('#', inserted[elem])
-    )
-
-  }
-  inserted <- c()
-  for(elem2 in 1:length(insertedV))
-  {
-    removeUI(
-      ## pass in appropriate div id
-      selector = paste0('#', insertedV[elem2])
-    )
-
-  }
+  #Initialization
+  rvs <<- reactiveValues(evidence = list(),values = list(),evidenceObserve = list(),valueObserve = list())
   insertedV <- c()
+  inserted <- c()
   rvs$evidence <- c()
   rvs$value <- c()
   rvs$evidenceObserve <- c()
@@ -78,6 +58,11 @@ shinyServer(function(input, output,session) {
   shapeVector<- c()
   communities<-NULL
   graph<-NULL
+  blacklistEdges<-c()
+  whitelistEdges<-c()
+  NetworkGraph <- NULL
+  assocNetwork<-NULL
+  predError<-NULL
   updateSelectInput(session,'event',choices = "")
   updateSelectizeInput(session,'varselect',choices = "")
   updateSelectizeInput(session,'Avarselect',choices = "")
