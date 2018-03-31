@@ -71,7 +71,8 @@ dashboardPage(skin = "blue",
                                                     href = "https://github.com/SAFE-ICU/ShinyBN"),
                                           menuItem(text = "",
                                                     icon = shiny::icon("info"),
-                                                  tabName = "About"))
+                                                  tabName = "About")
+                                          )
                                ),
               dashboardBody(id ="dashboardBody",
                             # Include shinyalert Ui
@@ -121,7 +122,7 @@ dashboardPage(skin = "blue",
                                                                  tabPanel("Data",
                                                                           div(id = "data",
                                                                               shinyWidgets::radioGroupButtons(inputId = "dataOptions",
-                                                                                                              choices = c("Upload","Pre-process","Explore"),
+                                                                                                              choices = c("Upload","Pre-process"),
                                                                                                               selected = "Upload",
                                                                                                               justified = FALSE
                                                                                                               ),
@@ -151,13 +152,7 @@ dashboardPage(skin = "blue",
                                                                                     shiny::fluidRow(column(6,shiny::selectInput('dtype',label = NULL,c("interval","quantile","frequency","cluster","hybrid"))),column(6,actionButton('discretize',"Discretize")))
                                                                                     #h5("subset columns in data using the tables")
 
-                                                                              )),
-                                                                              shiny::conditionalPanel(
-                                                                                condition = "input.dataOptions=='Explore'",
-                                                                                h5("Association Network"),
-                                                                                shiny::fluidRow(column(6,shiny::selectInput('assocType',label = NULL,c("cramer's V","Cohen's D","Goodman Kruskal lambda","Tschuprow's T"))),column(6,actionButton('association',"Build")))
-                                                                                #h5("subset association networks using the tables")
-                                                                              )
+                                                                              ))
                                                                               )
                                                                           ),
                                                                  tabPanel("Learn",
@@ -265,75 +260,6 @@ dashboardPage(skin = "blue",
                                                                             downloadButton('saveBtn','Save')
                                                                           ))
                                                                  ),
-                                                                 tabPanel("Graph",
-                                                                          #status = "primary",
-                                                                          shinyWidgets::radioGroupButtons(inputId = "graphOptions",
-                                                                                                          choices = c("Association","Bayesian"),
-                                                                                                          selected = "Bayesian",
-                                                                                                          justified = FALSE
-                                                                                                          ),
-                                                                          shiny::conditionalPanel(
-                                                                            condition = "input.graphOptions=='Association'",
-                                                                            div(id="Agraph",
-                                                                                h5('group of variables:'),
-                                                                                shiny::fluidRow(shiny::column(6,selectizeInput('Avarselect',label = "Variables","",multiple = T)),
-                                                                                                shiny::column(6,selectInput('Avarshape',label = "Shape",""))
-                                                                                ),
-                                                                                actionButton('Agroup','Group Variables'),
-                                                                                hr(),
-                                                                                h5('vector of index:'),
-                                                                                shiny::fluidRow(shiny::column(6,textInput('Avarselectvector',label = "Variables")),
-                                                                                                shiny::column(6,selectInput('Avarshape2',label = "Shape",""))
-                                                                                ),
-                                                                                actionButton('Agroup2','Group Variables'),
-                                                                                div(id = "AgraphChain",
-                                                                                    sliderInput("Adegree", label = "Visible Neighbors chain",
-                                                                                                min = 1, max = 10,
-                                                                                                value = 2
-                                                                                    )),
-                                                                                div(id = "ANChain",
-                                                                                    sliderInput("AdegreeN", label = "Nth Neighbors",
-                                                                                                min = 1, max = 10,
-                                                                                                value = 2
-                                                                                    )),
-                                                                                hr(),
-                                                                                div(id="AgraphLayout",
-                                                                                    h4("Select Graph Layout"),
-                                                                                    shiny::selectInput('Agraph_layout',label = NULL,"layout_nicely"))
-                                                                            )
-                                                                          ),
-                                                                          shiny::conditionalPanel(
-                                                                            condition = "input.graphOptions=='Bayesian'",
-                                                                            div(id="Bgraph",
-                                                                                h5('group of variables:'),
-                                                                                shiny::fluidRow(shiny::column(6,selectizeInput('varselect',label = "Variables","",multiple = T)),
-                                                                                                shiny::column(6,selectInput('varshape',label = "Shape",""))
-                                                                                ),
-                                                                                actionButton('group','Group Variables'),
-                                                                                hr(),
-                                                                                h5('vector of index:'),
-                                                                                shiny::fluidRow(shiny::column(6,textInput('varselectvector',label = "Variables")),
-                                                                                                shiny::column(6,selectInput('varshape2',label = "Shape",""))
-                                                                                ),
-                                                                                actionButton('group2','Group Variables'),
-                                                                                div(id = "graphChain",
-                                                                                    sliderInput("degree", label = "Visible Neighbors chain",
-                                                                                                min = 1, max = 10,
-                                                                                                value = 2
-                                                                                    )),
-                                                                                div(id = "NChain",
-                                                                                    sliderInput("degreeN", label = "Nth Neighbors",
-                                                                                                min = 1, max = 10,
-                                                                                                value = 2
-                                                                                    )),
-                                                                                hr(),
-                                                                                div(id="graphLayout",
-                                                                                    h4("Select Graph Layout"),
-                                                                                    shiny::selectInput('graph_layout',label = NULL,"layout_nicely")),
-                                                                                actionButton("Bcommunities","Build Modules")
-                                                                            )
-                                                                          )
-                                                                          ),
                                                                  tabPanel("Inference",
                                                                           status = "primary",
                                                                           shiny::h4("Display inference plot"),
@@ -373,8 +299,55 @@ dashboardPage(skin = "blue",
                                                                  tabPanel("Tables",
                                                                           shiny::fluidRow(shiny::column(4,selectInput("tableName",label = NULL,"")),shiny::column(1,downloadButton("downloadData", "Download"))),
                                                                           withSpinner(DT::dataTableOutput("tableOut")),color = "#2E86C1"),
+                                                                 tabPanel('Background Frequency',
+                                                                          selectInput("freqSelect",label = "Variable",""),
+                                                                          withSpinner(plotOutput("freqPlot",height = "600px")),color="#2E86C1"),
                                                                  tabPanel("Association Graph",
-                                                                          shiny::fluidRow(shiny::column(4,sliderInput("threshold", label = "Association Threshold",min = 0, max = 1,value = 0.75)),shiny::column(5,shiny::selectInput("Aneighbornodes",label = "Nth Neighbor List",choices = ""))),
+                                                                          shiny::fluidRow(
+                                                                            shiny::column(3,
+                                                                                          dropdownButton(
+                                                                                            h5("Association Network"),
+                                                                                            shiny::fluidRow(column(6,shiny::selectInput('assocType',label = NULL,c("cramer's V","Cohen's D","Goodman Kruskal lambda","Tschuprow's T"))),column(6,actionButton('association',"Build"))),
+                                                                                            sliderInput("threshold", label = "Association Threshold",min = 0, max = 1,value = 0.75),
+                                                                                            label = "Build",circle = F, status = "primary", icon = icon("glyphicon glyphicon-wrench",lib = "glyphicon"), width = "500px",tooltip = tooltipOptions(title = "Build association graph")
+                                                                                            )
+                                                                                          ),
+                                                                            shiny::column(3,
+                                                                                          dropdownButton(
+                                                                                            div(id="Agraph",
+                                                                                                h5('group of variables:'),
+                                                                                                shiny::fluidRow(shiny::column(6,selectizeInput('Avarselect',label = "Variables","",multiple = T)),
+                                                                                                                shiny::column(6,selectInput('Avarshape',label = "Shape",""))
+                                                                                                ),
+                                                                                                actionButton('Agroup','Group Variables'),
+                                                                                                hr(),
+                                                                                                h5('vector of index:'),
+                                                                                                shiny::fluidRow(shiny::column(6,textInput('Avarselectvector',label = "Variables")),
+                                                                                                                shiny::column(6,selectInput('Avarshape2',label = "Shape",""))
+                                                                                                ),
+                                                                                                actionButton('Agroup2','Group Variables'),
+                                                                                                div(id = "AgraphChain",
+                                                                                                    sliderInput("Adegree", label = "Visible Neighbors chain",
+                                                                                                                min = 1, max = 10,
+                                                                                                                value = 2
+                                                                                                    )),
+                                                                                                div(id = "ANChain",
+                                                                                                    sliderInput("AdegreeN", label = "Nth Neighbors",
+                                                                                                                min = 1, max = 10,
+                                                                                                                value = 2
+                                                                                                    )),
+                                                                                                hr(),
+                                                                                                div(id="AgraphLayout",
+                                                                                                    h4("Select Graph Layout"),
+                                                                                                    shiny::selectInput('Agraph_layout',label = NULL,"layout_nicely"))
+                                                                                            ),
+                                                                                            label = "Settings",circle = F, status = "primary", icon = icon("gear"), width = "500px",tooltip = tooltipOptions(title = "graph settings")
+                                                                                            )
+                                                                                          ),
+                                                                            shiny::column(6,
+                                                                                          shiny::selectInput("Aneighbornodes",label = "Nth Neighbor List",choices = "")
+                                                                                          )
+                                                                            ),
                                                                           div(style = "position:absolute;right:1em;margin-right:10px;",
                                                                               bsButton('graphBtn2', '', icon = icon("refresh"),style = "default")
                                                                           ),
@@ -384,7 +357,45 @@ dashboardPage(skin = "blue",
                                                                           withSpinner(visNetworkOutput("assocPlot",height = "600px"), color= "#2E86C1")
                                                                  ),
                                                                  tabPanel("Network Graph",
-                                                                          shiny::fluidRow(shiny::column(9,shiny::selectInput("neighbornodes",label = "Nth Neighbor List",choices = "")),shiny::column(3,shiny::selectInput("moduleSelection",label = "Module","graph"))),
+                                                                          shiny::fluidRow(
+                                                                            shiny::column(3,
+                                                                                          dropdownButton(
+                                                                                            div(id="Bgraph",
+                                                                                                h5('group of variables:'),
+                                                                                                shiny::fluidRow(shiny::column(6,selectizeInput('varselect',label = "Variables","",multiple = T)),
+                                                                                                                shiny::column(6,selectInput('varshape',label = "Shape",""))
+                                                                                                ),
+                                                                                                actionButton('group','Group Variables'),
+                                                                                                hr(),
+                                                                                                h5('vector of index:'),
+                                                                                                shiny::fluidRow(shiny::column(6,textInput('varselectvector',label = "Variables")),
+                                                                                                                shiny::column(6,selectInput('varshape2',label = "Shape",""))
+                                                                                                ),
+                                                                                                actionButton('group2','Group Variables'),
+                                                                                                div(id = "graphChain",
+                                                                                                    sliderInput("degree", label = "Visible Neighbors chain",
+                                                                                                                min = 1, max = 10,
+                                                                                                                value = 2
+                                                                                                    )),
+                                                                                                div(id = "NChain",
+                                                                                                    sliderInput("degreeN", label = "Nth Neighbors",
+                                                                                                                min = 1, max = 10,
+                                                                                                                value = 2
+                                                                                                    )),
+                                                                                                hr(),
+                                                                                                div(id="graphLayout",
+                                                                                                    h4("Select Graph Layout"),
+                                                                                                    shiny::selectInput('graph_layout',label = NULL,"layout_nicely"))
+                                                                                                ),
+                                                                                            label = "Settings",circle = F, status = "primary", icon = icon("gear"), width = "500px",tooltip = tooltipOptions(title = "graph settings")
+                                                                                            )
+                                                                                          ),
+                                                                            shiny::column(3,
+                                                                                          shiny::selectInput("neighbornodes",label = "Nth Neighbor List",choices = "")),
+                                                                            shiny::column(3,
+                                                                                          shiny::selectInput("moduleSelection",label = "Module","graph")),
+                                                                            shiny::column(3,actionButton("Bcommunities","Build Modules"))
+                                                                            ),
                                                                           div(style = "position:absolute;right:1em;margin-right:10px;",
                                                                               bsButton('graphBtn', '', icon = icon("refresh"),style = "default")
                                                                           ),
@@ -396,7 +407,7 @@ dashboardPage(skin = "blue",
                                                                           sliderInput("NumBar", label = "No. of bars",min = 0, max = 1,value = 1,step=1),
                                                                           actionButton("sortPlot","Sort X-axis"),
                                                                           withSpinner(plotOutput("distPlot",height = "600px")), color="#2E86C1"),
-                                                                 tabPanel('Prevalence',
+                                                                 tabPanel('CP distribution',
                                                                           selectInput("paramSelect",label = "Variable",""),
                                                                           withSpinner(plotOutput("parameterPlot",height = "600px")),color="#2E86C1")
                                                                  )

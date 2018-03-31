@@ -37,7 +37,7 @@ shinyServer(function(input, output,session) {
   options(warn=-1)
   options("getSymbols.warning4.0"=FALSE)
   #Structure Initialization
-  DiscreteData <- get(load('a.RData'))
+  DiscreteData <- alarm
   #Sanity check
   sanity<-1
   confidence<-1
@@ -63,6 +63,7 @@ shinyServer(function(input, output,session) {
   NetworkGraph <- NULL
   assocNetwork<-NULL
   predError<-NULL
+  updateSelectInput(session,"freqSelect",choices = names(DiscreteData))
   updateSelectInput(session,'event',choices = "")
   updateSelectizeInput(session,'varselect',choices = "")
   updateSelectizeInput(session,'Avarselect',choices = "")
@@ -84,6 +85,7 @@ shinyServer(function(input, output,session) {
   output$netPlot<-renderVisNetwork({validate("Please do structure learning on the data")})
   output$parameterPlot<-renderPlot({validate("Please do structure learning on the data")})
   output$distPlot<-renderPlot({validate("Please do structure learning on the data and then derive inferences")})
+  output$freqPlot<-renderPlot({validate("Please preprocess data to build plot")})
   })
   #observe events
   observeEvent(input$tableName,{
@@ -374,6 +376,7 @@ shinyServer(function(input, output,session) {
         updateSelectInput(session,"neighbornodes",choices = "")
         updateSelectInput(session,"Aneighbornodes",choices = "")
         updateSliderInput(session,"NumBar",min = 1, max = 2,value = 1)
+        updateSelectInput(session,"freqSelect",choices = names(DiscreteData))
         },error = function(e){
              shinyalert(c("Error in loading data: ",toString(e)), type = "error")
            })
@@ -423,7 +426,24 @@ shinyServer(function(input, output,session) {
     })
 
   })
-
+  observeEvent(input$freqSelect,{
+    tryCatch({
+      val = table(DiscreteData[,input$freqSelect])/nrow(DiscreteData)
+      output$freqPlot = renderPlot({par(mar=c(5,3,3,3))
+        par(oma=c(5,3,3,3))
+        barx <<-barplot(val,
+                        col = "lightblue",
+                        main = paste("Background frequency of ",input$freqSelect),
+                        border = NA,
+                        xlab = "Factors",
+                        ylab = "Frequency",
+                        ylim = c(0,1),
+                        las=2)
+        text(x = barx,y = round(val,digits = 4),label = round(val,digits = 4), pos = 3, cex = 0.8, col = "black")})
+    },error=function(e){
+      #print(e)
+    })
+  })
 
   # Get the data selection from user
   observeEvent(input$structFile,{# Get the uploaded file from user
