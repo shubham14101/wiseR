@@ -300,6 +300,11 @@ dashboardPage(skin = "blue",
                                                                           withSpinner(DT::dataTableOutput("tableOut")),color = "#2E86C1"),
                                                                  tabPanel('Background Frequency',
                                                                           selectInput("freqSelect",label = "Variable",""),
+                                                                          shinyWidgets::radioGroupButtons(inputId = "datataboption",
+                                                                                                          choices = c("Data","Distribution"),
+                                                                                                          selected = "Data",
+                                                                                                          justified = FALSE
+                                                                          ),
                                                                           withSpinner(plotOutput("freqPlot",height = "600px")),color="#2E86C1"),
                                                                  tabPanel("Association Network",
                                                                           shiny::fluidRow(
@@ -318,8 +323,8 @@ dashboardPage(skin = "blue",
                                                                                                 shiny::fluidRow(shiny::column(6,selectInput('Avarselect',label = "Variables","",multiple = T)),
                                                                                                                 shiny::column(3,selectInput('Avarshape',label = "Shape","")),
                                                                                                                 shiny::column(3,actionButton('Agroup','Group', style="margin-top:25px;"))
-                                                                    
-                                                                                                                
+
+
                                                                                                 ),
                                                                                                 hr(),
                                                                                                 h4('Vector of indices'),
@@ -338,7 +343,7 @@ dashboardPage(skin = "blue",
                                                                                                                                                 min = 1, max = 10,
                                                                                                                                                 value = 2
                                                                                                                                     )))
-                                                                                                  
+
                                                                                                 ),
                                                                                                 hr(),
                                                                                                 div(id="AgraphLayout",
@@ -352,9 +357,9 @@ dashboardPage(skin = "blue",
                                                                             shiny::column(3,
                                                                                           div(style = "position:absolute;right:0.1em;",
                                                                                           h5("N-distance neighors:"))),
-                                                                            
+
                                                                             shiny::column(4,
-                                                                                          
+
                                                                                           shiny::selectInput("Aneighbornodes",label = NULL,choices = "")
                                                                                           )
                                                                           ),
@@ -372,9 +377,9 @@ dashboardPage(skin = "blue",
                                                                                                                 shiny::fluidRow(shiny::column(6,selectizeInput('varselect',label = "Variables","",multiple = T)),
                                                                                                                                 shiny::column(3,selectInput('varshape',label = "Shape","")),
                                                                                                                                 shiny::column(3, actionButton('group','Group', style="margin-top:25px;"))
-                                                                                                                                
+
                                                                                                                 ),
-                                                                                                                
+
                                                                                                                 hr(),
                                                                                                                 h4('Vector of index:'),
                                                                                                                 shiny::fluidRow(shiny::column(6,textInput('varselectvector',label = "Variables")),
@@ -391,7 +396,7 @@ dashboardPage(skin = "blue",
                                                                                                                                                                                      min = 1, max = 10,
                                                                                                                                                                                      value = 2
                                                                                                                                                                          )))
-                                                                                                                                
+
                                                                                                                 ),
                                                                                                                 hr(),
                                                                                                                 div(id="graphLayout",
@@ -406,14 +411,19 @@ dashboardPage(skin = "blue",
                                                                                                           shiny::selectInput("neighbornodes",label = "Nth Neighbor List",choices = "")),
                                                                                             shiny::column(3,
                                                                                                           shiny::selectInput("moduleSelection",label = "Module","graph")),
-                                                                                            shiny::column(3,actionButton("Bcommunities","Build Modules"))
+                                                                                            shiny::column(3,actionButton("Bcommunities","Build Modules")),
+                                                                                            shinyWidgets::radioGroupButtons(inputId = "bayesianOption",
+                                                                                                                            choices = c("Graph","Plot"),
+                                                                                                                            selected = "Graph",
+                                                                                                                            justified = FALSE
+                                                                                                                            )
                                                                                           )
                                                                                           ),
                                                                             shiny::column(1, div(style = "position:absolute;right:1em;margin-right:1px;",
                                                                                                  bsButton('graphBtn', 'Inference', icon = icon("graph"),style = "primary")
                                                                             ))
                                                                           ),
-                                        
+
                                                                           withSpinner(visNetworkOutput("netPlot",height = "550px"), color= "#2E86C1")
                                                                          ),
                                                                  tabPanel("Inference Plot",
