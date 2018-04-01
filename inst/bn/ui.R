@@ -313,6 +313,7 @@ dashboardPage(skin = "blue",
                                                                                             h5("Association Network"),
                                                                                             shiny::fluidRow(column(6,shiny::selectInput('assocType',label = NULL,c("cramer's V","Cohen's D","Goodman Kruskal lambda","Tschuprow's T"))),column(6,actionButton('association',"Build"))),
                                                                                             sliderInput("threshold", label = "Association Threshold",min = 0, max = 1,value = 0.75),
+                                                                                            
                                                                                             label = "Build",circle = F, status = "primary", icon = icon("glyphicon glyphicon-wrench",lib = "glyphicon"), width = "300px",tooltip = tooltipOptions(title = "Build association graph")
                                                                                             )
                                                                                           ),
