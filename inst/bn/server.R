@@ -68,7 +68,7 @@ shinyServer(function(input, output,session) {
   updateSelectizeInput(session,'varselect',choices = "")
   updateSelectizeInput(session,'Avarselect',choices = "")
   updateSelectInput(session,'paramSelect',choices = "")
-  updateSelectInput(session,"tableName",choices = c("Data","Association Graph","Bayesian Graph","Cross Validation Results","blacklist edges","whitelist edges"))
+  updateSelectInput(session,"tableName",choices = c("Association Graph","Bayesian Graph","Cross Validation Results","blacklist edges","whitelist edges"))
   updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
   updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
   updateSelectInput(session,'Avarshape',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
@@ -86,15 +86,12 @@ shinyServer(function(input, output,session) {
   output$parameterPlot<-renderPlot({validate("Please do structure learning on the data")})
   output$distPlot<-renderPlot({validate("Please do structure learning on the data and then derive inferences")})
   output$freqPlot<-renderPlot({validate("Please preprocess data to build plot")})
+  output$datasetTable<-DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
   })
   #observe events
   observeEvent(input$tableName,{
     tryCatch({
-      if(input$tableName=="Data")
-      {
-        output$tableOut<- DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
-      }
-      else if(input$tableName == "Association Graph")
+      if(input$tableName == "Association Graph")
       {
         output$tableOut<- DT::renderDataTable({assocNetwork},options = list(scrollX = TRUE,pageLength = 10))
       }
@@ -248,16 +245,20 @@ shinyServer(function(input, output,session) {
     })
 
   })
+  output$downloadDataset<-downloadHandler(
+    filename = function(){
+      paste('dataset',".csv",sep = "")
+    },
+    content = function(filename){
+      write.csv(DiscreteData,file=filename,row.names = F)
+    }
+  )
   output$downloadData <- downloadHandler(
     filename = function() {
       paste(input$tableName, ".csv", sep = "")
     },
     content = function(file) {
-      if(input$tableName=="Data")
-      {
-        write.csv(DiscreteData,file,row.names = F)
-      }
-      else if(input$tableName == "Association Graph")
+      if(input$tableName == "Association Graph")
       {
         write.csv(assocNetwork, file,row.names = F)
       }
@@ -337,6 +338,7 @@ shinyServer(function(input, output,session) {
         output$netPlot<<-renderVisNetwork({validate("Please do structure learning on the data")})
         output$parameterPlot<<-renderPlot({validate("Please do structure learning on the data")})
         output$distPlot<<-renderPlot({validate("Please do structure learning on the data and then derive inferences")})
+        output$datasetTable<-DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
         NetworkGraph <<- NULL
         assocNetwork<<-NULL
         predError<<-NULL
@@ -398,6 +400,7 @@ shinyServer(function(input, output,session) {
         tempDiscreteData[,which(lapply(tempDiscreteData,nlevels)<2)] = NULL
         tempDiscreteData <- droplevels(tempDiscreteData)
         DiscreteData <<-tempDiscreteData
+        output$datasetTable<-DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
       })},error = function(e){
         type <- toString(input$dtype)
         messageString <- paste(c("Error is discretising using method ", type, ". Try using other method or upload pre-discretised data."), collapse = '')
@@ -417,6 +420,7 @@ shinyServer(function(input, output,session) {
         }
       }
       DiscreteData <<- missRanger(DiscreteData,maxiter = 1,num.tree = 100)
+      output$datasetTable<-DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
       check.discrete(DiscreteData)
       check.NA(DiscreteData)
     })}, error = function(e){
@@ -1152,6 +1156,7 @@ shinyServer(function(input, output,session) {
           if(input$moduleSelection!='graph')
           {
             selectedNodes<<-communities[[input$moduleSelection]]
+            print(selectedNodes)
             from<-c()
             to<-c()
             for(i in 1:length(data.frame(directed.arcs(bn.hc.boot.average))[,1]))
