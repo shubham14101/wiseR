@@ -219,7 +219,7 @@ dashboardPage(skin = "blue",
                                                                             shiny::column(1,bsButton('graphBtn2', 'Refresh', icon = icon("refresh"),style = "primary")),
                                                                             shiny::column(3,
                                                                                           div(style = "position:absolute;right:0.1em;",
-                                                                                          h5("N-distance neighors:"))),
+                                                                                          h5("N-distance neighors of selected node in the network:"))),
 
                                                                             shiny::column(4,
 
@@ -367,7 +367,7 @@ dashboardPage(skin = "blue",
 
                                                                                               shiny::column(2,
                                                                                                             div(
-                                                                                                                h5("Nth Neigbors of selected node:"))),
+                                                                                                                h5("Nth Neigbors of selected node in the network:"))),
 
                                                                                               shiny::column(3,style="padding-right:0px",
                                                                                                             shiny::selectInput("neighbornodes",label = NULL,choices = "")),
