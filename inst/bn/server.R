@@ -83,12 +83,20 @@ shinyServer(function(input, output,session) {
   updateSelectInput(session,"Aneighbornodes",choices = "")
   updateSliderInput(session,"NumBar",min = 1, max = 2,value = 1)
   output$valLoss<-renderText({0})
+<<<<<<< HEAD
   output$netScore<-renderText({0})
   output$assocPlot<-renderVisNetwork({validate("Please build an association plot on the data")})
   output$netPlot<-renderVisNetwork({validate("Please do structure learning on the data")})
   output$parameterPlot<-renderPlot({validate("Please do structure learning on the data")})
   output$distPlot<-renderPlot({validate("Please do structure learning on the data and then derive inferences")})
   output$freqPlot<-renderPlot({validate("Please preprocess data to build plot")})
+=======
+  output$assocPlot<-renderVisNetwork({validate("Please build an association plot on the data using 'Build' functionality")})
+  output$netPlot<-renderVisNetwork({validate("Please do structure learning on the data using 'Learn' functionality")})
+  output$parameterPlot<-renderPlot({validate("Please do structure learning on the data using 'Learn' functionality")})
+  output$distPlot<-renderPlot({validate("Please do structure learning on the data using 'Learn' functionality and then derive inferences using 'Inference' functionality")})
+  output$freqPlot<-renderPlot({validate("Please preprocess data using 'Process' functionality to build plot")})
+>>>>>>> 1fafe9b764e2a7af103680a160f74b88936f4a46
   output$datasetTable<-DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
   })
   #observe events

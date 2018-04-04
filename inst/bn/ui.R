@@ -146,6 +146,7 @@ dashboardPage(skin = "blue",
                                                                                     shiny::fluidRow(column(6,shiny::selectInput('dtype',label = NULL,c("interval","quantile","frequency","cluster","hybrid"))),column(6,actionButton('discretize',"Discretize")))
                                                                                     #h5("subset columns in data using the tables")
 
+<<<<<<< HEAD
                                                                                 ),
                                                                                 hr(),
                                                                                 div(id="dataTranspose",
@@ -154,6 +155,8 @@ dashboardPage(skin = "blue",
                                                                                 div(id="dataDelete",
                                                                                     shiny::h4("Delete variables"),
                                                                                     shiny::fluidRow(shiny::column(6,selectInput('delSelect',label = NULL,"",multiple = T)),shiny::column(3,actionButton('delete','Delete')),shiny::column(3,actionButton('reset','Reset')))
+=======
+>>>>>>> 1fafe9b764e2a7af103680a160f74b88936f4a46
                                                                                 ),
                                                                                 label = "Process",circle = F, status = "primary", icon = icon("edit"), width = "500px",tooltip = tooltipOptions(title = "preprocess data")
                                                                               )),
@@ -227,7 +230,7 @@ dashboardPage(skin = "blue",
                                                                             shiny::column(1,bsButton('graphBtn2', 'Refresh', icon = icon("refresh"),style = "primary")),
                                                                             shiny::column(3,
                                                                                           div(style = "position:absolute;right:0.1em;",
-                                                                                          h5("N-distance neighors:"))),
+                                                                                          h5("N-distance neighors of selected node in the network:"))),
 
                                                                             shiny::column(4,
 
@@ -321,6 +324,17 @@ dashboardPage(skin = "blue",
                                                                                                          min = 0, max = 1,
                                                                                                          value = 0.5))
                                                                                     ),
+<<<<<<< HEAD
+=======
+
+
+                                                                                    hr(),
+
+                                                                                    h5("Parameter Learning Type"),
+                                                                                    selectizeInput("paramMethod2",label = NULL,choices = c("Maximum Likelihood parameter estimation" = "mle","Bayesian parameter estimation" = "bayes")),
+                                                                                    h5("Inject Expert Knowledge by Forcing/Prohibiting Edges"),
+                                                                                    shiny::fluidRow(shiny::column(6,selectInput("listType",label = NULL,choices = c("Blacklist","Whitelist"))),shiny::column(6,shiny::fileInput('listFile',label = NULL,accept = c('.csv')))),
+>>>>>>> 1fafe9b764e2a7af103680a160f74b88936f4a46
                                                                                     actionButton('learnBtn', 'Bootstrap'),
                                                                                     actionButton('learnSBtn','Direct'),
                                                                                     hr(),
@@ -362,9 +376,16 @@ dashboardPage(skin = "blue",
                                                                                 shiny::selectInput("event",
                                                                                                    label = NULL,
                                                                                                    ""),
+<<<<<<< HEAD
                                                                                 label = "Inference",circle = F, status = "primary", icon = icon("bar-chart-o"), width = "300px",tooltip = tooltipOptions(title = "Learn Inferences")
                                                                               ))
                                                                               ),
+=======
+                                                                                label = "Inference",circle = F, status = "primary", icon = icon("bar-chart-o"), width = "400px",tooltip = tooltipOptions(title = "Learn Inferences")
+                                                                              ))),
+                                                                            #hr(),
+
+>>>>>>> 1fafe9b764e2a7af103680a160f74b88936f4a46
                                                                             shiny::conditionalPanel(
                                                                               "input.bayesianOption=='Graph'",
                                                                               shiny::column(11,
@@ -372,7 +393,11 @@ dashboardPage(skin = "blue",
 
                                                                                               shiny::column(2,
                                                                                                             div(
+<<<<<<< HEAD
                                                                                                                 h5("Nth Neigbors:"))),
+=======
+                                                                                                                h5("Nth Neigbors of selected node in the network:"))),
+>>>>>>> 1fafe9b764e2a7af103680a160f74b88936f4a46
 
                                                                                               shiny::column(3,style="padding-right:0px",
                                                                                                             shiny::selectInput("neighbornodes",label = NULL,choices = "")),
@@ -381,12 +406,18 @@ dashboardPage(skin = "blue",
                                                                                                                 h5("Modules:"))),
                                                                                               shiny::column(2,style="padding-right:0px",
                                                                                                             shiny::selectInput("moduleSelection",label = NULL,"graph")),
+<<<<<<< HEAD
                                                                                               shiny::column(1,style="margin-right:20px",dropdownButton(
                                                                                                 shiny::fluidRow(shiny::column(6,selectInput('moduleAlgo',label = NULL,choices = c("ward.D","ward.D2", "single", "complete", "average", "mcquitty", "median","centroid"))),shiny::column(1,bsButton("Bcommunities","Build Modules", style="primary"))),
                                                                                                 label = "Modules",circle = F, status = "primary", width = "300px",tooltip = tooltipOptions(title = "Build modules in the graph")
                                                                                               )),
+=======
+                                                                                              shiny::column(1,bsButton("Bcommunities","Build Modules", style="primary"), style="margin-right:20px"),
+
+
+>>>>>>> 1fafe9b764e2a7af103680a160f74b88936f4a46
                                                                                               shiny::column(1,style = "margin-right:8px",
-                                                                                                            dropdownButton(
+                                                                                                            dropdownButton(right = FALSE,
                                                                                                               div(id="Bgraph",
                                                                                                                   h4('Group of variables:'),
                                                                                                                   shiny::fluidRow(shiny::column(6,selectizeInput('varselect',label = "Variables","",multiple = T)),
@@ -395,7 +426,7 @@ dashboardPage(skin = "blue",
 
                                                                                                                   ),
 
-                                                                                                                  hr(),
+                                                                                                                  #hr(),
                                                                                                                   h4('Vector of index:'),
                                                                                                                   shiny::fluidRow(shiny::column(6,textInput('varselectvector',label = "Variables")),
                                                                                                                                   shiny::column(3,selectInput('varshape2',label = "Shape","")),
@@ -413,7 +444,7 @@ dashboardPage(skin = "blue",
                                                                                                                                                                            )))
 
                                                                                                                   ),
-                                                                                                                  hr(),
+                                                                                                                  #hr(),
                                                                                                                   div(id="graphLayout",
                                                                                                                       h4("Select Graph Layout"),
                                                                                                                       shiny::selectInput('graph_layout',label = NULL,"layout_nicely"))
