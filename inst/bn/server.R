@@ -38,6 +38,7 @@ shinyServer(function(input, output,session) {
   options("getSymbols.warning4.0"=FALSE)
   #Structure Initialization
   DiscreteData <- alarm
+  trueData<-DiscreteData
   #Sanity check
   sanity<-1
   confidence<-1
@@ -64,6 +65,7 @@ shinyServer(function(input, output,session) {
   assocNetwork<-NULL
   predError<-NULL
   updateSelectInput(session,"freqSelect",choices = names(DiscreteData))
+  updateSelectInput(session,"delSelect",choices = names(DiscreteData))
   updateSelectInput(session,'event',choices = "")
   updateSelectizeInput(session,'varselect',choices = "")
   updateSelectizeInput(session,'Avarselect',choices = "")
@@ -81,6 +83,7 @@ shinyServer(function(input, output,session) {
   updateSelectInput(session,"Aneighbornodes",choices = "")
   updateSliderInput(session,"NumBar",min = 1, max = 2,value = 1)
   output$valLoss<-renderText({0})
+  output$netScore<-renderText({0})
   output$assocPlot<-renderVisNetwork({validate("Please build an association plot on the data")})
   output$netPlot<-renderVisNetwork({validate("Please do structure learning on the data")})
   output$parameterPlot<-renderPlot({validate("Please do structure learning on the data")})
@@ -89,6 +92,9 @@ shinyServer(function(input, output,session) {
   output$datasetTable<-DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
   })
   #observe events
+  observeEvent(input$start,{
+    updateTabItems(session, "sidebarMenu", "Structure")
+  })
   observeEvent(input$tableName,{
     tryCatch({
       if(input$tableName == "Association Graph")
@@ -151,9 +157,6 @@ shinyServer(function(input, output,session) {
       shinyalert(toString(e), type = "error")
     })
   })
-  observeEvent(input$start,{
-      updateTabItems(session, "sidebarMenu", "Structure")
-    })
   observeEvent(input$threshold,{
     tryCatch({
       if(assocReset==2)
@@ -240,10 +243,29 @@ shinyServer(function(input, output,session) {
           }
         })
       }
+      else
+      {
+        shinyalert("Please learn network structure first", type = "info")
+      }
     },error=function(e){
       shinyalert(toString(e), type = "error")
     })
 
+  })
+  observeEvent(input$getScore,{
+    tryCatch({
+      if(reset==2)
+      {
+        scoreVal<<- score(bn.hc.boot.average,DiscreteData,type=input$scoreAlgo)
+        output$netScore<<-renderText({scoreVal})
+      }
+      else
+      {
+        shinyalert("Please learn network structure first", type = "info")
+      }
+    },error=function(e){
+      shinyalert(toString(e), type = "error")
+    })
   })
   output$downloadDataset<-downloadHandler(
     filename = function(){
@@ -285,7 +307,16 @@ shinyServer(function(input, output,session) {
       paste('structure', ".RData", sep = "")
     },
     content = function(file) {
-      save(bn.hc.boot.average,file)
+      tryCatch({
+        if(reset==2)
+        {
+          save(bn.hc.boot.average,file)
+        }
+        else
+        {
+          shinyalert("Please learn network structure first",type="info")
+        }
+      })
     }
   )
   #Data Frame From User
@@ -328,12 +359,14 @@ shinyServer(function(input, output,session) {
         check.discrete(DiscreteData)
         check.NA(DiscreteData)
         DiscreteData<<-as.data.frame(DiscreteData)
+        trueData<<-DiscreteData
         #Reset APP
         reset<<-1
         assocReset<<-1
         blacklistEdges<<-c()
         whitelistEdges<<-c()
         output$valLoss<<-renderText({0})
+        output$netScore<<-renderText({0})
         output$assocPlot<<-renderVisNetwork({validate("Please build an association plot on the data")})
         output$netPlot<<-renderVisNetwork({validate("Please do structure learning on the data")})
         output$parameterPlot<<-renderPlot({validate("Please do structure learning on the data")})
@@ -368,17 +401,17 @@ shinyServer(function(input, output,session) {
         EventNode <<- c()
         EvidenceNode <<- c()
         shapeVector<<- c()
+        communities<<-NULL
+        graph<<-NULL
         updateSelectInput(session,'event',choices = "")
         updateSelectizeInput(session,'varselect',choices = "")
         updateSelectInput(session,'paramSelect',choices = "")
-        communities<<-NULL
         updateSelectInput(session,"moduleSelection",choices = "")
-        updateSelectInput(session,"Aneighbornodes",choices = "")
-        graph<<-NULL
         updateSelectInput(session,"neighbornodes",choices = "")
         updateSelectInput(session,"Aneighbornodes",choices = "")
         updateSliderInput(session,"NumBar",min = 1, max = 2,value = 1)
         updateSelectInput(session,"freqSelect",choices = names(DiscreteData))
+        updateSelectInput(session,"delSelect",choices = names(DiscreteData))
         },error = function(e){
              shinyalert(c("Error in loading data: ",toString(e)), type = "error")
            })
@@ -386,27 +419,34 @@ shinyServer(function(input, output,session) {
     })
   observeEvent(input$discretize,{
     tryCatch({
-      check.NA(DiscreteData)
-      withProgress(message = "Discretizing data", value = 0, {
-        tempDiscreteData <- DiscreteData
-        for(n in colnames(tempDiscreteData))
-        {
-          if(is.numeric(tempDiscreteData[,n])|| is.integer(tempDiscreteData[,n]))
+      if(check.NA(DiscreteData))
+      {
+        shinyalert("Data has missing values, please impute the missing data first",type="info")
+      }
+      else
+      {
+        withProgress(message = "Discretizing data", value = 0, {
+          tempDiscreteData <- DiscreteData
+          for(n in colnames(tempDiscreteData))
           {
-            temp = custom.discretize(as.numeric(tempDiscreteData[,n]),input$dtype)
-            tempDiscreteData[,n]<-temp
+            if(is.numeric(tempDiscreteData[,n])|| is.integer(tempDiscreteData[,n]))
+            {
+              temp = custom.discretize(as.numeric(tempDiscreteData[,n]),input$dtype)
+              tempDiscreteData[,n]<-temp
+            }
           }
-        }
-        tempDiscreteData[,which(lapply(tempDiscreteData,nlevels)<2)] = NULL
-        tempDiscreteData <- droplevels(tempDiscreteData)
-        DiscreteData <<-tempDiscreteData
-        output$datasetTable<-DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
-      })},error = function(e){
+          tempDiscreteData[,which(lapply(tempDiscreteData,nlevels)<2)] = NULL
+          tempDiscreteData <- droplevels(tempDiscreteData)
+          DiscreteData <<-tempDiscreteData
+          trueData<<-DiscreteData
+          output$datasetTable<-DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
+        })
+      }
+      },error = function(e){
         type <- toString(input$dtype)
         messageString <- paste(c("Error is discretising using method ", type, ". Try using other method or upload pre-discretised data."), collapse = '')
         shinyalert(messageString, type = "error")
       })
-
   })
 
   observeEvent(input$impute,{
@@ -421,8 +461,7 @@ shinyServer(function(input, output,session) {
       }
       DiscreteData <<- missRanger(DiscreteData,maxiter = 1,num.tree = 100)
       output$datasetTable<-DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
-      check.discrete(DiscreteData)
-      check.NA(DiscreteData)
+      trueData<<-DiscreteData
     })}, error = function(e){
       type <- toString(input$dtype)
       messageString <- "Error imputing missingness using missRanger method. Try uploading pre-imputed data."
@@ -430,23 +469,75 @@ shinyServer(function(input, output,session) {
     })
 
   })
-  observeEvent(input$freqSelect,{
+  observeEvent(input$delete,{
     tryCatch({
-      val = table(DiscreteData[,input$freqSelect])/nrow(DiscreteData)
-      output$freqPlot = renderPlot({par(mar=c(5,3,3,3))
-        par(oma=c(5,3,3,3))
-        barx <<-barplot(val,
-                        col = "lightblue",
-                        main = paste("Background frequency of ",input$freqSelect),
-                        border = NA,
-                        xlab = "Factors",
-                        ylab = "Frequency",
-                        ylim = c(0,1),
-                        las=2)
-        text(x = barx,y = round(val,digits = 4),label = round(val,digits = 4), pos = 3, cex = 0.8, col = "black")})
+      DiscreteData[,input$delSelect]=NULL
+      DiscreteData<<-DiscreteData
+      updateSelectInput(session,"delSelect",choices = names(DiscreteData))
+      updateSelectInput(session,"freqSelect",choices = names(DiscreteData))
+      output$datasetTable<-DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
     },error=function(e){
-      #print(e)
+
     })
+  })
+  observeEvent(input$reset,{
+    tryCatch({
+      DiscreteData<<-trueData
+      updateSelectInput(session,"delSelect",choices = names(DiscreteData))
+      updateSelectInput(session,"freqSelect",choices = names(DiscreteData))
+      output$datasetTable<-DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
+    },error=function(e){
+      shinyalert(toString(e), type = "error")
+    })
+  })
+  observeEvent(input$transpose,{
+    tryCatch({
+      if(dim(DiscreteData)[1]>dim(DiscreteData)[2])
+      {
+        shinyalert("Transpose is only possible for datasest with #variables more than #samples",type="info")
+      }
+      else
+      {
+        DiscreteData<<-t(DiscreteData)
+        updateSelectInput(session,"delSelect",choices = names(DiscreteData))
+        updateSelectInput(session,"freqSelect",choices = names(DiscreteData))
+        output$datasetTable<-DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
+      }
+    },error=function(e){
+      shinyalert(toString(e),type = 'error')
+    })
+  })
+  observeEvent(input$freqSelect,{
+    if(check.discrete(DiscreteData)||check.NA(DiscreteData))
+    {
+      output$freqPlot<<-renderPlot({validate("Please make sure data is complete and discretized before using the feature")})
+    }
+    else
+    {
+      tryCatch({
+        val = table(DiscreteData[,input$freqSelect])/nrow(DiscreteData)
+        output$freqPlot = renderPlot({par(mar=c(5,3,3,3))
+          par(oma=c(5,3,3,3))
+          barx <<-barplot(val,
+                          col = "lightblue",
+                          main = paste("Background frequency of ",input$freqSelect),
+                          border = NA,
+                          xlab = "",
+                          ylab = "Frequency",
+                          ylim = c(0,1),
+                          las=2)
+          text(x = barx,y = round(val,digits = 4),label = round(val,digits = 4), pos = 3, cex = 0.8, col = "black")})
+      },error=function(e){
+        if(input$freqSelect=="")
+        {
+
+        }
+        else
+        {
+          shinyalert(toString(e),type="error")
+        }
+      })
+    }
   })
 
   # Get the data selection from user
@@ -1155,8 +1246,7 @@ shinyServer(function(input, output,session) {
         tryCatch({
           if(input$moduleSelection!='graph')
           {
-            selectedNodes<<-communities[[input$moduleSelection]]
-            print(selectedNodes)
+            selectedNodes<<-communities[[lengthCom[input$moduleSelection]]]
             from<-c()
             to<-c()
             for(i in 1:length(data.frame(directed.arcs(bn.hc.boot.average))[,1]))
@@ -1200,7 +1290,6 @@ shinyServer(function(input, output,session) {
             shapeVector<<- rep('dot',length(nodeNames))
             updateSelectInput(session,'event',choices = nodeNames)
             output$netPlot<-renderVisNetwork({graph.custom(pruneGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
-            updateSelectInput(session,'event',choices = nodeNames)
             updateSelectizeInput(session,'varselect',choices = nodeNames)
             updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                               "ellipse", "database", "text", "diamond"))
@@ -1299,8 +1388,15 @@ shinyServer(function(input, output,session) {
   observeEvent(input$Bcommunities,{
     if(reset==2)
     {
-      communities<<-custom.Modules(NetworkGraph,rep(1,length(NetworkGraph[,1])))
+      communities<<-custom.Modules(NetworkGraph,input$moduleAlgo)
       names(communities)<<-paste("Module",c(1:length(communities)),sep=" ")
+      lengthCom<<-c()
+      for(n in names(communities))
+      {
+        lengthCom<<-c(lengthCom,length(communities[[n]]))
+      }
+      lengthCom<<-order(lengthCom,decreasing = T)
+      names(lengthCom)<<-paste("Module",c(1:length(communities)),sep=" ")
       updateSelectInput(session,"moduleSelection",choices = c("graph",names(communities)))
     }
   })
