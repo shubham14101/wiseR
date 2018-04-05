@@ -21,6 +21,7 @@ library('igraph')
 library("parallel")
 library("snow")
 library("shinyBS")
+library("rbmn")
 source('error.bar.R')
 source('graph.custom.R')
 source('graph.custom.assoc.R')
@@ -240,8 +241,8 @@ dashboardPage(skin = "blue",
                                                                  tabPanel("Bayesian Network",
                                                                           fluidPage(
                                                                             shiny::fluidRow(
-                                                                              shiny::column(4,shinyWidgets::radioGroupButtons(inputId = "bayesianOption",
-                                                                                                                              choices = c("Graph","CP Distribution", "Inference Plot"),
+                                                                              shiny::column(5,shinyWidgets::radioGroupButtons(inputId = "bayesianOption",
+                                                                                                                              choices = c("Graph","CP Distribution", "Inference Plot","Prior","Post"),
                                                                                                                               selected = "Graph",
                                                                                                                               justified = FALSE
                                                                               )),
@@ -323,6 +324,7 @@ dashboardPage(skin = "blue",
                                                                                     ),
                                                                                     actionButton('learnBtn', 'Bootstrap'),
                                                                                     actionButton('learnSBtn','Direct'),
+                                                                                    actionButton('PruneBtn','Parameter Tuning'),
                                                                                     hr(),
                                                                                     shiny::h5("Save learned structure"),
                                                                                     downloadButton('saveBtn','Save')
@@ -436,6 +438,18 @@ dashboardPage(skin = "blue",
                                                                               "input.bayesianOption=='CP Distribution'",
                                                                               selectInput("paramSelect",label = "Variable",""),
                                                                               withSpinner(plotOutput("parameterPlot",height = "450px"),color="#2E86C1")
+                                                                            ),
+                                                                            shiny::conditionalPanel(
+                                                                              "input.bayesianOption=='Prior'",
+                                                                              shiny::fluidRow(shiny::column(2,h5("Upload Prior Structure Object")),shiny::column(2,h5("from")),shiny::column(2,h5("to")),shiny::column(4,h5("")),shiny::column(2,h5("Select from table"))),
+                                                                              shiny::fluidRow(shiny::column(2,shiny::fileInput('priorFile',label = NULL,accept = c('.RData'))),shiny::column(2,selectInput("fromarc1",label = NULL,choices=c())),shiny::column(2,selectInput("toarc1",label = NULL,choices=c())),column(4,actionButton("addarc1","Add")),shiny::column(1,actionButton("RemoveArc","Remove")),shiny::column(1,actionButton("ReverseArc","Reverse"))),
+                                                                              withSpinner(DT::dataTableOutput("priorout"),color = "#2E86C1")
+                                                                            ),
+                                                                            shiny::conditionalPanel(
+                                                                              "input.bayesianOption=='Post'",
+                                                                              shiny::fluidRow(shiny::column(3,h5("from")),shiny::column(3,h5("to")),shiny::column(3,h5("")),shiny::column(3,h5("Select from table"))),
+                                                                              shiny::fluidRow(shiny::column(3,selectInput("fromarc",label = NULL,choices=c())),shiny::column(3,selectInput("toarc",label = NULL,choices=c())),column(3,actionButton("addarc","Add")),actionButton("RemoveArc2","Remove"),actionButton("ReverseArc2","Reverse")),
+                                                                              withSpinner(DT::dataTableOutput("postout"),color = "#2E86C1")
                                                                             )
                                                                             )
                                                                          ),
