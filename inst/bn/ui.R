@@ -21,7 +21,6 @@ library('igraph')
 library("parallel")
 library("snow")
 library("shinyBS")
-library("rbmn")
 source('error.bar.R')
 source('graph.custom.R')
 source('graph.custom.assoc.R')
@@ -115,7 +114,7 @@ dashboardPage(skin = "blue",
                                                                  tabPanel('Data',
 
                                                                           shinyWidgets::radioGroupButtons(inputId = "dataoption",
-                                                                                                          choices = c("Dataset","Distribution","Other Data"),
+                                                                                                          choices = c("Dataset","Distribution","Tables"),
                                                                                                           selected = "Dataset",
                                                                                                           justified = FALSE
                                                                           ),
@@ -171,7 +170,7 @@ dashboardPage(skin = "blue",
                                                                             withSpinner(plotOutput("freqPlot",height = "600px"),color="#2E86C1")
                                                                             ),
                                                                           conditionalPanel(
-                                                                            "input.dataoption=='Other Data'",
+                                                                            "input.dataoption=='Tables'",
                                                                             shiny::fluidRow(shiny::column(4,selectInput("tableName",label = NULL,"")),shiny::column(1,downloadButton("downloadData", "Download"))),
                                                                             withSpinner(DT::dataTableOutput("tableOut"),color = "#2E86C1")
                                                                           )
