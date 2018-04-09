@@ -46,6 +46,8 @@ shinyServer(function(input, output,session) {
   reset<-1
   assocReset<-1
   simple<-1
+  upload<-1
+  uploadtype<-1
   #Initialization
   rvs <<- reactiveValues(evidence = list(),values = list(),evidenceObserve = list(),valueObserve = list())
   insertedV <- c()
@@ -975,6 +977,8 @@ shinyServer(function(input, output,session) {
                updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
                output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
                reset<<-2
+               upload<<-1
+               uploadtype<<-1
              },error = function(e){
                shinyalert(toString(e), type = "error")
              })
@@ -983,8 +987,224 @@ shinyServer(function(input, output,session) {
        }
     })
 
+  observeEvent(input$bootFile,{
+    if(check.NA(DiscreteData))
+    {
+      shinyalert("Please impute missingness in the data first",type="info")
+    }
+    else if(check.discrete(DiscreteData))
+    {
+      shinyalert("Please discritize the data first",type="info")
+    }
+    else
+    {
+      inFile <- input$bootFile
+      if (is.null(inFile))
+      {
+        shinyalert("Structure File is empty",type='error')
+      }
+      else
+      {
+        if(is.null(DiscreteData))
+        {
+          shinyalert("Please Upload Data File First",type = 'error')
+        }
+        else
+        {
+          tryCatch({
+            tryCatch({
+              bn.hc.boot <<- get(load(inFile$datapath))
+            },error = function(e){
+              bn.hc.boot <<- readRDS(inFile$datapath)
+            })
+            bn.hc.boot.pruned <<- bn.hc.boot[bn.hc.boot$strength > input$edgeStrengthU & bn.hc.boot$direction > input$directionStrengthU,]
+            bn.hc.boot.average <<- cextend(averaged.network(bn.hc.boot.pruned))
+            if(input$parallel==T)
+            {
+              bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod,cluster = cl)
+            }
+            else
+            {
+              bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod)
+            }
+            shinyalert("Learned Structure loaded",type = "success")
+            for(elem in 1:length(inserted))
+            {
+              removeUI(
+                ## pass in appropriate div id
+                selector = paste0('#', inserted[elem])
+              )
 
+            }
+            inserted <<- c()
+            for(elem2 in 1:length(insertedV))
+            {
+              removeUI(
+                ## pass in appropriate div id
+                selector = paste0('#', insertedV[elem2])
+              )
 
+            }
+            insertedV <<- c()
+            rvs$evidence <<- c()
+            rvs$value <<- c()
+            rvs$evidenceObserve <<- c()
+            rvs$valueObserve <<- c()
+            output$distPlot <<- renderPlot(NULL)
+            NetworkGraph <<- data.frame(directed.arcs(bn.hc.boot.average))
+            nodeNames <<- names(bn.hc.boot.average$nodes)
+            EventNode <<- nodeNames[1]
+            EvidenceNode <<- c()
+            shapeVector<<- rep('dot',length(nodeNames))
+            updateSelectInput(session,'event',choices = nodeNames)
+            output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
+            updateSelectizeInput(session,'varselect',choices = nodeNames)
+            updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                              "ellipse", "database", "text", "diamond"))
+            updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                               "ellipse", "database", "text", "diamond"))
+            updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+            updateSelectInput(session,'paramSelect',choices = nodeNames)
+            graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
+            updateSelectInput(session,"neighbornodes",choices = "")
+            updateSelectInput(session,"fromarc",choices = nodeNames)
+            updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
+            output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
+            reset<<-2
+            upload<<-1
+            uploadtype<<-2
+          },error = function(e){
+            shinyalert(toString(e), type = "error")
+          })
+        }
+      }
+    }
+  })
+  observeEvent(input$parameterTuningU,{
+    if(upload==1)
+    {
+      if(reset==2)
+      {
+        if(uploadtype==1)
+        {
+          if(input$parallel==T)
+          {
+            bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod,cluster = cl)
+          }
+          else
+          {
+            bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod)
+          }
+          shinyalert("Learned Structure loaded",type = "success")
+          for(elem in 1:length(inserted))
+          {
+            removeUI(
+              ## pass in appropriate div id
+              selector = paste0('#', inserted[elem])
+            )
+
+          }
+          inserted <<- c()
+          for(elem2 in 1:length(insertedV))
+          {
+            removeUI(
+              ## pass in appropriate div id
+              selector = paste0('#', insertedV[elem2])
+            )
+
+          }
+          insertedV <<- c()
+          rvs$evidence <<- c()
+          rvs$value <<- c()
+          rvs$evidenceObserve <<- c()
+          rvs$valueObserve <<- c()
+          output$distPlot <<- renderPlot(NULL)
+          NetworkGraph <<- data.frame(directed.arcs(bn.hc.boot.average))
+          nodeNames <<- names(bn.hc.boot.average$nodes)
+          EventNode <<- nodeNames[1]
+          EvidenceNode <<- c()
+          shapeVector<<- rep('dot',length(nodeNames))
+          updateSelectInput(session,'event',choices = nodeNames)
+          output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
+          updateSelectizeInput(session,'varselect',choices = nodeNames)
+          updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                            "ellipse", "database", "text", "diamond"))
+          updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                             "ellipse", "database", "text", "diamond"))
+          updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+          updateSelectInput(session,'paramSelect',choices = nodeNames)
+          graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
+          updateSelectInput(session,"neighbornodes",choices = "")
+          updateSelectInput(session,"fromarc",choices = nodeNames)
+          updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
+          output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
+          reset<<-2
+          upload<<-1
+          uploadtype<<-1
+        }
+        else
+        {
+          bn.hc.boot.pruned <<- bn.hc.boot[bn.hc.boot$strength > input$edgeStrengthU & bn.hc.boot$direction > input$directionStrengthU,]
+          bn.hc.boot.average <<- cextend(averaged.network(bn.hc.boot.pruned))
+          if(input$parallel==T)
+          {
+            bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod,cluster = cl)
+          }
+          else
+          {
+            bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod)
+          }
+          shinyalert("Learned Structure loaded",type = "success")
+          for(elem in 1:length(inserted))
+          {
+            removeUI(
+              ## pass in appropriate div id
+              selector = paste0('#', inserted[elem])
+            )
+
+          }
+          inserted <<- c()
+          for(elem2 in 1:length(insertedV))
+          {
+            removeUI(
+              ## pass in appropriate div id
+              selector = paste0('#', insertedV[elem2])
+            )
+
+          }
+          insertedV <<- c()
+          rvs$evidence <<- c()
+          rvs$value <<- c()
+          rvs$evidenceObserve <<- c()
+          rvs$valueObserve <<- c()
+          output$distPlot <<- renderPlot(NULL)
+          NetworkGraph <<- data.frame(directed.arcs(bn.hc.boot.average))
+          nodeNames <<- names(bn.hc.boot.average$nodes)
+          EventNode <<- nodeNames[1]
+          EvidenceNode <<- c()
+          shapeVector<<- rep('dot',length(nodeNames))
+          updateSelectInput(session,'event',choices = nodeNames)
+          output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
+          updateSelectizeInput(session,'varselect',choices = nodeNames)
+          updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                            "ellipse", "database", "text", "diamond"))
+          updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                             "ellipse", "database", "text", "diamond"))
+          updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+          updateSelectInput(session,'paramSelect',choices = nodeNames)
+          graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
+          updateSelectInput(session,"neighbornodes",choices = "")
+          updateSelectInput(session,"fromarc",choices = nodeNames)
+          updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
+          output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
+          reset<<-2
+          upload<<-1
+          uploadtype<<-2
+        }
+      }
+    }
+
+  })
   # Learn the structure of the network
   observeEvent(input$learnBtn, {
     if(check.NA(DiscreteData))
@@ -1026,6 +1246,7 @@ shinyServer(function(input, output,session) {
         }
         shinyalert("Structure learning done",type="success")
         simple<<-2
+        upload<<-2
         for(elem in 1:length(inserted))
         {
           removeUI(
@@ -1078,125 +1299,128 @@ shinyServer(function(input, output,session) {
   })
   observeEvent(input$PruneBtn,{
     tryCatch({
-      if(reset==2)
+      if(upload==2)
       {
-        if(simple==1)
+        if(reset==2)
         {
-          if(input$parallel==T)
+          if(simple==1)
           {
-            bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod2,cluster = cl)
+            if(input$parallel==T)
+            {
+              bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod2,cluster = cl)
+            }
+            else
+            {
+              bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod2)
+            }
+            simple<<-1
+            for(elem in 1:length(inserted))
+            {
+              removeUI(
+                ## pass in appropriate div id
+                selector = paste0('#', inserted[elem])
+              )
+
+            }
+            inserted <<- c()
+            for(elem2 in 1:length(insertedV))
+            {
+              removeUI(
+                ## pass in appropriate div id
+                selector = paste0('#', insertedV[elem2])
+              )
+
+            }
+            insertedV <<- c()
+            rvs$evidence <<- c()
+            rvs$value <<- c()
+            rvs$evidenceObserve <<- c()
+            rvs$valueObserve <<- c()
+            output$distPlot <<- renderPlot(NULL)
+            NetworkGraph <<- data.frame(directed.arcs(bn.hc.boot.average))
+            nodeNames <<- names(bn.hc.boot.average$nodes)
+            EventNode <<- nodeNames[1]
+            EvidenceNode <<- c()
+            shapeVector<<- rep('dot',length(nodeNames))
+            updateSelectInput(session,'event',choices = nodeNames)
+            output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
+            updateSelectInput(session,'event',choices = nodeNames)
+            updateSelectizeInput(session,'varselect',choices = nodeNames)
+            updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                              "ellipse", "database", "text", "diamond"))
+            updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                               "ellipse", "database", "text", "diamond"))
+            updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+            updateSelectInput(session,'paramSelect',choices = nodeNames)
+            updateSelectInput(session,"moduleSelection",choices = "graph")
+            graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
+            updateSelectInput(session,"neighbornodes",choices = "")
+            updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
+            reset<<-2
+            updateSelectInput(session,"fromarc",choices = nodeNames)
+            output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
           }
           else
           {
-            bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod2)
-          }
-          simple<<-1
-          for(elem in 1:length(inserted))
-          {
-            removeUI(
-              ## pass in appropriate div id
-              selector = paste0('#', inserted[elem])
-            )
+            if(input$parallel==T)
+            {
+              bn.hc.boot.pruned <<- bn.hc.boot[bn.hc.boot$strength > input$edgeStrength & bn.hc.boot$direction > input$directionStrength,]
+              bn.hc.boot.average <<- cextend(averaged.network(bn.hc.boot.pruned))
+              bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod2,cluster = cl)
+            }
+            else
+            {
+              bn.hc.boot.pruned <<- bn.hc.boot[bn.hc.boot$strength > input$edgeStrength & bn.hc.boot$direction > input$directionStrength,]
+              bn.hc.boot.average <<- cextend(averaged.network(bn.hc.boot.pruned))
+              bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod2)
+            }
+            simple<<-2
+            for(elem in 1:length(inserted))
+            {
+              removeUI(
+                ## pass in appropriate div id
+                selector = paste0('#', inserted[elem])
+              )
 
-          }
-          inserted <<- c()
-          for(elem2 in 1:length(insertedV))
-          {
-            removeUI(
-              ## pass in appropriate div id
-              selector = paste0('#', insertedV[elem2])
-            )
+            }
+            inserted <<- c()
+            for(elem2 in 1:length(insertedV))
+            {
+              removeUI(
+                ## pass in appropriate div id
+                selector = paste0('#', insertedV[elem2])
+              )
 
+            }
+            insertedV <<- c()
+            rvs$evidence <<- c()
+            rvs$value <<- c()
+            rvs$evidenceObserve <<- c()
+            rvs$valueObserve <<- c()
+            output$distPlot <<- renderPlot(NULL)
+            NetworkGraph <<- data.frame(directed.arcs(bn.hc.boot.average))
+            nodeNames <<- names(bn.hc.boot.average$nodes)
+            EventNode <<- nodeNames[1]
+            EvidenceNode <<- c()
+            shapeVector<<- rep('dot',length(nodeNames))
+            updateSelectInput(session,'event',choices = nodeNames)
+            output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
+            updateSelectInput(session,'event',choices = nodeNames)
+            updateSelectizeInput(session,'varselect',choices = nodeNames)
+            updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                              "ellipse", "database", "text", "diamond"))
+            updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                               "ellipse", "database", "text", "diamond"))
+            updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+            updateSelectInput(session,'paramSelect',choices = nodeNames)
+            updateSelectInput(session,"moduleSelection",choices = "graph")
+            graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
+            updateSelectInput(session,"neighbornodes",choices = "")
+            updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
+            reset<<-2
+            updateSelectInput(session,"fromarc",choices = nodeNames)
+            output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
           }
-          insertedV <<- c()
-          rvs$evidence <<- c()
-          rvs$value <<- c()
-          rvs$evidenceObserve <<- c()
-          rvs$valueObserve <<- c()
-          output$distPlot <<- renderPlot(NULL)
-          NetworkGraph <<- data.frame(directed.arcs(bn.hc.boot.average))
-          nodeNames <<- names(bn.hc.boot.average$nodes)
-          EventNode <<- nodeNames[1]
-          EvidenceNode <<- c()
-          shapeVector<<- rep('dot',length(nodeNames))
-          updateSelectInput(session,'event',choices = nodeNames)
-          output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
-          updateSelectInput(session,'event',choices = nodeNames)
-          updateSelectizeInput(session,'varselect',choices = nodeNames)
-          updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
-                                                            "ellipse", "database", "text", "diamond"))
-          updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
-                                                             "ellipse", "database", "text", "diamond"))
-          updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
-          updateSelectInput(session,'paramSelect',choices = nodeNames)
-          updateSelectInput(session,"moduleSelection",choices = "graph")
-          graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
-          updateSelectInput(session,"neighbornodes",choices = "")
-          updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
-          reset<<-2
-          updateSelectInput(session,"fromarc",choices = nodeNames)
-          output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
-        }
-        else
-        {
-          if(input$parallel==T)
-          {
-            bn.hc.boot.pruned <<- bn.hc.boot[bn.hc.boot$strength > input$edgeStrength & bn.hc.boot$direction > input$directionStrength,]
-            bn.hc.boot.average <<- cextend(averaged.network(bn.hc.boot.pruned))
-            bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod2,cluster = cl)
-          }
-          else
-          {
-            bn.hc.boot.pruned <<- bn.hc.boot[bn.hc.boot$strength > input$edgeStrength & bn.hc.boot$direction > input$directionStrength,]
-            bn.hc.boot.average <<- cextend(averaged.network(bn.hc.boot.pruned))
-            bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod2)
-          }
-          simple<<-2
-          for(elem in 1:length(inserted))
-          {
-            removeUI(
-              ## pass in appropriate div id
-              selector = paste0('#', inserted[elem])
-            )
-
-          }
-          inserted <<- c()
-          for(elem2 in 1:length(insertedV))
-          {
-            removeUI(
-              ## pass in appropriate div id
-              selector = paste0('#', insertedV[elem2])
-            )
-
-          }
-          insertedV <<- c()
-          rvs$evidence <<- c()
-          rvs$value <<- c()
-          rvs$evidenceObserve <<- c()
-          rvs$valueObserve <<- c()
-          output$distPlot <<- renderPlot(NULL)
-          NetworkGraph <<- data.frame(directed.arcs(bn.hc.boot.average))
-          nodeNames <<- names(bn.hc.boot.average$nodes)
-          EventNode <<- nodeNames[1]
-          EvidenceNode <<- c()
-          shapeVector<<- rep('dot',length(nodeNames))
-          updateSelectInput(session,'event',choices = nodeNames)
-          output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
-          updateSelectInput(session,'event',choices = nodeNames)
-          updateSelectizeInput(session,'varselect',choices = nodeNames)
-          updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
-                                                            "ellipse", "database", "text", "diamond"))
-          updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
-                                                             "ellipse", "database", "text", "diamond"))
-          updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
-          updateSelectInput(session,'paramSelect',choices = nodeNames)
-          updateSelectInput(session,"moduleSelection",choices = "graph")
-          graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
-          updateSelectInput(session,"neighbornodes",choices = "")
-          updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
-          reset<<-2
-          updateSelectInput(session,"fromarc",choices = nodeNames)
-          output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
         }
       }
     },error=function(e){
@@ -1342,6 +1566,7 @@ shinyServer(function(input, output,session) {
         }
         shinyalert("Structure learning done",type="success")
         simple<<-1
+        upload<<-2
         for(elem in 1:length(inserted))
         {
           removeUI(

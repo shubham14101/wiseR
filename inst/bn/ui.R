@@ -249,16 +249,48 @@ dashboardPage(skin = "blue",
                                                                                 h5("Paramter learning type"),
                                                                                 selectizeInput('paramMethod',label = NULL,choices = c("Maximum Likelihood parameter estimation" = "mle","Bayesian parameter estimation" = "bayes")),
                                                                                 hr(),
-                                                                                div(style ='overflow-y:scroll',
-                                                                                    # File input
-                                                                                    shiny::p("Note: Upload .RData file"),
-                                                                                    shiny::fileInput(
-                                                                                      'structFile',
-                                                                                      strong('File Input:'),
-                                                                                      accept = c('.RData')
-                                                                                    )
+                                                                                shinyWidgets::radioGroupButtons(inputId = "uploadOption",
+                                                                                                                choices = c("Averaged Network","Bootstraped Network"),
+                                                                                                                selected = "Averaged Network",
+                                                                                                                justified = FALSE
+                                                                                                                ),
+                                                                                shiny::conditionalPanel(
+                                                                                  "input.uploadOption=='Averaged Network'",
+                                                                                  div(
+                                                                                      # File input
+                                                                                      shiny::p("Note: Upload .RData file"),
+                                                                                      shiny::fileInput(
+                                                                                        'structFile',
+                                                                                        strong('File Input:'),
+                                                                                        accept = c('.RData')
+                                                                                      )
+
+                                                                                )
                                                                                 ),
-                                                                                label = "Upload",circle = F, status = "primary", icon = icon("upload"), width = "400px",tooltip = tooltipOptions(title = "Upload structure")
+                                                                                shiny::conditionalPanel(
+                                                                                  "input.uploadOption=='Bootstraped Network'",
+                                                                                  div(
+                                                                                      # File input
+                                                                                      shiny::p("Note: Upload .RData file"),
+                                                                                      shiny::fileInput(
+                                                                                        'bootFile',
+                                                                                        strong('File Input:'),
+                                                                                        accept = c('.RData')
+                                                                                      ),
+                                                                                      fluidRow(
+                                                                                        column(6,h5("Edge Strength"),
+                                                                                               sliderInput("edgeStrengthU", label = NULL,
+                                                                                                           min = 0, max = 1,
+                                                                                                           value = 0.5)),
+                                                                                        column(6,h5("Direction Confidence:"),
+                                                                                               sliderInput("directionStrengthU", label = NULL,
+                                                                                                           min = 0, max = 1,
+                                                                                                           value = 0.5))
+                                                                                      )
+                                                                                      )
+                                                                                ),
+                                                                                actionButton("parameterTuningU","Parameter Tuning"),
+                                                                                label = "Upload",circle = F, status = "primary", icon = icon("upload"), width = "450px",tooltip = tooltipOptions(title = "Upload structure")
                                                                               )),
                                                                               shiny::column(1,dropdownButton(
                                                                                 div(style ='overflow-y:scroll;height:600px;padding-right:20px;',
