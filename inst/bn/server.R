@@ -368,11 +368,11 @@ shinyServer(function(input, output,session) {
     filename = function() {
       paste('structure', ".RData", sep = "")
     },
-    content = function(file) {
+    content = function(filename) {
       tryCatch({
         if(reset==2)
         {
-          save(bn.hc.boot.average,file)
+          save(bn.hc.boot.average,file=filename)
         }
         else
         {
