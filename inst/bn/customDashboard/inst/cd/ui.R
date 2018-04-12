@@ -25,6 +25,7 @@ source('error.bar.R')
 source('graph.custom.R')
 source('custom.Modules.R')
 
+nm<-read.csv("name.txt")
 
 myDashboardHeader <- function (..., title = NULL, titleWidth = NULL, disable = FALSE,
                                .list = NULL) {
@@ -46,7 +47,7 @@ myDashboardHeader <- function (..., title = NULL, titleWidth = NULL, disable = F
 }
 
 dashboardPage(skin = "blue",
-              myDashboardHeader(title = "Dashboard",
+              myDashboardHeader(title = nm$x,
                                 titleWidth = "400"
                                 #,tags$li(class = "dropdown", bsButton("homeIntro", label = NULL, icon = icon("question-circle", lib="font-awesome"), style = "primary", size = "large"))
               ),
@@ -70,30 +71,6 @@ dashboardPage(skin = "blue",
                               shinydashboard::tabItem(tabName = "Structure",
                                                           tabBox(id = "visula_tabs",
                                                                  width = 12,
-                                                                 tabPanel('Data',
-
-                                                                          shinyWidgets::radioGroupButtons(inputId = "dataoption",
-                                                                                                          choices = c("Dataset","Distribution"),
-                                                                                                          selected = "Dataset",
-                                                                                                          justified = FALSE
-                                                                          ),
-
-                                                                          conditionalPanel(
-                                                                            "input.dataoption =='Dataset'",
-                                                                            fluidRow(style="padding:0px",
-                                                                              shiny::column(1, downloadButton("downloadDataset", "Download", class = "butt"))),
-                                                                              tags$head(tags$style(".butt{background-color:#2E86C1;} .butt{color:white;} .butt{border:#2E86C1;}")
-
-                                                                            ),
-                                                                            hr(),
-                                                                            withSpinner(DT::dataTableOutput("datasetTable"),color = "#2E86C1")
-                                                                          ),
-                                                                          conditionalPanel(
-                                                                            "input.dataoption=='Distribution'",
-                                                                            selectInput("freqSelect",label = "Variable",""),
-                                                                            withSpinner(plotOutput("freqPlot",height = "600px"),color="#2E86C1")
-                                                                            )
-                                                                          ),
                                                                  tabPanel("Bayesian Network",
                                                                           fluidPage(
                                                                             shiny::fluidRow(

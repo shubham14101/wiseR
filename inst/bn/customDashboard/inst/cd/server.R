@@ -50,8 +50,6 @@ shinyServer(function(input, output,session) {
   EventNode <- c()
   EvidenceNode <- c()
   shapeVector<- c()
-  updateSelectInput(session,"freqSelect",choices = names(DiscreteData))
-  output$datasetTable<-DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
   #structure initialization
   bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = "bayes")
   NetworkGraph <<- data.frame(directed.arcs(bn.hc.boot.average))
@@ -59,7 +57,6 @@ shinyServer(function(input, output,session) {
   EventNode <<- nodeNames[1]
   EvidenceNode <<- c()
   shapeVector<<- rep('dot',length(nodeNames))
-  updateSelectInput(session,'event',choices = nodeNames)
   updateSelectInput(session,'event',choices = nodeNames)
   updateSelectizeInput(session,'varselect',choices = nodeNames)
   updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
@@ -75,43 +72,6 @@ shinyServer(function(input, output,session) {
   output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
   })
   #observe events
-  observeEvent(input$start,{
-    updateTabItems(session, "sidebarMenu", "Structure")
-  })
-  output$downloadDataset<-downloadHandler(
-    filename = function(){
-      paste('dataset',".csv",sep = "")
-    },
-    content = function(filename){
-      write.csv(DiscreteData,file=filename,row.names = F)
-    }
-  )
-  #Data Frame From User
-  observeEvent(input$freqSelect,{
-    tryCatch({
-      val = table(DiscreteData[,input$freqSelect])/nrow(DiscreteData)
-      output$freqPlot = renderPlot({par(mar=c(5,3,3,3))
-        par(oma=c(5,3,3,3))
-        barx <<-barplot(val,
-                        col = "lightblue",
-                        main = paste("Background frequency of ",input$freqSelect),
-                        border = NA,
-                        xlab = "",
-                        ylab = "Frequency",
-                        ylim = c(0,1),
-                        las=2)
-        text(x = barx,y = round(val,digits = 4),label = round(val,digits = 4), pos = 3, cex = 0.8, col = "black")})
-    },error=function(e){
-      if(input$freqSelect=="")
-      {
-
-      }
-      else
-      {
-        shinyalert(toString(e),type="error")
-      }
-    })
-  })
   observeEvent(input$paramSelect,{
     tryCatch({
       output$parameterPlot<-renderPlot({bn.fit.barchart(bn.hc.boot.fit[[input$paramSelect]])})

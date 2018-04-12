@@ -719,6 +719,70 @@ shinyServer(function(input, output,session) {
 
     })
   })
+  observeEvent(input$sort,{
+    DiscreteData<<-DiscreteData[,order(names(DiscreteData))]
+    updateSelectInput(session,"delSelect",choices = names(DiscreteData))
+    updateSelectInput(session,"freqSelect",choices = names(DiscreteData))
+    output$datasetTable<-DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
+    reset<<-1
+    assocReset<<-1
+    blacklistEdges<<-c()
+    whitelistEdges<<-c()
+    output$valLoss<<-renderText({0})
+    output$netScore<<-renderText({0})
+    output$assocPlot<<-renderVisNetwork({validate("Please build an association plot on the data")})
+    output$netPlot<<-renderVisNetwork({validate("Please do structure learning on the data")})
+    output$parameterPlot<<-renderPlot({validate("Please do structure learning on the data")})
+    output$distPlot<<-renderPlot({validate("Please do structure learning on the data and then derive inferences")})
+    output$datasetTable<-DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
+    NetworkGraph <<- NULL
+    assocNetwork<<-NULL
+    predError<<-NULL
+    for(elem in 1:length(inserted))
+    {
+      removeUI(
+        ## pass in appropriate div id
+        selector = paste0('#', inserted[elem])
+      )
+
+    }
+    inserted <<- c()
+    for(elem2 in 1:length(insertedV))
+    {
+      removeUI(
+        ## pass in appropriate div id
+        selector = paste0('#', insertedV[elem2])
+      )
+
+    }
+    insertedV <<- c()
+    rvs$evidence <<- c()
+    rvs$value <<- c()
+    rvs$evidenceObserve <<- c()
+    rvs$valueObserve <<- c()
+    nodeNames <<- c()
+    EventNode <<- c()
+    EvidenceNode <<- c()
+    shapeVector<<- c()
+    bn.start<<- empty.graph(names(DiscreteData))
+    communities<<-NULL
+    graph<<-NULL
+    updateSelectInput(session,'event',choices = "")
+    updateSelectizeInput(session,'varselect',choices = "")
+    updateSelectInput(session,'paramSelect',choices = "")
+    updateSelectInput(session,"moduleSelection",choices = "")
+    updateSelectInput(session,"neighbornodes",choices = "")
+    updateSelectInput(session,"Aneighbornodes",choices = "")
+    updateSliderInput(session,"NumBar",min = 1, max = 2,value = 1)
+    updateSelectInput(session,"freqSelect",choices = names(DiscreteData))
+    updateSelectInput(session,"delSelect",choices = names(DiscreteData))
+    updateSelectInput(session,"fromarc",choices=c())
+    updateSelectInput(session,"toarc",choices = c())
+    updateSelectInput(session,"fromarc1",choices = names(DiscreteData))
+    output$postout<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
+    bn.start<<- empty.graph(names(DiscreteData))
+    output$priorout<-DT::renderDataTable({bn.start$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
+  })
   observeEvent(input$reset,{
     tryCatch({
       DiscreteData<<-trueData
@@ -981,6 +1045,7 @@ shinyServer(function(input, output,session) {
                uploadtype<<-1
                save(DiscreteData,file="customDashboard/inst/cd/data.RData")
                save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
+               write.csv(input$name,file = "customDashboard/inst/cd/name.txt",row.names = FALSE)
              },error = function(e){
                shinyalert(toString(e), type = "error")
              })
@@ -1077,6 +1142,7 @@ shinyServer(function(input, output,session) {
             uploadtype<<-2
             save(DiscreteData,file="customDashboard/inst/cd/data.RData")
             save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
+            write.csv(input$name,file = "customDashboard/inst/cd/name.txt",row.names = FALSE)
           },error = function(e){
             shinyalert(toString(e), type = "error")
           })
@@ -1147,6 +1213,7 @@ shinyServer(function(input, output,session) {
           uploadtype<<-1
           save(DiscreteData,file="customDashboard/inst/cd/data.RData")
           save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
+          write.csv(input$name,file = "customDashboard/inst/cd/name.txt",row.names = FALSE)
         }
         else
         {
@@ -1208,6 +1275,7 @@ shinyServer(function(input, output,session) {
           uploadtype<<-2
           save(DiscreteData,file="customDashboard/inst/cd/data.RData")
           save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
+          write.csv(input$name,file = "customDashboard/inst/cd/name.txt",row.names = FALSE)
         }
       }
     }
@@ -1302,6 +1370,7 @@ shinyServer(function(input, output,session) {
         output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
         save(DiscreteData,file="customDashboard/inst/cd/data.RData")
         save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
+        write.csv(input$name,file = "customDashboard/inst/cd/name.txt",row.names = FALSE)
       },error = function(e){
         shinyalert(toString(e), type = "error")
       })
@@ -1432,6 +1501,7 @@ shinyServer(function(input, output,session) {
             output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
             save(DiscreteData,file="customDashboard/inst/cd/data.RData")
             save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
+            write.csv(input$name,file = "customDashboard/inst/cd/name.txt",row.names = FALSE)
           }
         }
       }
@@ -1626,6 +1696,7 @@ shinyServer(function(input, output,session) {
         output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
         save(DiscreteData,file="customDashboard/inst/cd/data.RData")
         save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
+        write.csv(input$name,file = "customDashboard/inst/cd/name.txt",row.names = FALSE)
       },error = function(e){
         shinyalert(toString(e), type = "error")
       })
@@ -1700,6 +1771,7 @@ shinyServer(function(input, output,session) {
       output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
       save(DiscreteData,file="customDashboard/inst/cd/data.RData")
       save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
+      write.csv(input$name,file = "customDashboard/inst/cd/name.txt",row.names = FALSE)
     },error = function(e){
       shinyalert(toString(e), type = "error")
     })
@@ -1766,6 +1838,7 @@ shinyServer(function(input, output,session) {
           output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
           save(DiscreteData,file="customDashboard/inst/cd/data.RData")
           save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
+          write.csv(input$name,file = "customDashboard/inst/cd/name.txt",row.names = FALSE)
         }
       }
     },error = function(e){
@@ -1834,6 +1907,7 @@ shinyServer(function(input, output,session) {
           output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
           save(DiscreteData,file="customDashboard/inst/cd/data.RData")
           save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
+          write.csv(input$name,file = "customDashboard/inst/cd/name.txt",row.names = FALSE)
         }
       }
     },error = function(e){
