@@ -487,7 +487,8 @@ dashboardPage(skin = "blue",
                                                                  tabPanel("App Settings",
                                                                           shiny::fluidRow(
                                                                             column(3,materialSwitch(inputId = "parallel", label = "Go parallel", status = "primary", right = TRUE), style="margin:30px;"),
-                                                                            column(3,selectInput("clusters",choices = c(1:20),label = "Number of clusters")))
+                                                                            column(3,selectInput("clusters",choices = c(1:20),label = "Number of clusters"))),
+                                                                          downloadButton('dashboard','Custom Dashboard')
                                                                  )
                                                                  )
 

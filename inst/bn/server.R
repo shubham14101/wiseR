@@ -979,6 +979,8 @@ shinyServer(function(input, output,session) {
                reset<<-2
                upload<<-1
                uploadtype<<-1
+               save(DiscreteData,file="customDashboard/inst/cd/data.RData")
+               save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
              },error = function(e){
                shinyalert(toString(e), type = "error")
              })
@@ -1073,6 +1075,8 @@ shinyServer(function(input, output,session) {
             reset<<-2
             upload<<-1
             uploadtype<<-2
+            save(DiscreteData,file="customDashboard/inst/cd/data.RData")
+            save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
           },error = function(e){
             shinyalert(toString(e), type = "error")
           })
@@ -1141,6 +1145,8 @@ shinyServer(function(input, output,session) {
           reset<<-2
           upload<<-1
           uploadtype<<-1
+          save(DiscreteData,file="customDashboard/inst/cd/data.RData")
+          save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
         }
         else
         {
@@ -1200,6 +1206,8 @@ shinyServer(function(input, output,session) {
           reset<<-2
           upload<<-1
           uploadtype<<-2
+          save(DiscreteData,file="customDashboard/inst/cd/data.RData")
+          save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
         }
       }
     }
@@ -1292,6 +1300,8 @@ shinyServer(function(input, output,session) {
         reset<<-2
         updateSelectInput(session,"fromarc",choices = nodeNames)
         output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
+        save(DiscreteData,file="customDashboard/inst/cd/data.RData")
+        save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
       },error = function(e){
         shinyalert(toString(e), type = "error")
       })
@@ -1420,6 +1430,8 @@ shinyServer(function(input, output,session) {
             reset<<-2
             updateSelectInput(session,"fromarc",choices = nodeNames)
             output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
+            save(DiscreteData,file="customDashboard/inst/cd/data.RData")
+            save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
           }
         }
       }
@@ -1612,6 +1624,8 @@ shinyServer(function(input, output,session) {
         reset<<-2
         updateSelectInput(session,"fromarc",choices = nodeNames)
         output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
+        save(DiscreteData,file="customDashboard/inst/cd/data.RData")
+        save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
       },error = function(e){
         shinyalert(toString(e), type = "error")
       })
@@ -1684,6 +1698,8 @@ shinyServer(function(input, output,session) {
       reset<<-2
       updateSelectInput(session,"fromarc",choices = nodeNames)
       output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
+      save(DiscreteData,file="customDashboard/inst/cd/data.RData")
+      save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
     },error = function(e){
       shinyalert(toString(e), type = "error")
     })
@@ -1748,6 +1764,8 @@ shinyServer(function(input, output,session) {
           reset<<-2
           updateSelectInput(session,"fromarc",choices = nodeNames)
           output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
+          save(DiscreteData,file="customDashboard/inst/cd/data.RData")
+          save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
         }
       }
     },error = function(e){
@@ -1814,6 +1832,8 @@ shinyServer(function(input, output,session) {
           reset<<-2
           updateSelectInput(session,"fromarc",choices = nodeNames)
           output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
+          save(DiscreteData,file="customDashboard/inst/cd/data.RData")
+          save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
         }
       }
     },error = function(e){
@@ -2454,4 +2474,13 @@ shinyServer(function(input, output,session) {
 
       }
     })
+  output$dashboard<-downloadHandler(
+    filename = "customDashboard.tar.gz",
+    content = function(filename){
+      if(reset==2)
+      {
+        tar(filename,"customDashboard", compression = 'gzip', tar=Sys.getenv("tar"))
+      }
+    }
+  )
 })
