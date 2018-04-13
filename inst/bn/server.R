@@ -29,6 +29,7 @@ source('check.NA.R')
 source('check.discrete.R')
 source('custom.association.R')
 source('custom.Modules.R')
+source('tooltip.R')
 
 shinyServer(function(input, output,session) {
   withProgress(message = "Initializing Dashboard", value = 0, {
@@ -36,6 +37,8 @@ shinyServer(function(input, output,session) {
   options(shiny.maxRequestSize=1500*1024^2)
   options(warn=-1)
   options("getSymbols.warning4.0"=FALSE)
+  #tooltips
+  tooltip(session)
   #Structure Initialization
   DiscreteData <- alarm
   trueData<-DiscreteData
@@ -99,10 +102,12 @@ shinyServer(function(input, output,session) {
   output$datasetTable<-DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
   output$priorout<-DT::renderDataTable({bn.start$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
   output$postout<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
+  tooltip(session)
   })
   #observe events
   observeEvent(input$start,{
     updateTabItems(session, "sidebarMenu", "Structure")
+    tooltip(session)
   })
   observeEvent(input$tableName,{
     tryCatch({
@@ -129,7 +134,7 @@ shinyServer(function(input, output,session) {
     },error=function(e){
       shinyalert(toString(e), type = "error")
     })
-
+    tooltip(session)
   })
   observeEvent(input$listFile,{
     tryCatch({
@@ -165,6 +170,7 @@ shinyServer(function(input, output,session) {
     },error=function(e){
       shinyalert(toString(e), type = "error")
     })
+    tooltip(session)
   })
   observeEvent(input$priorFile,{
     file = input$priorFile
@@ -176,6 +182,7 @@ shinyServer(function(input, output,session) {
       bn.start<<- readRDS(file)
       output$priorout<-DT::renderDataTable({bn.start$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
     })
+    tooltip(session)
   })
   observeEvent(input$fromarc1,{
     tryCatch({
@@ -183,6 +190,7 @@ shinyServer(function(input, output,session) {
     },error=function(e){
       shinyalert(toString(e), type = "error")
     })
+    tooltip(session)
   })
   observeEvent(input$addarc1,{
     tryCatch({
@@ -192,7 +200,7 @@ shinyServer(function(input, output,session) {
     },error=function(e){
       shinyalert(toString(e), type = "error")
     })
-
+    tooltip(session)
   })
   observeEvent(input$RemoveArc,{
     tryCatch({
@@ -205,6 +213,7 @@ shinyServer(function(input, output,session) {
     },error=function(e){
       shinyalert(toString(e), type = "error")
     })
+    tooltip(session)
   })
   observeEvent(input$ReverseArc,{
     tryCatch({
@@ -217,6 +226,7 @@ shinyServer(function(input, output,session) {
     },error=function(e){
       shinyalert(toString(e), type = "error")
     })
+    tooltip(session)
   })
   observeEvent(input$threshold,{
     tryCatch({
@@ -243,6 +253,7 @@ shinyServer(function(input, output,session) {
     },error=function(e){
       shinyalert(toString(e), type = "error")
     })
+    tooltip(session)
   })
   observeEvent(input$association,{
     withProgress(message = "Building Association Graph", value = 0, {
@@ -271,6 +282,7 @@ shinyServer(function(input, output,session) {
         shinyalert(toString(e), type = "error")
       })
     })
+    tooltip(session)
   })
   observeEvent(input$calLoss,{
     tryCatch({
@@ -312,7 +324,7 @@ shinyServer(function(input, output,session) {
     },error=function(e){
       shinyalert(toString(e), type = "error")
     })
-
+    tooltip(session)
   })
   observeEvent(input$getScore,{
     tryCatch({
@@ -328,6 +340,7 @@ shinyServer(function(input, output,session) {
     },error=function(e){
       shinyalert(toString(e), type = "error")
     })
+    tooltip(session)
   })
   output$downloadDataset<-downloadHandler(
     filename = function(){
@@ -482,7 +495,8 @@ shinyServer(function(input, output,session) {
         },error = function(e){
              shinyalert(c("Error in loading data: ",toString(e)), type = "error")
            })
-      }
+    }
+    tooltip(session)
     })
   observeEvent(input$discretize,{
     tryCatch({
@@ -572,6 +586,7 @@ shinyServer(function(input, output,session) {
         messageString <- paste(c("Error is discretising using method ", type, ". Try using other method or upload pre-discretised data."), collapse = '')
         shinyalert(messageString, type = "error")
       })
+    tooltip(session)
   })
 
   observeEvent(input$impute,{
@@ -648,7 +663,7 @@ shinyServer(function(input, output,session) {
       messageString <- "Error imputing missingness using missRanger method. Try uploading pre-imputed data."
       shinyalert(messageString, type = "error")
     })
-
+    tooltip(session)
   })
   observeEvent(input$delete,{
     tryCatch({
@@ -718,6 +733,7 @@ shinyServer(function(input, output,session) {
     },error=function(e){
 
     })
+    tooltip(session)
   })
   observeEvent(input$sort,{
     DiscreteData<<-DiscreteData[,order(names(DiscreteData))]
@@ -782,6 +798,7 @@ shinyServer(function(input, output,session) {
     output$postout<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
     bn.start<<- empty.graph(names(DiscreteData))
     output$priorout<-DT::renderDataTable({bn.start$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
+    tooltip(session)
   })
   observeEvent(input$reset,{
     tryCatch({
@@ -850,6 +867,7 @@ shinyServer(function(input, output,session) {
     },error=function(e){
       shinyalert(toString(e), type = "error")
     })
+    tooltip(session)
   })
   observeEvent(input$transpose,{
     tryCatch({
@@ -925,6 +943,7 @@ shinyServer(function(input, output,session) {
     },error=function(e){
       shinyalert(toString(e),type = 'error')
     })
+    tooltip(session)
   })
   observeEvent(input$freqSelect,{
     if((check.discrete(DiscreteData)||check.NA(DiscreteData)))
@@ -957,6 +976,7 @@ shinyServer(function(input, output,session) {
         }
       })
     }
+    tooltip(session)
   })
   # Get the data selection from user
   observeEvent(input$structFile,{# Get the uploaded file from user
@@ -1052,6 +1072,7 @@ shinyServer(function(input, output,session) {
            }
          }
        }
+    tooltip(session)
     })
 
   observeEvent(input$bootFile,{
@@ -1149,6 +1170,7 @@ shinyServer(function(input, output,session) {
         }
       }
     }
+    tooltip(session)
   })
   observeEvent(input$parameterTuningU,{
     if(upload==1)
@@ -1279,7 +1301,7 @@ shinyServer(function(input, output,session) {
         }
       }
     }
-
+    tooltip(session)
   })
   # Learn the structure of the network
   observeEvent(input$learnBtn, {
@@ -1375,6 +1397,7 @@ shinyServer(function(input, output,session) {
         shinyalert(toString(e), type = "error")
       })
     }
+    tooltip(session)
   })
   observeEvent(input$PruneBtn,{
     tryCatch({
@@ -1508,6 +1531,7 @@ shinyServer(function(input, output,session) {
     },error=function(e){
       shinyalert(toString(e), type = "error")
     })
+    tooltip(session)
   })
   observeEvent(input$learnSBtn, {
     if(check.NA(DiscreteData))
@@ -1701,6 +1725,7 @@ shinyServer(function(input, output,session) {
         shinyalert(toString(e), type = "error")
       })
     }
+    tooltip(session)
   })
   observeEvent(input$fromarc,{
     tryCatch({
@@ -1711,6 +1736,7 @@ shinyServer(function(input, output,session) {
     },error = function(e){
       shinyalert(toString(e), type = "error")
     })
+    tooltip(session)
   })
   observeEvent(input$addarc,{
     tryCatch({
@@ -1775,6 +1801,7 @@ shinyServer(function(input, output,session) {
     },error = function(e){
       shinyalert(toString(e), type = "error")
     })
+    tooltip(session)
   })
   observeEvent(input$RemoveArc2,{
     tryCatch({
@@ -1844,6 +1871,7 @@ shinyServer(function(input, output,session) {
     },error = function(e){
       shinyalert(toString(e), type = "error")
     })
+    tooltip(session)
   })
   observeEvent(input$ReverseArc2,{
     tryCatch({
@@ -1913,6 +1941,7 @@ shinyServer(function(input, output,session) {
     },error = function(e){
       shinyalert(toString(e), type = "error")
     })
+    tooltip(session)
   })
   observeEvent(input$paramSelect,{
     if(reset==2)
@@ -1923,6 +1952,7 @@ shinyServer(function(input, output,session) {
         shinyalert(toString(e), type = "error")
       })
     }
+    tooltip(session)
   })
   observeEvent(input$parallel,{
     withProgress(message = "Building Clusters", value = 0, {
@@ -1945,6 +1975,7 @@ shinyServer(function(input, output,session) {
         shinyalert(toString(e), type = "error")
       })
     })
+    tooltip(session)
   })
   observeEvent(input$insertBtn, {
     withProgress(message = "Inserting Evidence", value = 0, {
@@ -1984,6 +2015,7 @@ shinyServer(function(input, output,session) {
         })
       }
     })
+    tooltip(session)
   })
 
   observeEvent(input$removeBtn, {
@@ -2008,6 +2040,7 @@ shinyServer(function(input, output,session) {
         shinyalert(toString(e), type = "error")
       })
     }
+    tooltip(session)
   })
   observeEvent(input$event,{
     if(reset==2)
@@ -2025,6 +2058,7 @@ shinyServer(function(input, output,session) {
         shinyalert(toString(e), type = "error")
       })
     }
+    tooltip(session)
   })
   observeEvent(input$plotBtn,{
     withProgress(message = "Learning Inference", value = 0, {
@@ -2044,7 +2078,7 @@ shinyServer(function(input, output,session) {
             }
             count = count + 1
           }
-          probs = prop.table(table(cpdist(bn.hc.boot.fit,input$event,evidence = eval(parse(text = str1)))))
+          probs = prop.table(table(cpdist(bn.hc.boot.fit,input$event,evidence = eval(parse(text = str1)))))[1:input$NumBar]
           output$distPlot = renderPlot({par(mar=c(5,3,3,3))
             par(oma=c(5,3,3,3))
             barx<<-barplot(probs,
@@ -2062,6 +2096,7 @@ shinyServer(function(input, output,session) {
         })
       }
     })
+    tooltip(session)
   })
   observeEvent(input$plotStrengthBtn,{
     withProgress(message = "Learning Inference", value = 0, {
@@ -2092,7 +2127,7 @@ shinyServer(function(input, output,session) {
           ee$sd = apply(probT, 2, sd)
           output$distPlot = renderPlot({par(mar=c(5,3,3,3))
             par(oma=c(5,3,3,3))
-            barx <<-barplot(ee$mean,
+            barx <<-barplot(ee$mean[1:input$NumBar],
                             col = "lightblue",
                             main = paste("Conditional Probabilities on ",input$event),
                             border = NA,
@@ -2100,14 +2135,15 @@ shinyServer(function(input, output,session) {
                             ylab = "Probabilities",
                             ylim = c(0,1),
                             las=2)
-            text(x = barx,y = round(ee$mean,digits = 4),label = round(ee$mean,digits = 4), pos = 3, cex = 0.8, col = "black")
-            error.bar(barx,ee$mean, 1.96*ee$sd/sqrt(input$plotStrengthBtn))})
+            text(x = barx,y = round(ee$mean[1:input$NumBar],digits = 4),label = round(ee$mean[1:input$NumBar],digits = 4), pos = 3, cex = 0.8, col = "black")
+            error.bar(barx,ee$mean[1:input$NumBar], 1.96*ee$sd[1:input$NumBar]/sqrt(input$plotStrengthBtn))})
 
         },error = function(e){
           shinyalert(toString(e), type = "error")
         })
       }
     })
+    tooltip(session)
   })
   observeEvent(input$sortPlot,{
     withProgress(message = "Learning Inference", value = 0, {
@@ -2193,6 +2229,7 @@ shinyServer(function(input, output,session) {
         }
       }
     })
+    tooltip(session)
   })
   observeEvent(input$moduleSelection,{
     withProgress(message = "Loading Module", value = 0, {
@@ -2288,6 +2325,7 @@ shinyServer(function(input, output,session) {
         })
       }
     })
+    tooltip(session)
   })
   observeEvent(input$current_node_id,{
     if(reset==2)
@@ -2313,6 +2351,7 @@ shinyServer(function(input, output,session) {
         shinyalert(toString(e), type = "error")
       })
     }
+    tooltip(session)
   })
   observeEvent(input$Acurrent_node_id,{
     if(assocReset==2)
@@ -2338,7 +2377,7 @@ shinyServer(function(input, output,session) {
         shinyalert(toString(e), type = "error")
       })
     }
-
+    tooltip(session)
   })
   observeEvent(input$Bcommunities,{
     tryCatch({
@@ -2356,6 +2395,7 @@ shinyServer(function(input, output,session) {
         updateSelectInput(session,"moduleSelection",choices = c("graph",names(communities)))
       }
     })
+    tooltip(session)
   })
   observeEvent(input$degree,{
     if(reset==2)
@@ -2381,6 +2421,7 @@ shinyServer(function(input, output,session) {
 
       })
     }
+    tooltip(session)
   })
   observeEvent(input$Adegree,{
     if(assocReset==2)
@@ -2388,6 +2429,7 @@ shinyServer(function(input, output,session) {
       output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$Adegree,input$Agraph_layout,shapeVectorAssoc)})
       updateSelectInput(session,"Aneighbornodes",choices = "")
     }
+    tooltip(session)
   })
   observeEvent(input$graph_layout,{
     if(reset==2)
@@ -2413,6 +2455,7 @@ shinyServer(function(input, output,session) {
 
       })
     }
+    tooltip(session)
   })
   observeEvent(input$Agraph_layout,{
     if(assocReset==2)
@@ -2420,6 +2463,7 @@ shinyServer(function(input, output,session) {
       output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$Adegree,input$Agraph_layout,shapeVectorAssoc)})
       updateSelectInput(session,"Aneighbornodes",choices = "")
     }
+    tooltip(session)
   })
   observeEvent(input$graphBtn,{
     if(reset==2)
@@ -2445,6 +2489,7 @@ shinyServer(function(input, output,session) {
 
       })
     }
+    tooltip(session)
   })
   observeEvent(input$graphBtn2,{
     if(assocReset==2)
@@ -2458,6 +2503,7 @@ shinyServer(function(input, output,session) {
 
       })
     }
+    tooltip(session)
   })
   observeEvent(input$group,{
     if(reset==2)
@@ -2484,6 +2530,7 @@ shinyServer(function(input, output,session) {
 
       })
     }
+    tooltip(session)
   })
   observeEvent(input$Agroup,{
     if(assocReset==2)
@@ -2492,6 +2539,7 @@ shinyServer(function(input, output,session) {
       output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$Adegree,input$Agraph_layout,shapeVectorAssoc)})
       updateSelectInput(session,"Aneighbornodes",choices = "")
     }
+    tooltip(session)
   })
   observeEvent(input$Agroup2,{
     if(assocReset==2)
@@ -2501,6 +2549,7 @@ shinyServer(function(input, output,session) {
       output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$Adegree,input$Agraph_layout,shapeVectorAssoc)})
       updateSelectInput(session,"Aneighbornodes",choices = "")
     }
+    tooltip(session)
   })
   observeEvent(input$group2,{
     if(reset==2)
@@ -2528,6 +2577,7 @@ shinyServer(function(input, output,session) {
 
       })
     }
+    tooltip(session)
   })
 
 
