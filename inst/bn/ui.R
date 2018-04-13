@@ -248,7 +248,7 @@ dashboardPage(skin = "blue",
                                                                  tabPanel("Bayesian Network",
                                                                           fluidPage(
                                                                             shiny::fluidRow(
-                                                                              shiny::column(2,dropdownButton(
+                                                                              shiny::column(1,dropdownButton(
                                                                                 shinyWidgets::radioGroupButtons(inputId = "structureOption",
                                                                                                                 choices = c("Upload Network","Learn New","Validate Network"),
                                                                                                                 selected = "Upload Network",
