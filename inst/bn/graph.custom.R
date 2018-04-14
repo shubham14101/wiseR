@@ -1,4 +1,4 @@
-graph.custom <- function(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,Ndegree,Tlayout)
+graph.custom <- function(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,Ndegree,Tlayout,w,val)
 {
   defLeg<-TRUE
   if(!(EventNode %in% nodeNames))
@@ -16,9 +16,11 @@ graph.custom <- function(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNo
                           group = nodes$group,
                           shape = shapeVector)
     visEdges<- data.frame(from = NetworkGraph$from,
-                          to = NetworkGraph$to)
+                          to = NetworkGraph$to,
+                          title=w,
+                          value=val)
     return(visNetwork(visNodes, visEdges, width = "100%") %>%
-             visEdges(arrows ="to",smooth = T,color = list(color = "grey",highlight = "black",hover = "black"))%>%
+             visEdges(arrows ="to",smooth = T,color = list(color = "grey",highlight = "black",hover = "black"),scaling=list(min=0,max=1))%>%
              visGroups(groupname = "not in use", color = list(background = "lightblue",highlight = 'blue', hover = "blue")) %>%
              visGroups(groupname = "Event", color = list(background = "lightgreen",highlight = "green", hover = "green"))%>%
              visGroups(groupname = "Evidence", color = list(background = "pink",highlight = "red", hover = "red")) %>%
