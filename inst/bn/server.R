@@ -80,6 +80,8 @@ shinyServer(function(input, output,session) {
   updateSelectInput(session,"tableName",choices = c("Association Graph","Bayesian Graph","Cross Validation Results","blacklist edges","whitelist edges"))
   updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
   updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
+  updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
+  updateSelectInput(session,'modGroup',choices = "")
   updateSelectInput(session,'Avarshape',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
   updateSelectInput(session,'Avarshape2',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
   updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
@@ -491,6 +493,8 @@ shinyServer(function(input, output,session) {
         updateSelectInput(session,"fromarc",choices=c())
         updateSelectInput(session,"toarc",choices = c())
         updateSelectInput(session,"fromarc1",choices = names(DiscreteData))
+        updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
+        updateSelectInput(session,'modGroup',choices = "")
         output$postout<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
         },error = function(e){
              shinyalert(c("Error in loading data: ",toString(e)), type = "error")
@@ -578,6 +582,7 @@ shinyServer(function(input, output,session) {
           updateSelectInput(session,"fromarc",choices=c())
           updateSelectInput(session,"toarc",choices = c())
           updateSelectInput(session,"fromarc1",choices = names(DiscreteData))
+          updateSelectInput(session,'modGroup',choices = "")
           output$postout<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
         })
       }
@@ -657,6 +662,7 @@ shinyServer(function(input, output,session) {
       updateSelectInput(session,"fromarc",choices=c())
       updateSelectInput(session,"toarc",choices = c())
       updateSelectInput(session,"fromarc1",choices = names(DiscreteData))
+      updateSelectInput(session,'modGroup',choices = "")
       output$postout<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
     })}, error = function(e){
       type <- toString(input$dtype)
@@ -727,6 +733,7 @@ shinyServer(function(input, output,session) {
       updateSelectInput(session,"fromarc",choices=c())
       updateSelectInput(session,"toarc",choices = c())
       updateSelectInput(session,"fromarc1",choices = names(DiscreteData))
+      updateSelectInput(session,'modGroup',choices = "")
       output$postout<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
       bn.start<<- empty.graph(names(DiscreteData))
       output$priorout<-DT::renderDataTable({bn.start$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
@@ -795,6 +802,7 @@ shinyServer(function(input, output,session) {
     updateSelectInput(session,"fromarc",choices=c())
     updateSelectInput(session,"toarc",choices = c())
     updateSelectInput(session,"fromarc1",choices = names(DiscreteData))
+    updateSelectInput(session,'modGroup',choices = "")
     output$postout<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
     bn.start<<- empty.graph(names(DiscreteData))
     output$priorout<-DT::renderDataTable({bn.start$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
@@ -861,6 +869,7 @@ shinyServer(function(input, output,session) {
       updateSelectInput(session,"fromarc",choices=c())
       updateSelectInput(session,"toarc",choices = c())
       updateSelectInput(session,"fromarc1",choices = names(DiscreteData))
+      updateSelectInput(session,'modGroup',choices = "")
       output$postout<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
       bn.start<<- empty.graph(names(DiscreteData))
       output$priorout<-DT::renderDataTable({bn.start$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
@@ -936,6 +945,7 @@ shinyServer(function(input, output,session) {
         updateSelectInput(session,"fromarc",choices=c())
         updateSelectInput(session,"toarc",choices = c())
         updateSelectInput(session,"fromarc1",choices = names(DiscreteData))
+        updateSelectInput(session,'modGroup',choices = "")
         output$postout<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
         bn.start<<- empty.graph(names(DiscreteData))
         output$priorout<-DT::renderDataTable({bn.start$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
@@ -1058,6 +1068,9 @@ shinyServer(function(input, output,session) {
                graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
                updateSelectInput(session,"neighbornodes",choices = "")
                updateSelectInput(session,"fromarc",choices = nodeNames)
+               updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                                  "ellipse", "database", "text", "diamond"))
+               updateSelectInput(session,'modGroup',choices = "")
                updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
                output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
                reset<<-2
@@ -1156,6 +1169,9 @@ shinyServer(function(input, output,session) {
             graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
             updateSelectInput(session,"neighbornodes",choices = "")
             updateSelectInput(session,"fromarc",choices = nodeNames)
+            updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                               "ellipse", "database", "text", "diamond"))
+            updateSelectInput(session,'modGroup',choices = "")
             updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
             output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
             reset<<-2
@@ -1228,6 +1244,9 @@ shinyServer(function(input, output,session) {
           graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
           updateSelectInput(session,"neighbornodes",choices = "")
           updateSelectInput(session,"fromarc",choices = nodeNames)
+          updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                             "ellipse", "database", "text", "diamond"))
+          updateSelectInput(session,'modGroup',choices = "")
           updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
           output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
           reset<<-2
@@ -1290,6 +1309,9 @@ shinyServer(function(input, output,session) {
           graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
           updateSelectInput(session,"neighbornodes",choices = "")
           updateSelectInput(session,"fromarc",choices = nodeNames)
+          updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                             "ellipse", "database", "text", "diamond"))
+          updateSelectInput(session,'modGroup',choices = "")
           updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
           output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
           reset<<-2
@@ -1374,6 +1396,7 @@ shinyServer(function(input, output,session) {
         EvidenceNode <<- c()
         shapeVector<<- rep('dot',length(nodeNames))
         updateSelectInput(session,'event',choices = nodeNames)
+        #print(bn.hc.boot.pruned[,3])
         output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
         updateSelectInput(session,'event',choices = nodeNames)
         updateSelectizeInput(session,'varselect',choices = nodeNames)
@@ -1386,6 +1409,9 @@ shinyServer(function(input, output,session) {
         updateSelectInput(session,"moduleSelection",choices = "graph")
         graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
         updateSelectInput(session,"neighbornodes",choices = "")
+        updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                           "ellipse", "database", "text", "diamond"))
+        updateSelectInput(session,'modGroup',choices = "")
         updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
         reset<<-2
         updateSelectInput(session,"fromarc",choices = nodeNames)
@@ -1457,6 +1483,9 @@ shinyServer(function(input, output,session) {
             updateSelectInput(session,"moduleSelection",choices = "graph")
             graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
             updateSelectInput(session,"neighbornodes",choices = "")
+            updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                               "ellipse", "database", "text", "diamond"))
+            updateSelectInput(session,'modGroup',choices = "")
             updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
             reset<<-2
             updateSelectInput(session,"fromarc",choices = nodeNames)
@@ -1518,6 +1547,9 @@ shinyServer(function(input, output,session) {
             updateSelectInput(session,"moduleSelection",choices = "graph")
             graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
             updateSelectInput(session,"neighbornodes",choices = "")
+            updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                               "ellipse", "database", "text", "diamond"))
+            updateSelectInput(session,'modGroup',choices = "")
             updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
             reset<<-2
             updateSelectInput(session,"fromarc",choices = nodeNames)
@@ -1712,6 +1744,9 @@ shinyServer(function(input, output,session) {
         updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
         updateSelectInput(session,'paramSelect',choices = nodeNames)
         updateSelectInput(session,"moduleSelection",choices = "graph")
+        updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                           "ellipse", "database", "text", "diamond"))
+        updateSelectInput(session,'modGroup',choices = "")
         graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
         updateSelectInput(session,"neighbornodes",choices = "")
         updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
@@ -1789,6 +1824,9 @@ shinyServer(function(input, output,session) {
       updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
       updateSelectInput(session,'paramSelect',choices = nodeNames)
       updateSelectInput(session,"moduleSelection",choices = "graph")
+      updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                         "ellipse", "database", "text", "diamond"))
+      updateSelectInput(session,'modGroup',choices = "")
       graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
       updateSelectInput(session,"neighbornodes",choices = "")
       updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
@@ -1862,6 +1900,9 @@ shinyServer(function(input, output,session) {
           updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
           reset<<-2
           updateSelectInput(session,"fromarc",choices = nodeNames)
+          updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                             "ellipse", "database", "text", "diamond"))
+          updateSelectInput(session,'modGroup',choices = "")
           output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
           save(DiscreteData,file="customDashboard/inst/cd/data.RData")
           save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
@@ -1932,6 +1973,9 @@ shinyServer(function(input, output,session) {
           updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
           reset<<-2
           updateSelectInput(session,"fromarc",choices = nodeNames)
+          updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                             "ellipse", "database", "text", "diamond"))
+          updateSelectInput(session,'modGroup',choices = "")
           output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
           save(DiscreteData,file="customDashboard/inst/cd/data.RData")
           save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
@@ -2291,6 +2335,8 @@ shinyServer(function(input, output,session) {
             updateSelectInput(session,'paramSelect',choices = nodeNames)
             graph<<-graph_from_edgelist(as.matrix(pruneGraph),directed = TRUE)
             updateSelectInput(session,"neighbornodes",choices = "")
+            updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                               "ellipse", "database", "text", "diamond"))
             updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
           }
           else
@@ -2318,6 +2364,8 @@ shinyServer(function(input, output,session) {
             updateSelectInput(session,'paramSelect',choices = nodeNames)
             graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
             updateSelectInput(session,"neighbornodes",choices = "")
+            updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                               "ellipse", "database", "text", "diamond"))
             updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
           }
         },error=function(e){
@@ -2393,8 +2441,45 @@ shinyServer(function(input, output,session) {
         lengthCom<<-order(lengthCom,decreasing = T)
         names(lengthCom)<<-paste("Module",c(1:length(communities)),sep=" ")
         updateSelectInput(session,"moduleSelection",choices = c("graph",names(communities)))
+        updateSelectInput(session,'modGroup',choices = names(communities))
+        shinyalert("Module detection successfull",type="success")
       }
+    },error=function(e){
+      shinyalert("Module detection failed",type="error")
+      updateSelectInput(session,"moduleSelection",choices = "graph")
+      updateSelectInput(session,'modGroup',choices = "")
     })
+    tooltip(session)
+  })
+  observeEvent(input$group3,{
+    if(reset==2)
+    {
+      if(input$modGroup!="")
+      {
+        tryCatch({
+          selectedNodes<<-communities[[lengthCom[input$modGroup]]]
+          shapeVector[which(nodeNames %in% selectedNodes)] <<- input$varshape3
+          for(elem in inserted)
+          {
+            EvidenceNode = c(EvidenceNode,input[[elem]])
+          }
+          if(sanity==1)
+          {
+            EventNode = nodeNames[1]
+            sanity=sanity + 1
+          }
+          else
+          {
+            EventNode = input$event
+          }
+          output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
+          updateSelectInput(session,"neighbornodes",choices = "")
+        },error = function(e){
+          shinyalert(toString(e), type = "error")
+
+        })
+      }
+    }
     tooltip(session)
   })
   observeEvent(input$degree,{

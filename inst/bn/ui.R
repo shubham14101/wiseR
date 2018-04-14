@@ -443,6 +443,10 @@ dashboardPage(skin = "blue",
                                                                                                                                   shiny::column(3,selectInput('varshape2',label = "Shape","")),
                                                                                                                                   shiny::column(3, actionButton('group2','Group', style="margin-top:25px;"))
                                                                                                                   ),
+                                                                                                                  shiny::fluidRow(shiny::column(6,selectInput('modGroup',label = "modules",choices = "")),
+                                                                                                                                  shiny::column(3,selectInput('varshape3',label = "Shape","")),
+                                                                                                                                  shiny::column(3, actionButton('group3','Group', style="margin-top:25px;"))
+                                                                                                                  ),
                                                                                                                   shiny::fluidRow(shiny::column(6,h4('Visible Neighbors'),div(id = "graphChain",
                                                                                                                                                                                     sliderInput("degree", label = NULL,
                                                                                                                                                                                                 min = 1, max = 10,
