@@ -10,9 +10,10 @@ graph.custom.assoc <- function(assocNetwork,nodeNames,Ndegree,Tlayout,shapeVecto
                           shape = shapeVector)
     visEdges<- data.frame(from = assocNetwork[,1],
                           to = assocNetwork[,2],
-                          title = assocNetwork[,3])
+                          title = assocNetwork[,3],
+                          value=assocNetwork[,3])
     return(visNetwork(visNodes, visEdges, width = "100%") %>%
-             visEdges(smooth = T,color = list(color = "grey",highlight = "black",hover = "black"))%>%
+             visEdges(smooth = T,color = list(color = "grey",highlight = "black",hover = "black"),scaling=list(min=0,max=1))%>%
              visGroups(groupname = "not in use", color = list(background = "lightblue",highlight = 'blue', hover = "blue")) %>%
              visLegend(width = 0.1, position = "left",enabled=FALSE)%>%
              visNodes(shape = "dot") %>%

@@ -50,6 +50,7 @@ shinyServer(function(input, output,session) {
   EventNode <- c()
   EvidenceNode <- c()
   shapeVector<- c()
+  communities<-NULL
   #structure initialization
   bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = "bayes")
   NetworkGraph <<- data.frame(directed.arcs(bn.hc.boot.average))
@@ -63,6 +64,8 @@ shinyServer(function(input, output,session) {
                                                     "ellipse", "database", "text", "diamond"))
   updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                      "ellipse", "database", "text", "diamond"))
+  updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
+  updateSelectInput(session,'modGroup',choices = "")
   updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
   updateSelectInput(session,'paramSelect',choices = nodeNames)
   updateSelectInput(session,"moduleSelection",choices = "graph")
@@ -435,6 +438,13 @@ shinyServer(function(input, output,session) {
       lengthCom<<-order(lengthCom,decreasing = T)
       names(lengthCom)<<-paste("Module",c(1:length(communities)),sep=" ")
       updateSelectInput(session,"moduleSelection",choices = c("graph",names(communities)))
+      updateSelectInput(session,'modGroup',choices = names(communities))
+      shinyalert("Module detection successfull",type="success")
+    },error=function(e){
+      print(e)
+      shinyalert("Module detection failed",type="error")
+      updateSelectInput(session,"moduleSelection",choices = "graph")
+      updateSelectInput(session,'modGroup',choices = "")
     })
   })
   observeEvent(input$degree,{
@@ -549,5 +559,32 @@ shinyServer(function(input, output,session) {
       shinyalert(toString(e), type = "error")
 
     })
+  })
+  observeEvent(input$group3,{
+    if(input$modGroup!="")
+    {
+      tryCatch({
+        selectedNodes<<-communities[[lengthCom[input$modGroup]]]
+        shapeVector[which(nodeNames %in% selectedNodes)] <<- input$varshape3
+        for(elem in inserted)
+        {
+          EvidenceNode = c(EvidenceNode,input[[elem]])
+        }
+        if(sanity==1)
+        {
+          EventNode = nodeNames[1]
+          sanity=sanity + 1
+        }
+        else
+        {
+          EventNode = input$event
+        }
+        output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
+        updateSelectInput(session,"neighbornodes",choices = "")
+      },error = function(e){
+        shinyalert(toString(e), type = "error")
+
+      })
+    }
   })
 })
