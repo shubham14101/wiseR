@@ -2388,10 +2388,26 @@ shinyServer(function(input, output,session) {
             updateSelectInput(session,"neighbornodes",choices = "")
             updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                                "ellipse", "database", "text", "diamond"))
+            updateSelectInput(session,'modGroup',choices = input$moduleSelection)
             updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
           }
           else
           {
+            for(elem in 1:length(inserted))
+            {
+              removeUI(
+                selector = paste0('#', inserted[elem])
+              )
+
+            }
+            inserted <<- c()
+            for(elem2 in 1:length(insertedV))
+            {
+              removeUI(
+                selector = paste0('#', insertedV[elem2])
+              )
+
+            }
             insertedV <<- c()
             rvs$evidence <<- c()
             rvs$value <<- c()
@@ -2428,6 +2444,7 @@ shinyServer(function(input, output,session) {
             updateSelectInput(session,"neighbornodes",choices = "")
             updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                                "ellipse", "database", "text", "diamond"))
+            updateSelectInput(session,'modGroup',choices = names(communities))
             updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
           }
         },error=function(e){
@@ -2453,7 +2470,7 @@ shinyServer(function(input, output,session) {
           else
           {
             nlist<<-ego(graph,input$degreeN,nodes = input$current_node_id, mode = c("all", "out", "in"),mindist = 0)
-            updateSelectInput(session,"neighbornodes",choices = nlist[[1]]$name)
+            updateSelectInput(session,"neighbornodes",choices = setdiff(nlist[[1]]$name,input$current_node_id))
           }
 
         }

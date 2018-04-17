@@ -374,6 +374,21 @@ shinyServer(function(input, output,session) {
         }
         else
         {
+          for(elem in 1:length(inserted))
+          {
+            removeUI(
+              selector = paste0('#', inserted[elem])
+            )
+
+          }
+          inserted <<- c()
+          for(elem2 in 1:length(insertedV))
+          {
+            removeUI(
+              selector = paste0('#', insertedV[elem2])
+            )
+
+          }
           insertedV <<- c()
           rvs$evidence <<- c()
           rvs$value <<- c()
@@ -418,7 +433,7 @@ shinyServer(function(input, output,session) {
         else
         {
           nlist<<-ego(graph,input$degreeN,nodes = input$current_node_id, mode = c("all", "out", "in"),mindist = 0)
-          updateSelectInput(session,"neighbornodes",choices = nlist[[1]]$name)
+          updateSelectInput(session,"neighbornodes",choices = setdiff(nlist[[1]]$name,input$current_node_id))
         }
 
       }
