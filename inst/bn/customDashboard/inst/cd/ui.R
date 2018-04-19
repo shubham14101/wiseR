@@ -74,21 +74,7 @@ dashboardPage(skin = "blue",
                                                                  tabPanel("Bayesian Network",
                                                                           fluidPage(
                                                                             shiny::fluidRow(
-                                                                              shiny::column(9,shinyWidgets::radioGroupButtons(inputId = "bayesianOption",
-                                                                                                                              choices = c("Graph","CP Distribution", "Inference Plot"),
-                                                                                                                              selected = "Graph",
-                                                                                                                              justified = FALSE
-                                                                              )),
-                                                                              shiny::column(1, dropdownButton(
-                                                                                shiny::h4("Display inference plot"),
-                                                                                shiny::fluidRow(shiny::column(5,actionButton('plotBtn', 'Simple Plot')),shiny::column(4,actionButton('plotStrengthBtn', 'Confidence Plot'))),
-                                                                                hr(),
-                                                                                shiny::h4("No of iterations for confidence plot"),
-                                                                                sliderInput("numInterval", label = NULL,
-                                                                                            min = 1, max = 500,
-                                                                                            value = 25
-                                                                                ),
-                                                                                hr(),
+                                                                              shiny::column(2, dropdownButton(
                                                                                 h4("Select evidence to add to the model"),
                                                                                 shiny::fluidRow(shiny::column(6,actionButton('insertBtn', 'Insert')),
                                                                                                 shiny::column(6,actionButton('removeBtn', 'Remove'))
@@ -102,7 +88,17 @@ dashboardPage(skin = "blue",
                                                                                 shiny::selectInput("event",
                                                                                                    label = NULL,
                                                                                                    ""),
+                                                                                shiny::h4("Display inference plot"),
+                                                                                shiny::fluidRow(shiny::column(5,actionButton('plotBtn', 'Simple Plot')),shiny::column(4,actionButton('plotStrengthBtn', 'Confidence Plot'))),
+                                                                                hr(),
+                                                                                shiny::h4("No of iterations for confidence plot"),
+                                                                                textInput("numInterval", label = NULL,placeholder = 25),
                                                                                 label = "Inference",circle = F, status = "primary", icon = icon("bar-chart-o"), width = "300px",tooltip = tooltipOptions(title = "Learn Inferences")
+                                                                              )),
+                                                                              shiny::column(9,shinyWidgets::radioGroupButtons(inputId = "bayesianOption",
+                                                                                                                              choices = c("Graph","CP Distribution", "Inference Plot"),
+                                                                                                                              selected = "Graph",
+                                                                                                                              justified = FALSE
                                                                               ))
                                                                               ),
                                                                             shiny::conditionalPanel(

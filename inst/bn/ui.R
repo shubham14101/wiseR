@@ -399,6 +399,11 @@ dashboardPage(skin = "blue",
                                                                                 shiny::selectInput("event",
                                                                                                    label = NULL,
                                                                                                    ""),
+                                                                                shiny::h4("Display inference plot"),
+                                                                                shiny::fluidRow(shiny::column(5,actionButton('plotBtn', 'Simple Plot')),shiny::column(4,actionButton('plotStrengthBtn', 'Confidence Plot'))),
+                                                                                hr(),
+                                                                                shiny::h4("No of iterations for confidence plot"),
+                                                                                textInput("numInterval", label = NULL,placeholder = 25),
                                                                                 label = "Inference",circle = F, status = "primary", icon = icon("bar-chart-o"), width = "300px",tooltip = tooltipOptions(title = "Learn Inferences")
                                                                               )),
                                                                               shiny::column(5,shinyWidgets::radioGroupButtons(inputId = "bayesianOption",
@@ -475,11 +480,6 @@ dashboardPage(skin = "blue",
                                                                             shiny::conditionalPanel(
                                                                               "input.bayesianOption=='Inference Plot'",
                                                                               dropdownButton(
-                                                                                shiny::h4("Display inference plot"),
-                                                                                shiny::fluidRow(shiny::column(5,actionButton('plotBtn', 'Simple Plot')),shiny::column(4,actionButton('plotStrengthBtn', 'Confidence Plot'))),
-                                                                                hr(),
-                                                                                shiny::h4("No of iterations for confidence plot"),
-                                                                                textInput("numInterval", label = NULL,placeholder = 25),
                                                                                 sliderInput("NumBar", label = "No. of bars",min = 0, max = 1,value = 1,step=1),
                                                                                 actionButton("sortPlot","Sort X-axis"),
                                                                                 label = "Plot",circle = F, status = "primary", icon = icon("gear"), width = "400px",tooltip = tooltipOptions(title = "plot settings")
