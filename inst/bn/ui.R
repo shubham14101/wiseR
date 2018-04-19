@@ -507,11 +507,12 @@ dashboardPage(skin = "blue",
                                                                          ),
                                                                  tabPanel("Custom Dashboard",
                                                                           shiny::fluidRow(
-                                                                            column(3,h5("")),
-                                                                            column(3,h5("Name"))),
+                                                                            column(3,h5("Name")),
+                                                                            column(3,h5(""))),
                                                                           shiny::fluidRow(
-                                                                            column(3,downloadButton('dashboard','Custom Dashboard')),
-                                                                            column(3,textInput("name",placeholder = NULL,label = NULL)))
+                                                                            column(3,textInput("name",placeholder = NULL,label = NULL)),
+                                                                            column(2,actionButton("build",'build')),
+                                                                            column(3,downloadButton('dashboard','Custom Dashboard')))
                                                                  )
                                                                  )
 

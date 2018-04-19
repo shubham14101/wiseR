@@ -158,23 +158,25 @@ shinyServer(function(input, output,session) {
       tryCatch({
         confidence<<-1
         str1 <<- ""
+        str2<<-""
         count =1
         for(elem in inserted)
         {
           vid = insertedV[which(inserted == elem)]
           str1 <<- paste0(str1,"(", input[[elem]], "=='", input[[vid]], "')")
+          str2<<-paste(str2,input[[elem]],", ")
           if(count!=length(inserted))
           {
             str1 <<- paste0(str1," & ")
           }
           count = count + 1
         }
-        probs = prop.table(table(cpdist(bn.hc.boot.fit,input$event,evidence = eval(parse(text = str1)))))
+        probs = prop.table(table(cpdist(bn.hc.boot.fit,input$event,evidence = eval(parse(text = str1)))))[1:input$NumBar]
         output$distPlot = renderPlot({par(mar=c(5,3,3,3))
           par(oma=c(5,3,3,3))
           barx<<-barplot(probs,
                          col = "lightblue",
-                         main = paste("Conditional Probabilities on ",input$event),
+                         main = paste("probability of ",input$event," conditioned on evidence ",substr(str2,1,(nchar(str2)-2))),
                          border = NA,
                          xlab = "",
                          ylab = "Probabilities",
@@ -195,11 +197,13 @@ shinyServer(function(input, output,session) {
         for(i in 1:input$plotStrengthBtn)
         {
           str1 <<- ""
+          str2<<-""
           count =1
           for(elem in inserted)
           {
             vid = insertedV[which(inserted == elem)]
             str1 <<- paste0(str1,"(", input[[elem]], "=='", input[[vid]], "')")
+            str2<<-paste(str2,input[[elem]],", ")
             if(count!=length(inserted))
             {
               str1 <<- paste0(str1," & ")
@@ -214,16 +218,16 @@ shinyServer(function(input, output,session) {
         ee$sd = apply(probT, 2, sd)
         output$distPlot = renderPlot({par(mar=c(5,3,3,3))
           par(oma=c(5,3,3,3))
-          barx <<-barplot(ee$mean,
+          barx <<-barplot(ee$mean[1:input$NumBar],
                           col = "lightblue",
-                          main = paste("Conditional Probabilities on ",input$event),
+                          main = paste("probability of ",input$event," conditioned on evidence ",substr(str2,1,(nchar(str2)-2))),
                           border = NA,
                           xlab = "",
                           ylab = "Probabilities",
                           ylim = c(0,1),
                           las=2)
-          text(x = barx,y = round(ee$mean,digits = 4),label = round(ee$mean,digits = 4), pos = 3, cex = 0.8, col = "black")
-          error.bar(barx,ee$mean, 1.96*ee$sd/sqrt(input$plotStrengthBtn))})
+          text(x = barx,y = round(ee$mean[1:input$NumBar],digits = 4),label = round(ee$mean[1:input$NumBar],digits = 4), pos = 3, cex = 0.8, col = "black")
+          error.bar(barx,ee$mean[1:input$NumBar], 1.96*ee$sd[1:input$NumBar]/sqrt(input$plotStrengthBtn))})
 
       },error = function(e){
         shinyalert(toString(e), type = "error")
@@ -237,11 +241,13 @@ shinyServer(function(input, output,session) {
         tryCatch({
           confidence<<-1
           str1 <<- ""
+          str2<<-""
           count =1
           for(elem in inserted)
           {
             vid = insertedV[which(inserted == elem)]
             str1 <<- paste0(str1,"(", input[[elem]], "=='", input[[vid]], "')")
+            str2<<-paste(str2,input[[elem]],", ")
             if(count!=length(inserted))
             {
               str1 <<- paste0(str1," & ")
@@ -253,7 +259,7 @@ shinyServer(function(input, output,session) {
             par(oma=c(5,3,3,3))
             barx<<-barplot(probs,
                            col = "lightblue",
-                           main = paste("Conditional Probabilities on ",input$event),
+                           main = paste("probability of ",input$event," conditioned on evidence ",substr(str2,1,(nchar(str2)-2))),
                            border = NA,
                            xlab = "",
                            ylab = "Probabilities",
@@ -275,11 +281,13 @@ shinyServer(function(input, output,session) {
           for(i in 1:input$plotStrengthBtn)
           {
             str1 <<- ""
+            str2<<-""
             count =1
             for(elem in inserted)
             {
               vid = insertedV[which(inserted == elem)]
               str1 <<- paste0(str1,"(", input[[elem]], "=='", input[[vid]], "')")
+              str2<<-paste(str2,input[[elem]],", ")
               if(count!=length(inserted))
               {
                 str1 <<- paste0(str1," & ")
@@ -297,7 +305,7 @@ shinyServer(function(input, output,session) {
             par(oma=c(5,3,3,3))
             barx <<-barplot(ee$mean[nm],
                             col = "lightblue",
-                            main = paste("Conditional Probabilities on ",input$event),
+                            main = paste("probability of ",input$event," conditioned on evidence ",substr(str2,1,(nchar(str2)-2))),
                             border = NA,
                             xlab = "",
                             ylab = "Probabilities",

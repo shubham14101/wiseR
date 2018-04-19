@@ -168,8 +168,11 @@ dashboardPage(skin = "blue",
                                                                               ),
                                                                             shiny::conditionalPanel(
                                                                               "input.bayesianOption=='Inference Plot'",
-                                                                              sliderInput("NumBar", label = "No. of bars",min = 0, max = 1,value = 1,step=1),
-                                                                              actionButton("sortPlot","Sort X-axis"),
+                                                                              dropdownButton(
+                                                                                sliderInput("NumBar", label = "No. of bars",min = 0, max = 1,value = 1,step=1),
+                                                                                actionButton("sortPlot","Sort X-axis"),
+                                                                                label = "Plot",circle = F, status = "primary", icon = icon("gear"), width = "400px",tooltip = tooltipOptions(title = "plot settings")
+                                                                              ),
                                                                               withSpinner(plotOutput("distPlot",height = "450px"), color="#2E86C1")
                                                                             ),
                                                                             shiny::conditionalPanel(
