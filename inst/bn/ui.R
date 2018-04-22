@@ -29,6 +29,7 @@ source('check.NA.R')
 source('check.discrete.R')
 source('custom.association.R')
 source('custom.Modules.R')
+source('dashboardthemes.R')
 
 
 myDashboardHeader <- function (..., title = NULL, titleWidth = NULL, disable = FALSE,
@@ -51,7 +52,7 @@ myDashboardHeader <- function (..., title = NULL, titleWidth = NULL, disable = F
 }
 
 dashboardPage(skin = "blue",
-              myDashboardHeader(title = "ShinyBN",
+              myDashboardHeader(title = "wiseR",
                                 titleWidth = "400"
                                 #,tags$li(class = "dropdown", bsButton("homeIntro", label = NULL, icon = icon("question-circle", lib="font-awesome"), style = "primary", size = "large"))
               ),
@@ -76,6 +77,9 @@ dashboardPage(skin = "blue",
               dashboardBody(id ="dashboardBody",
                             # Include shinyalert Ui
                             useShinyalert(),
+                            shinyDashboardThemes(
+                              theme = "grey_light"
+                            ),
                             # Include introjs UI
                             rintrojs::introjsUI(),
                             #shinythemes::themeSelector(),
@@ -87,9 +91,7 @@ dashboardPage(skin = "blue",
                                                                    status = "primary",
                                                                    width = 12,
                                                                    div(style="text-align:center",
-                                                                       shiny::img(src = "placeholder-logo.png",height = 110,width = 110),
-                                                                       shiny::h1("ShinyBN"),
-                                                                       shiny::h2("Democratizing Bayesian Networks for Data Driven Decisions")
+                                                                       shiny::img(src = "wiseR.png",height = 300,width = 400)
                                                                    ),
                                                                    br(),
                                                                    hr(),

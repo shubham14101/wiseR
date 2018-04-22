@@ -30,6 +30,8 @@ source('check.discrete.R')
 source('custom.association.R')
 source('custom.Modules.R')
 source('tooltip.R')
+source('dashboardthemes.R')
+source('graph.weight.R')
 
 shinyServer(function(input, output,session) {
   withProgress(message = "Initializing Dashboard", value = 0, {
@@ -1178,8 +1180,8 @@ shinyServer(function(input, output,session) {
             EvidenceNode <<- c()
             shapeVector<<- rep('dot',length(nodeNames))
             updateSelectInput(session,'event',choices = nodeNames)
-            weight <<- bn.hc.boot.pruned[dim(NetworkGraph)[1],3]
-            value <<- bn.hc.boot.pruned[dim(NetworkGraph)[1],3]
+            weight <<- graph.weight(bn.hc.boot,NetworkGraph)
+            value <<- graph.weight(bn.hc.boot,NetworkGraph)
             output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,weight,value)})
             updateSelectizeInput(session,'varselect',choices = nodeNames)
             updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
@@ -1324,8 +1326,8 @@ shinyServer(function(input, output,session) {
           EvidenceNode <<- c()
           shapeVector<<- rep('dot',length(nodeNames))
           updateSelectInput(session,'event',choices = nodeNames)
-          weight <<- bn.hc.boot.pruned[dim(NetworkGraph)[1],3]
-          value <<- bn.hc.boot.pruned[dim(NetworkGraph)[1],3]
+          weight <<- graph.weight(bn.hc.boot,NetworkGraph)
+          value <<- graph.weight(bn.hc.boot,NetworkGraph)
           output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,weight,value)})
           updateSelectizeInput(session,'varselect',choices = nodeNames)
           updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
@@ -1425,8 +1427,9 @@ shinyServer(function(input, output,session) {
         EvidenceNode <<- c()
         shapeVector<<- rep('dot',length(nodeNames))
         updateSelectInput(session,'event',choices = nodeNames)
-        weight <<- bn.hc.boot.pruned[dim(NetworkGraph)[1],3]
-        value <<- bn.hc.boot.pruned[dim(NetworkGraph)[1],3]
+        weight <<- graph.weight(bn.hc.boot,NetworkGraph)
+        value <<- graph.weight(bn.hc.boot,NetworkGraph)
+        print(weight)
         output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,weight,value)})
         updateSelectInput(session,'event',choices = nodeNames)
         updateSelectizeInput(session,'varselect',choices = nodeNames)
@@ -1569,8 +1572,8 @@ shinyServer(function(input, output,session) {
             EvidenceNode <<- c()
             shapeVector<<- rep('dot',length(nodeNames))
             updateSelectInput(session,'event',choices = nodeNames)
-            weight <<- bn.hc.boot.pruned[dim(NetworkGraph)[1],3]
-            value <<- bn.hc.boot.pruned[dim(NetworkGraph)[1],3]
+            weight <<- graph.weight(bn.hc.boot,NetworkGraph)
+            value <<- graph.weight(bn.hc.boot,NetworkGraph)
             output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,weight,value)})
             updateSelectInput(session,'event',choices = nodeNames)
             updateSelectizeInput(session,'varselect',choices = nodeNames)
@@ -2382,9 +2385,18 @@ shinyServer(function(input, output,session) {
             EvidenceNode <<- c()
             shapeVector<<- rep('dot',length(nodeNames))
             updateSelectInput(session,'event',choices = nodeNames)
-            weight <<- 1
-            value <<- 1
-            output$netPlot<-renderVisNetwork({graph.custom(pruneGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,weight,value)})
+            if(type==2)
+            {
+              weight <<- graph.weight(bn.hc.boot,NetworkGraph)
+              value <<- graph.weight(bn.hc.boot,NetworkGraph)
+              output$netPlot<-renderVisNetwork({graph.custom(pruneGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,weight,value)})
+            }
+            else
+            {
+              weight <<- 1
+              value <<- 1
+              output$netPlot<-renderVisNetwork({graph.custom(pruneGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,weight,value)})
+            }
             updateSelectizeInput(session,'varselect',choices = nodeNames)
             updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                               "ellipse", "database", "text", "diamond"))
@@ -2430,8 +2442,8 @@ shinyServer(function(input, output,session) {
             updateSelectInput(session,'event',choices = nodeNames)
             if(type==2)
             {
-              weight <<- bn.hc.boot.pruned[dim(NetworkGraph)[1],3]
-              value <<- bn.hc.boot.pruned[dim(NetworkGraph)[1],3]
+              weight <<- graph.weight(bn.hc.boot,NetworkGraph)
+              value <<- graph.weight(bn.hc.boot,NetworkGraph)
               output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,weight,value)})
             }
             else
