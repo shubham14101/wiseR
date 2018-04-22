@@ -1138,7 +1138,7 @@ shinyServer(function(input, output,session) {
             },error = function(e){
               bn.hc.boot <<- readRDS(inFile$datapath)
             })
-            bn.hc.boot.pruned <<- bn.hc.boot[bn.hc.boot$strength > input$edgeStrengthU & bn.hc.boot$direction > input$directionStrengthU,]
+            bn.hc.boot.pruned <<- bn.hc.boot[bn.hc.boot$strength >= input$edgeStrengthU & bn.hc.boot$direction >= input$directionStrengthU,]
             bn.hc.boot.average <<- cextend(averaged.network(bn.hc.boot.pruned))
             if(input$parallel==T)
             {
@@ -1284,7 +1284,7 @@ shinyServer(function(input, output,session) {
         }
         else
         {
-          bn.hc.boot.pruned <<- bn.hc.boot[bn.hc.boot$strength > input$edgeStrengthU & bn.hc.boot$direction > input$directionStrengthU,]
+          bn.hc.boot.pruned <<- bn.hc.boot[bn.hc.boot$strength >= input$edgeStrengthU & bn.hc.boot$direction >= input$directionStrengthU,]
           bn.hc.boot.average <<- cextend(averaged.network(bn.hc.boot.pruned))
           if(input$parallel==T)
           {
@@ -1382,14 +1382,14 @@ shinyServer(function(input, output,session) {
         if(input$parallel==T)
         {
           bn.hc.boot <<- boot.strength(data = DiscreteData, R = input$boot, m = ceiling(nrow(DiscreteData)*input$SampleSize), algorithm = input$alg,algorithm.args=list(blacklist=blacklistEdges,whitelist=whitelistEdges,start=bn.start),cluster = cl)
-          bn.hc.boot.pruned <<- bn.hc.boot[bn.hc.boot$strength > input$edgeStrength & bn.hc.boot$direction > input$directionStrength,]
+          bn.hc.boot.pruned <<- bn.hc.boot[bn.hc.boot$strength >= input$edgeStrength & bn.hc.boot$direction >= input$directionStrength,]
           bn.hc.boot.average <<- cextend(averaged.network(bn.hc.boot.pruned))
           bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod2,cluster = cl)
         }
         else
         {
           bn.hc.boot <<- boot.strength(data = DiscreteData, R = input$boot, m = ceiling(nrow(DiscreteData)*input$SampleSize), algorithm = input$alg,algorithm.args=list(blacklist=blacklistEdges,whitelist=whitelistEdges,start=bn.start))
-          bn.hc.boot.pruned <<- bn.hc.boot[bn.hc.boot$strength > input$edgeStrength & bn.hc.boot$direction > input$directionStrength,]
+          bn.hc.boot.pruned <<- bn.hc.boot[bn.hc.boot$strength >= input$edgeStrength & bn.hc.boot$direction >= input$directionStrength,]
           bn.hc.boot.average <<- cextend(averaged.network(bn.hc.boot.pruned))
           bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod2)
         }
@@ -1529,13 +1529,13 @@ shinyServer(function(input, output,session) {
           {
             if(input$parallel==T)
             {
-              bn.hc.boot.pruned <<- bn.hc.boot[bn.hc.boot$strength > input$edgeStrength & bn.hc.boot$direction > input$directionStrength,]
+              bn.hc.boot.pruned <<- bn.hc.boot[bn.hc.boot$strength >= input$edgeStrength & bn.hc.boot$direction >= input$directionStrength,]
               bn.hc.boot.average <<- cextend(averaged.network(bn.hc.boot.pruned))
               bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod2,cluster = cl)
             }
             else
             {
-              bn.hc.boot.pruned <<- bn.hc.boot[bn.hc.boot$strength > input$edgeStrength & bn.hc.boot$direction > input$directionStrength,]
+              bn.hc.boot.pruned <<- bn.hc.boot[bn.hc.boot$strength >= input$edgeStrength & bn.hc.boot$direction >= input$directionStrength,]
               bn.hc.boot.average <<- cextend(averaged.network(bn.hc.boot.pruned))
               bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod2)
             }
