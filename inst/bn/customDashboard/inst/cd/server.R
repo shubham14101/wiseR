@@ -1,5 +1,4 @@
 library('bnlearn')
-library('networkD3')
 library('rhandsontable')
 library('shiny')
 library('shinydashboard')
@@ -111,7 +110,7 @@ shinyServer(function(input, output,session) {
             valID = insertedV[which(inserted == id)]
             updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
           },error = function(e){
-            shinyalert(toString("Please learn structure or upload structure on new data uploaded to make infrences"), type = "error")
+            shinyalert(toString("Construct bayesian network for taking decisions"), type = "error")
           })
         }))
 

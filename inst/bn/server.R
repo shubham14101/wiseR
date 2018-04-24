@@ -104,10 +104,10 @@ shinyServer(function(input, output,session) {
   output$valLoss<-renderText({0})
   output$netScore<-renderText({0})
   output$assocPlot<-renderVisNetwork({validate("Explore the association network on your data")})
-  output$netPlot<-renderVisNetwork({validate("Please do structure learning on the data")})
-  output$parameterPlot<-renderPlot({validate("Please do structure learning on the data")})
-  output$distPlot<-renderPlot({validate("Please do structure learning on the data and then derive inferences")})
-  output$freqPlot<-renderPlot({validate("Please preprocess data to build plot")})
+  output$netPlot<-renderVisNetwork({validate("Construct bayesian network to take decision")})
+  output$parameterPlot<-renderPlot({validate("Construct bayesian network to take decision")})
+  output$distPlot<-renderPlot({validate("Construct bayesian network to take decision")})
+  output$freqPlot<-renderPlot({validate("You have to preprocess data to built the plot")})
   output$datasetTable<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
   output$priorout<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
   output$postout<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
@@ -319,7 +319,6 @@ shinyServer(function(input, output,session) {
       tryCatch({
         bn.start<<-set.arc(bn.start,input$fromarc1,input$toarc1)
         output$priorout<-DT::renderDataTable({bn.start$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
-        shinyalert("Arc successfully added",type="success")
       },error=function(e){
         shinyalert(toString(e), type = "error")
       })
@@ -334,7 +333,6 @@ shinyServer(function(input, output,session) {
         {
           bn.start<<-drop.arc(bn.start,bn.start$arcs[input$priorout_rows_selected,1],bn.start$arcs[input$priorout_rows_selected,2])
           output$priorout<-DT::renderDataTable({bn.start$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
-          shinyalert("Arc successfully removed",type="success")
         }
       },error=function(e){
         shinyalert(toString(e), type = "error")
@@ -350,7 +348,6 @@ shinyServer(function(input, output,session) {
         {
           bn.start<<-reverse.arc(bn.start,bn.start$arcs[input$priorout_rows_selected,1],bn.start$arcs[input$priorout_rows_selected,2])
           output$priorout<-DT::renderDataTable({bn.start$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
-          shinyalert("Arc Successfully reversed",type="success")
         }
       },error=function(e){
         shinyalert(toString(e), type = "error")
@@ -366,11 +363,11 @@ shinyServer(function(input, output,session) {
         {
           if(check.NA(DiscreteData))
           {
-            shinyalert("Please impute missingness in the data first",type="info")
+            shinyalert("Impute missing data using pre-process tab to procede",type="info")
           }
           else if(check.discrete(DiscreteData))
           {
-            shinyalert("Please discritize the data first",type="info")
+            shinyalert("Discretize data using pre-process tab to proceed",type="info")
           }
           else
           {
@@ -395,11 +392,11 @@ shinyServer(function(input, output,session) {
         tryCatch({
           if(check.NA(DiscreteData))
           {
-            shinyalert("Please impute missingness in the data first",type="info")
+            shinyalert("Impute missing data using pre-process tab to procede",type="info")
           }
           else if(check.discrete(DiscreteData))
           {
-            shinyalert("Please discritize the data first",type="info")
+            shinyalert("Discretize data using pre-process tab to proceed",type="info")
           }
           else
           {
@@ -460,7 +457,7 @@ shinyServer(function(input, output,session) {
         }
         else
         {
-          shinyalert("Please learn network structure first", type = "info")
+          shinyalert("Construct bayesian network for taking decisions", type = "info")
         }
       },error=function(e){
         shinyalert(toString(e), type = "error")
@@ -479,7 +476,7 @@ shinyServer(function(input, output,session) {
         }
         else
         {
-          shinyalert("Please learn network structure first", type = "info")
+          shinyalert("Construct bayesian network for take decisions", type = "info")
         }
       },error=function(e){
         shinyalert(toString(e), type = "error")
@@ -549,7 +546,7 @@ shinyServer(function(input, output,session) {
           }
           else
           {
-            shinyalert("Please learn network structure first",type="info")
+            shinyalert("Construct bayesian network for taking decisions",type="info")
           }
         })
       }
@@ -560,7 +557,7 @@ shinyServer(function(input, output,session) {
     inFile <- input$dataFile
     if (is.null(inFile))
     {
-      shinyalert("Data file is empty, pls upload a valid datafile",type = "error")
+      shinyalert("Data file is empty, upload a valid data file",type = "error")
     }
     else
     {
@@ -670,7 +667,7 @@ shinyServer(function(input, output,session) {
       tryCatch({
         if(check.NA(DiscreteData))
         {
-          shinyalert("Data has missing values, please impute the missing data first",type="info")
+          shinyalert("Data has missing values,impute data under pre-process tab",type="info")
         }
         else
         {
@@ -754,7 +751,7 @@ shinyServer(function(input, output,session) {
         }
       },error = function(e){
         type <- toString(input$dtype)
-        messageString <- paste(c("Error is discretising using method ", type, ". Try using other method or upload pre-discretised data."), collapse = '')
+        messageString <- paste(c("Error in discretising using method ", type, ". Try using other method or upload pre-discretised data."), collapse = '')
         shinyalert(messageString, type = "error")
       })
       tooltip(session)
@@ -837,7 +834,7 @@ shinyServer(function(input, output,session) {
           output$postout<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
         })}, error = function(e){
           type <- toString(input$dtype)
-          messageString <- "Error imputing missingness using missRanger method. Try uploading pre-imputed data."
+          messageString <- "Error imputing missingness. Try uploading complete data."
           shinyalert(messageString, type = "error")
         })
       tooltip(session)
@@ -1071,7 +1068,7 @@ shinyServer(function(input, output,session) {
       tryCatch({
         if(dim(DiscreteData)[1]>dim(DiscreteData)[2])
         {
-          shinyalert("Transpose is only possible for datasest with #variables more than #samples",type="info")
+          shinyalert("Transpose is only possible for datasest with no. of variables more than no. of samples",type="info")
         }
         else
         {
@@ -1189,11 +1186,11 @@ shinyServer(function(input, output,session) {
     {
       if(check.NA(DiscreteData))
       {
-        shinyalert("Please impute missingness in the data first",type="info")
+        shinyalert("Impute missing data using pre-process tab to procede",type="info")
       }
       else if(check.discrete(DiscreteData))
       {
-        shinyalert("Please discritize the data first",type="info")
+        shinyalert("Discretize data using pre-process tab to proceed",type="info")
       }
       else
       {
@@ -1206,7 +1203,7 @@ shinyServer(function(input, output,session) {
         {
           if(is.null(DiscreteData))
           {
-            shinyalert("Please Upload Data File First",type = 'error')
+            shinyalert("Upload Data file first",type = 'error')
           }
           else
           {
@@ -1224,7 +1221,7 @@ shinyServer(function(input, output,session) {
               {
                 bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod)
               }
-              shinyalert("Learned Structure loaded",type = "success")
+              shinyalert("Structure loaded",type = "success")
               for(elem in 1:length(inserted))
               {
                 removeUI(
@@ -1294,11 +1291,11 @@ shinyServer(function(input, output,session) {
     {
       if(check.NA(DiscreteData))
       {
-        shinyalert("Please impute missingness in the data first",type="info")
+        shinyalert("Impute missing data using pre-process tab to procede",type="info")
       }
       else if(check.discrete(DiscreteData))
       {
-        shinyalert("Please discritize the data first",type="info")
+        shinyalert("Discretize data using pre-process tab to proceed",type="info")
       }
       else
       {
@@ -1311,7 +1308,7 @@ shinyServer(function(input, output,session) {
         {
           if(is.null(DiscreteData))
           {
-            shinyalert("Please Upload Data File First",type = 'error')
+            shinyalert("Upload Data file first",type = 'error')
           }
           else
           {
@@ -1331,7 +1328,7 @@ shinyServer(function(input, output,session) {
               {
                 bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod)
               }
-              shinyalert("Learned Structure loaded",type = "success")
+              shinyalert("Structure loaded",type = "success")
               for(elem in 1:length(inserted))
               {
                 removeUI(
@@ -1412,7 +1409,6 @@ shinyServer(function(input, output,session) {
             {
               bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod)
             }
-            shinyalert("Learned Structure loaded",type = "success")
             for(elem in 1:length(inserted))
             {
               removeUI(
@@ -1481,7 +1477,6 @@ shinyServer(function(input, output,session) {
             {
               bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod)
             }
-            shinyalert("Learned Structure loaded",type = "success")
             for(elem in 1:length(inserted))
             {
               removeUI(
@@ -1548,16 +1543,15 @@ shinyServer(function(input, output,session) {
     {
       if(check.NA(DiscreteData))
       {
-        shinyalert("Please impute missingness in the data first",type="info")
+        shinyalert("Impute missing data using pre-process tab to procede",type="info")
       }
       else if(check.discrete(DiscreteData))
       {
-        shinyalert("Please discritize the data first",type="info")
+        shinyalert("Discretize data using pre-process tab to proceed",type="info")
       }
       else
       {
         tryCatch({
-          shinyalert("Structure Learning started",type="info")
           if (is.null(DiscreteData))
             return(NULL)
 
@@ -1583,7 +1577,7 @@ shinyServer(function(input, output,session) {
             bn.hc.boot.average <<- cextend(averaged.network(bn.hc.boot.pruned))
             bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod2)
           }
-          shinyalert("Structure learning done",type="success")
+          shinyalert("Structure learning complete",type="success")
           simple<<-2
           upload<<-2
           for(elem in 1:length(inserted))
@@ -1802,16 +1796,15 @@ shinyServer(function(input, output,session) {
     {
       if(check.NA(DiscreteData))
       {
-        shinyalert("Please impute missingness in the data first",type="info")
+        shinyalert("Impute missing data using pre-process tab to procede",type="info")
       }
       else if(check.discrete(DiscreteData))
       {
-        shinyalert("Please discritize the data first",type="info")
+        shinyalert("Discretize data using pre-process tab to proceed",type="info")
       }
       else
       {
         tryCatch({
-          shinyalert("Structure Learning started",type="info")
           if (is.null(DiscreteData))
             return(NULL)
 
@@ -1936,7 +1929,7 @@ shinyServer(function(input, output,session) {
             #bn.hc.boot.average <<- bnlearn::hc(DiscreteData)
             bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod2)
           }
-          shinyalert("Structure learning done",type="success")
+          shinyalert("Structure learning complete",type="success")
           simple<<-1
           upload<<-2
           type<<-1
@@ -2261,7 +2254,7 @@ shinyServer(function(input, output,session) {
         {
           check<<-2
           cl <<- makeCluster(strtoi(input$clusters), type = "SOCK")
-          shinyalert("Parallel clusters successfully created",type="success")
+          shinyalert("Parallel computing enabled",type="success")
         }
         else
         {
@@ -2308,7 +2301,7 @@ shinyServer(function(input, output,session) {
                 valID = insertedV[which(inserted == id)]
                 updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
               },error = function(e){
-                shinyalert(toString("Please learn structure or upload structure on new data uploaded to make infrences"), type = "error")
+                shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
               })
             }))
 
@@ -3085,7 +3078,7 @@ shinyServer(function(input, output,session) {
       }
       else
       {
-        shinyalert("Please enter dashboard name",type="error")
+        shinyalert("Please enter a dashboard name",type="error")
       }
     }
   })

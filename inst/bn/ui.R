@@ -431,7 +431,7 @@ dashboardPage(skin = "blue",
                                                                                 label = "Inference",circle = F, status = "primary", icon = icon("bar-chart-o"), width = "300px",tooltip = tooltipOptions(title = "Learn Inferences")
                                                                               )),
                                                                               shiny::column(5,shinyWidgets::radioGroupButtons(inputId = "bayesianOption",
-                                                                                                                              choices = c("Graph","CP Distribution", "Inference Plot","Prior","Post","Tables"),
+                                                                                                                              choices = c("Graph","CP Distribution", "Inference Plot","Tables"),
                                                                                                                               selected = "Graph",
                                                                                                                               justified = FALSE
                                                                               ))

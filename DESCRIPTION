@@ -1,4 +1,4 @@
-Package: ShinyBN
+Package: wiseR
 Type: Package
 Title: Bayesian Network with Chained Inferences
 Version: 0.1.0

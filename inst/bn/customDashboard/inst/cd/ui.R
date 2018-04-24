@@ -1,5 +1,4 @@
 library('bnlearn')
-library('networkD3')
 library('rhandsontable')
 library('shiny')
 library('shinydashboard')
