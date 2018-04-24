@@ -24,8 +24,10 @@ library("shinyBS")
 source('error.bar.R')
 source('graph.custom.R')
 source('custom.Modules.R')
+source('dashboardthemes.R')
 
 nm<-read.csv("name.txt")
+th<-read.csv("theme.txt")
 
 myDashboardHeader <- function (..., title = NULL, titleWidth = NULL, disable = FALSE,
                                .list = NULL) {
@@ -62,6 +64,9 @@ dashboardPage(skin = "blue",
               dashboardBody(id ="dashboardBody",
                             # Include shinyalert Ui
                             useShinyalert(),
+                            shinyDashboardThemes(
+                              theme = th$x
+                            ),
                             # Include introjs UI
                             rintrojs::introjsUI(),
                             #shinythemes::themeSelector(),

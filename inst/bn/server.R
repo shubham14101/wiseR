@@ -36,7 +36,8 @@ source('graph.weight.R')
 shinyServer(function(input, output,session) {
   withProgress(message = "Initializing Dashboard", value = 0, {
   #Data upload limit and other options
-  options(shiny.maxRequestSize=1500*1024^2)
+  #shinyalert("App come loaded with default Alarm data, you can upload your data or explore various other datasets available in the app")
+  options(shiny.maxRequestSize=8000*1024^2)
   options(warn=-1)
   options("getSymbols.warning4.0"=FALSE)
   #tooltips
@@ -82,15 +83,15 @@ shinyServer(function(input, output,session) {
   updateSelectizeInput(session,'varselect',choices = "")
   updateSelectizeInput(session,'Avarselect',choices = "")
   updateSelectInput(session,'paramSelect',choices = "")
-  updateSelectInput(session,"tableName",choices = c("Association Graph","Bayesian Graph","Cross Validation Results","blacklist edges","whitelist edges"))
+  updateSelectInput(session,"tableName",choices = c("Bayesian Graph","Cross Validation Results","blacklist edges","whitelist edges","Association Graph"))
   updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
   updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
   updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
   updateSelectInput(session,'modGroup',choices = "")
   updateSelectInput(session,'Avarshape',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
   updateSelectInput(session,'Avarshape2',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
-  updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
-  updateSelectInput(session,'Agraph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+  updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+  updateSelectInput(session,'Agraph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
   updateSelectInput(session,"moduleSelection",choices = "")
   updateSelectInput(session,"AmoduleSelection",choices = "")
   updateSelectInput(session,"neighbornodes",choices = "")
@@ -101,7 +102,7 @@ shinyServer(function(input, output,session) {
   updateSelectInput(session,"fromarc1",choices = names(DiscreteData))
   output$valLoss<-renderText({0})
   output$netScore<-renderText({0})
-  output$assocPlot<-renderVisNetwork({validate("Please build an association plot on the data")})
+  output$assocPlot<-renderVisNetwork({validate("Explore the association network on your data")})
   output$netPlot<-renderVisNetwork({validate("Please do structure learning on the data")})
   output$parameterPlot<-renderPlot({validate("Please do structure learning on the data")})
   output$distPlot<-renderPlot({validate("Please do structure learning on the data and then derive inferences")})
@@ -109,6 +110,7 @@ shinyServer(function(input, output,session) {
   output$datasetTable<-DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
   output$priorout<-DT::renderDataTable({bn.start$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
   output$postout<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
+  output$assocTable<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
   tooltip(session)
   })
   #observe events
@@ -116,13 +118,104 @@ shinyServer(function(input, output,session) {
     updateTabItems(session, "sidebarMenu", "Structure")
     tooltip(session)
   })
+  observeEvent(input$loadDef,{
+    if(input$defData=="Alarm")
+    {
+      DiscreteData<<-alarm
+    }
+    else if(input$defData=="Asia")
+    {
+      DiscreteData<<-asia
+    }
+    else if(input$defData=="Coronary")
+    {
+      DiscreteData<<-coronary
+    }
+    else if(input$defData=="Lizards")
+    {
+      DiscreteData<<-lizards
+    }
+    else if(input$defData=="Marks")
+    {
+      DiscreteData<<-marks
+    }
+    else if(input$defData=="Insurance")
+    {
+      DiscreteData<<-insurance
+    }
+    else if(input$defData=="Hailfinder")
+    {
+      DiscreteData<<-hailfinder
+    }
+    check.discrete(DiscreteData)
+    check.NA(DiscreteData)
+    DiscreteData<<-as.data.frame(DiscreteData)
+    trueData<<-DiscreteData
+    #Reset APP
+    reset<<-1
+    assocReset<<-1
+    blacklistEdges<<-c()
+    whitelistEdges<<-c()
+    output$valLoss<<-renderText({0})
+    output$netScore<<-renderText({0})
+    output$assocPlot<<-renderVisNetwork({validate("Please build an association plot on the data")})
+    output$netPlot<<-renderVisNetwork({validate("Please do structure learning on the data")})
+    output$parameterPlot<<-renderPlot({validate("Please do structure learning on the data")})
+    output$distPlot<<-renderPlot({validate("Please do structure learning on the data and then derive inferences")})
+    output$datasetTable<-DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
+    NetworkGraph <<- NULL
+    assocNetwork<<-NULL
+    predError<<-NULL
+    for(elem in 1:length(inserted))
+    {
+      removeUI(
+        ## pass in appropriate div id
+        selector = paste0('#', inserted[elem])
+      )
+
+    }
+    inserted <<- c()
+    for(elem2 in 1:length(insertedV))
+    {
+      removeUI(
+        ## pass in appropriate div id
+        selector = paste0('#', insertedV[elem2])
+      )
+
+    }
+    insertedV <<- c()
+    rvs$evidence <<- c()
+    rvs$value <<- c()
+    rvs$evidenceObserve <<- c()
+    rvs$valueObserve <<- c()
+    nodeNames <<- c()
+    EventNode <<- c()
+    EvidenceNode <<- c()
+    shapeVector<<- c()
+    weight<<-1
+    value<<-1
+    bn.start<<- empty.graph(names(DiscreteData))
+    communities<<-NULL
+    graph<<-NULL
+    updateSelectInput(session,'event',choices = "")
+    updateSelectizeInput(session,'varselect',choices = "")
+    updateSelectInput(session,'paramSelect',choices = "")
+    updateSelectInput(session,"moduleSelection",choices = "")
+    updateSelectInput(session,"neighbornodes",choices = "")
+    updateSelectInput(session,"Aneighbornodes",choices = "")
+    updateSliderInput(session,"NumBar",min = 1, max = 2,value = 1)
+    updateSelectInput(session,"freqSelect",choices = names(DiscreteData))
+    updateSelectInput(session,"delSelect",choices = names(DiscreteData))
+    updateSelectInput(session,"fromarc",choices=c())
+    updateSelectInput(session,"toarc",choices = c())
+    updateSelectInput(session,"fromarc1",choices = names(DiscreteData))
+    updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
+    updateSelectInput(session,'modGroup',choices = "")
+    output$postout<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
+  })
   observeEvent(input$tableName,{
     tryCatch({
-      if(input$tableName == "Association Graph")
-      {
-        output$tableOut<- DT::renderDataTable({assocNetwork},options = list(scrollX = TRUE,pageLength = 10))
-      }
-      else if(input$tableName=="Bayesian Graph")
+      if(input$tableName=="Bayesian Graph")
       {
         output$tableOut<- DT::renderDataTable({NetworkGraph},options = list(scrollX = TRUE,pageLength = 10))
       }
@@ -276,6 +369,8 @@ shinyServer(function(input, output,session) {
         else
         {
           assocNetwork<<-custom.association(DiscreteData,input$assocType)
+          colnames(assocNetwork)<<-c("V1","V2","Strength of Association")
+          print(assocNetwork)
           assocNetworkprune<<- assocNetwork[which(assocNetwork[,3]>input$threshold),]
           shapeVectorAssoc<<- rep('dot',length(unique(c(assocNetworkprune[,1],assocNetworkprune[,2]))))
           updateSelectizeInput(session,'Avarselect',choices = unique(c(assocNetworkprune[,1],assocNetworkprune[,2])))
@@ -283,7 +378,8 @@ shinyServer(function(input, output,session) {
           assocReset<<-2
           updateSelectInput(session,"Aneighbornodes",choices = "")
           Agraph<<-graph_from_edgelist(as.matrix(assocNetworkprune[,1:2]),directed = F)
-          shinyalert("association graph Successfully buit",type="success")
+          shinyalert("Association graph successfully built",type="success")
+          output$assocTable<- DT::renderDataTable({assocNetwork},options = list(scrollX = TRUE,pageLength = 10))
         }
       },error=function(e){
         shinyalert(toString(e), type = "error")
@@ -357,16 +453,20 @@ shinyServer(function(input, output,session) {
       write.csv(DiscreteData,file=filename,row.names = F)
     }
   )
+  output$assocDownload<-downloadHandler(
+    filename = function(){
+      paste('association graph',".csv",sep = "")
+    },
+    content = function(filename){
+      write.csv(assocNetwork,file=filename,row.names = F)
+    }
+  )
   output$downloadData <- downloadHandler(
     filename = function() {
       paste(input$tableName, ".csv", sep = "")
     },
     content = function(file) {
-      if(input$tableName == "Association Graph")
-      {
-        write.csv(assocNetwork, file,row.names = F)
-      }
-      else if(input$tableName=="Bayesian Graph")
+      if(input$tableName=="Bayesian Graph")
       {
         write.csv(NetworkGraph, file,row.names = F)
       }
@@ -987,7 +1087,7 @@ shinyServer(function(input, output,session) {
           par(oma=c(5,3,3,3))
           barx <<-barplot(val,
                           col = "lightblue",
-                          main = paste("Background frequency of ",input$freqSelect),
+                          main = paste("Observed frequency of ",input$freqSelect),
                           border = NA,
                           xlab = "",
                           ylab = "Frequency",
@@ -1084,7 +1184,7 @@ shinyServer(function(input, output,session) {
                                                                  "ellipse", "database", "text", "diamond"))
                updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                                   "ellipse", "database", "text", "diamond"))
-               updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+               updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
                updateSelectInput(session,'paramSelect',choices = nodeNames)
                graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
                updateSelectInput(session,"neighbornodes",choices = "")
@@ -1188,7 +1288,7 @@ shinyServer(function(input, output,session) {
                                                               "ellipse", "database", "text", "diamond"))
             updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                                "ellipse", "database", "text", "diamond"))
-            updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+            updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
             updateSelectInput(session,'paramSelect',choices = nodeNames)
             graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
             updateSelectInput(session,"neighbornodes",choices = "")
@@ -1266,7 +1366,8 @@ shinyServer(function(input, output,session) {
                                                             "ellipse", "database", "text", "diamond"))
           updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                              "ellipse", "database", "text", "diamond"))
-          updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+          updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+
           updateSelectInput(session,'paramSelect',choices = nodeNames)
           graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
           updateSelectInput(session,"neighbornodes",choices = "")
@@ -1334,7 +1435,7 @@ shinyServer(function(input, output,session) {
                                                             "ellipse", "database", "text", "diamond"))
           updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                              "ellipse", "database", "text", "diamond"))
-          updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+          updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
           updateSelectInput(session,'paramSelect',choices = nodeNames)
           graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
           updateSelectInput(session,"neighbornodes",choices = "")
@@ -1437,7 +1538,7 @@ shinyServer(function(input, output,session) {
                                                           "ellipse", "database", "text", "diamond"))
         updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                            "ellipse", "database", "text", "diamond"))
-        updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+        updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
         updateSelectInput(session,'paramSelect',choices = nodeNames)
         updateSelectInput(session,"moduleSelection",choices = "graph")
         graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
@@ -1514,7 +1615,7 @@ shinyServer(function(input, output,session) {
                                                               "ellipse", "database", "text", "diamond"))
             updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                                "ellipse", "database", "text", "diamond"))
-            updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+            updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
             updateSelectInput(session,'paramSelect',choices = nodeNames)
             updateSelectInput(session,"moduleSelection",choices = "graph")
             graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
@@ -1581,7 +1682,7 @@ shinyServer(function(input, output,session) {
                                                               "ellipse", "database", "text", "diamond"))
             updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                                "ellipse", "database", "text", "diamond"))
-            updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+            updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
             updateSelectInput(session,'paramSelect',choices = nodeNames)
             updateSelectInput(session,"moduleSelection",choices = "graph")
             graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
@@ -1784,7 +1885,7 @@ shinyServer(function(input, output,session) {
                                                           "ellipse", "database", "text", "diamond"))
         updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                            "ellipse", "database", "text", "diamond"))
-        updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+        updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
         updateSelectInput(session,'paramSelect',choices = nodeNames)
         updateSelectInput(session,"moduleSelection",choices = "graph")
         updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
@@ -1867,7 +1968,7 @@ shinyServer(function(input, output,session) {
                                                         "ellipse", "database", "text", "diamond"))
       updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                          "ellipse", "database", "text", "diamond"))
-      updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+      updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
       updateSelectInput(session,'paramSelect',choices = nodeNames)
       updateSelectInput(session,"moduleSelection",choices = "graph")
       updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
@@ -1941,7 +2042,7 @@ shinyServer(function(input, output,session) {
                                                             "ellipse", "database", "text", "diamond"))
           updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                              "ellipse", "database", "text", "diamond"))
-          updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+          updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
           updateSelectInput(session,'paramSelect',choices = nodeNames)
           updateSelectInput(session,"moduleSelection",choices = "graph")
           graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
@@ -2017,7 +2118,7 @@ shinyServer(function(input, output,session) {
                                                             "ellipse", "database", "text", "diamond"))
           updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                              "ellipse", "database", "text", "diamond"))
-          updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+          updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
           updateSelectInput(session,'paramSelect',choices = nodeNames)
           updateSelectInput(session,"moduleSelection",choices = "graph")
           graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
@@ -2797,6 +2898,7 @@ shinyServer(function(input, output,session) {
       if(reset==2)
       {
         write.csv(input$name,file = "customDashboard/inst/cd/name.txt",row.names = FALSE)
+        write.csv(input$theme,file="customDashboard/inst/cd/theme.txt",row.names = FALSE)
         customDashboardName <- input$name
         customFileName <- paste("customDashboard/R/",customDashboardName, ".R", sep = "")
         sink(customFileName)
@@ -2810,6 +2912,7 @@ shinyServer(function(input, output,session) {
       sink(fileName)
       cat(customString)
       sink()
+      shinyalert("Custom Dashboard successfully built. You can now download it as an R package",type="success")
       }
     }
     else

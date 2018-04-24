@@ -24,6 +24,8 @@ library("shinyBS")
 source('error.bar.R')
 source('graph.custom.R')
 source('custom.Modules.R')
+source('dashboardthemes.R')
+
 
 shinyServer(function(input, output,session) {
   withProgress(message = "Initializing Dashboard", value = 0, {
