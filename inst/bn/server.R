@@ -109,7 +109,7 @@ shinyServer(function(input, output,session) {
   output$distPlot<-renderPlot({validate("Please do structure learning on the data and then derive inferences")})
   output$freqPlot<-renderPlot({validate("Please preprocess data to build plot")})
   output$datasetTable<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
-  output$priorout<-DT::renderDataTable({bn.start$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
+  output$priorout<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
   output$postout<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
   output$assocTable<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
   tooltip(session)
