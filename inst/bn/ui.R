@@ -134,7 +134,7 @@ dashboardPage(skin = "blue",
                                                                             fluidRow(style="padding:0px",
                                                                               shiny::column(2, dropdownButton(
                                                                                 h5('Choose default dataset'),
-                                                                                fluidRow(column(9,selectInput('defData',label = NULL,choices = c("Alarm (Pre-loaded)"="Alarm","Asia","Coronary","Lizards","Marks","Insurance","Hailfinder"))),column(3,actionButton('loadDef','load'))),
+                                                                                fluidRow(column(9,selectInput('defData',label = NULL,choices = c("Alarm","Asia","Coronary","Lizards","Marks","Insurance","Hailfinder"))),column(3,actionButton('loadDef','load'))),
                                                                                 h5('Data Format:'),
                                                                                 shiny::selectInput('format',label = NULL,c(".RData",".CSV")),
                                                                                 h5('File Input:'),
@@ -262,7 +262,7 @@ dashboardPage(skin = "blue",
                                                                             shiny::fluidRow(
                                                                               shiny::column(1,dropdownButton(
                                                                                 shinyWidgets::radioGroupButtons(inputId = "structureOption",
-                                                                                                                choices = c("Upload Network","Learn New","Validate Network"),
+                                                                                                                choices = c("Upload Network","Initialize","Learn New","Edit","Validate Network"),
                                                                                                                 selected = "Upload Network",
                                                                                                                 justified = FALSE
                                                                                 ),
@@ -312,6 +312,14 @@ dashboardPage(skin = "blue",
                                                                                     )
                                                                                   ),
                                                                                   actionButton("parameterTuningU","Parameter Tuning")
+                                                                                ),
+                                                                                shiny::conditionalPanel(
+                                                                                  "input.structureOption=='Initialize'",
+                                                                                  shiny::fluidRow(column(5,h5("Upload Prior Structure Object"))),
+                                                                                  shiny::fluidRow(column(5,shiny::fileInput('priorFile',label = NULL,accept = c('.RData')))),
+                                                                                  shiny::fluidRow(shiny::column(3,h5("from")),shiny::column(3,h5("to")),shiny::column(3,h5("")),shiny::column(3,h5("Select from table"))),
+                                                                                  shiny::fluidRow(shiny::column(3,selectInput("fromarc1",label = NULL,choices=c())),shiny::column(3,selectInput("toarc1",label = NULL,choices=c())),column(3,actionButton("addarc1","Add")),actionButton("RemoveArc","Remove"),actionButton("ReverseArc","Reverse")),
+                                                                                  withSpinner(DT::dataTableOutput("priorout"),color = "#2E86C1")
                                                                                 ),
                                                                                 shiny::conditionalPanel(
                                                                                   "input.structureOption=='Learn New'",
@@ -384,6 +392,12 @@ dashboardPage(skin = "blue",
                                                                                   )
                                                                                 ),
                                                                                 shiny::conditionalPanel(
+                                                                                  "input.structureOption=='Edit'",
+                                                                                  shiny::fluidRow(shiny::column(3,h5("from")),shiny::column(3,h5("to")),shiny::column(3,h5("")),shiny::column(3,h5("Select from table"))),
+                                                                                  shiny::fluidRow(shiny::column(3,selectInput("fromarc",label = NULL,choices=c())),shiny::column(3,selectInput("toarc",label = NULL,choices=c())),column(3,actionButton("addarc","Add")),actionButton("RemoveArc2","Remove"),actionButton("ReverseArc2","Reverse")),
+                                                                                  withSpinner(DT::dataTableOutput("postout"),color = "#2E86C1")
+                                                                                ),
+                                                                                shiny::conditionalPanel(
                                                                                   "input.structureOption=='Validate Network'",
                                                                                   shiny::fluidRow(shiny::column(6,shiny::selectInput('crossFunc',label = "Validation Method",choices = c("k-fold","hold-out"))),shiny::column(6,shiny::selectInput('lossFunc',label = "Loss Function",choices = c("pred","pred-lw")))),
                                                                                   h5("Parameter Fitting Method"),
@@ -393,7 +407,7 @@ dashboardPage(skin = "blue",
                                                                                   h5("Network Score"),
                                                                                   shiny::fluidRow(shiny::column(6,selectInput("scoreAlgo",label = NULL,choices = c("modified Bayesian Dirichelt equivalent"="mbde","log-likelihood"="loglik","Akaike Information Criterion"="aic","Bayesian Information Criterion"="bic","Bayesian Dirichelt sparse"="bds","locally averaged Bayesian Dirichelt"="bdla"))),shiny::column(2,actionButton("getScore","Score")),shiny::column(4,shiny::verbatimTextOutput("netScore")))
                                                                                 ),
-                                                                                label = "Structure",circle = F, status = "primary", icon = icon("wrench"), width = "550px",tooltip = tooltipOptions(title = "Upload structure")
+                                                                                label = "Structure",circle = F, status = "primary", icon = icon("wrench"), width = "700px",tooltip = tooltipOptions(title = "Upload structure")
                                                                               )),
                                                                               shiny::column(2, dropdownButton(
                                                                                 hr(),
@@ -501,18 +515,6 @@ dashboardPage(skin = "blue",
                                                                               "input.bayesianOption=='CP Distribution'",
                                                                               selectInput("paramSelect",label = "Variable",""),
                                                                               withSpinner(plotOutput("parameterPlot",height = "450px"),color="#2E86C1")
-                                                                            ),
-                                                                            shiny::conditionalPanel(
-                                                                              "input.bayesianOption=='Prior'",
-                                                                              shiny::fluidRow(shiny::column(2,h5("Upload Prior Structure Object")),shiny::column(2,h5("from")),shiny::column(2,h5("to")),shiny::column(4,h5("")),shiny::column(2,h5("Select from table"))),
-                                                                              shiny::fluidRow(shiny::column(2,shiny::fileInput('priorFile',label = NULL,accept = c('.RData'))),shiny::column(2,selectInput("fromarc1",label = NULL,choices=c())),shiny::column(2,selectInput("toarc1",label = NULL,choices=c())),column(4,actionButton("addarc1","Add")),shiny::column(1,actionButton("RemoveArc","Remove")),shiny::column(1,actionButton("ReverseArc","Reverse"))),
-                                                                              withSpinner(DT::dataTableOutput("priorout"),color = "#2E86C1")
-                                                                            ),
-                                                                            shiny::conditionalPanel(
-                                                                              "input.bayesianOption=='Post'",
-                                                                              shiny::fluidRow(shiny::column(3,h5("from")),shiny::column(3,h5("to")),shiny::column(3,h5("")),shiny::column(3,h5("Select from table"))),
-                                                                              shiny::fluidRow(shiny::column(3,selectInput("fromarc",label = NULL,choices=c())),shiny::column(3,selectInput("toarc",label = NULL,choices=c())),column(3,actionButton("addarc","Add")),actionButton("RemoveArc2","Remove"),actionButton("ReverseArc2","Reverse")),
-                                                                              withSpinner(DT::dataTableOutput("postout"),color = "#2E86C1")
                                                                             ),
                                                                             conditionalPanel(
                                                                               "input.bayesianOption=='Tables'",
