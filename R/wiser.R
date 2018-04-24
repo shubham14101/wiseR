@@ -1,4 +1,4 @@
-wiseR <- function()
+wiser <- function()
 {
-  shiny::runApp(appDir = system.file('bn',package = 'wiseR),launch.browser = TRUE)
+  shiny::runApp(appDir = system.file('bn',package = 'wiseR'),launch.browser = TRUE)
 }
