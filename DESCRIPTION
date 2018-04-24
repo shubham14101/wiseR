@@ -6,8 +6,8 @@ Author: Shubham Maheshwari
 Maintainer: The package maintainer <shubham14101@iiitd.ac.in>
 Contact: Shubham Maheshwari<shubham14101@iiitd.ac.in>, Anant Mittal<anant14015@iiitd.ac.in>, Tavpritesh Sethi<tavpritesh@iiitd.ac.in>
 Description: The package can be used to perform structure learning, parameter visulaization, graphical visualization and chained inferences on discrete and continous data
-Depends: R (>= 3.3.0),bnlearn,networkD3,rhandsontable,shiny,shinydashboard,dplyr,visNetwork,shinyWidgets,missRanger,tools,shinyalert,shinycssloaders,rintrojs,arules,rcompanion,psych,DescTools,DT,linkcomm,igraph,parallel,snow,shinyBS
-Imports: bnlearn,networkD3,rhandsontable,shiny,shinydashboard,dplyr,visNetwork,shinyWidgets,missRanger,tools,shinyalert,shinycssloaders,rintrojs,arules,rcompanion,psych,DescTools,DT,linkcomm,igraph,parallel,snow,shinyBS
+Depends: R (>= 3.3.0),bnlearn,rhandsontable,shiny,shinydashboard,dplyr,visNetwork,shinyWidgets,missRanger,tools,shinyalert,shinycssloaders,rintrojs,arules,rcompanion,psych,DescTools,DT,linkcomm,igraph,parallel,snow,shinyBS
+Imports: bnlearn,rhandsontable,shiny,shinydashboard,dplyr,visNetwork,shinyWidgets,missRanger,tools,shinyalert,shinycssloaders,rintrojs,arules,rcompanion,psych,DescTools,DT,linkcomm,igraph,parallel,snow,shinyBS
 License: GPL-2
 Encoding: UTF-8
 LazyData: true
