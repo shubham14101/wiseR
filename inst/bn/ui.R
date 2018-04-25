@@ -1,24 +1,8 @@
 library('bnlearn')
-library('rhandsontable')
 library('shiny')
 library('shinydashboard')
-library('dplyr')
 library('visNetwork')
 library('shinyWidgets')
-library('missRanger')
-library('tools')
-library('shinyalert')
-library('shinycssloaders')
-library('rintrojs')
-library('arules')
-library('rcompanion')
-library('psych')
-library('DescTools')
-library("DT")
-library("linkcomm")
-library('igraph')
-library("parallel")
-library("snow")
 library("shinyBS")
 source('error.bar.R')
 source('graph.custom.R')
@@ -75,7 +59,7 @@ dashboardPage(skin = "blue",
                                ),
               dashboardBody(id ="dashboardBody",
                             # Include shinyalert Ui
-                            useShinyalert(),
+                            shinyalert::useShinyalert(),
                             shinyDashboardThemes(
                               theme = "grey_light"
                             ),
@@ -151,7 +135,6 @@ dashboardPage(skin = "blue",
                                                                                     shiny::h4('Discretize Data'),
                                                                                     h5('Discretization Type:'),
                                                                                     shiny::fluidRow(column(9,shiny::selectInput('dtype',label = NULL,c("hybrid discretization(Recommended)"="hybrid","interval discretization"="interval","quantile discretization"="quantile","frequency discretization"="frequency","K-means clustering"="cluster"))),column(3,actionButton('discretize',"Discretize", class = "butt")))
-                                                                                    #h5("subset columns in data using the tables")
 
                                                                                 ),
                                                                                 div(id="dataTranspose",
@@ -171,12 +154,12 @@ dashboardPage(skin = "blue",
 
                                                                             ),
                                                                             hr(),
-                                                                            withSpinner(DT::dataTableOutput("datasetTable"),color = "#2E86C1")
+                                                                            shinycssloaders::withSpinner(DT::dataTableOutput("datasetTable"),color = "#2E86C1")
                                                                           ),
                                                                           conditionalPanel(
                                                                             "input.dataoption=='Explore'",
                                                                             selectInput("freqSelect",label = "Variable",""),
-                                                                            withSpinner(plotOutput("freqPlot",height = "600px"),color="#2E86C1")
+                                                                            shinycssloaders::withSpinner(plotOutput("freqPlot",height = "600px"),color="#2E86C1")
                                                                             )
                                                                           ),
                                                                  tabPanel("Association Network",
@@ -248,12 +231,12 @@ dashboardPage(skin = "blue",
                                                                               )
                                                                             ),
                                                                             br(),
-                                                                            withSpinner(visNetworkOutput("assocPlot",height = "550px"), color= "#2E86C1")
+                                                                            shinycssloaders::withSpinner(visNetworkOutput("assocPlot",height = "550px"), color= "#2E86C1")
                                                                           ),
                                                                           conditionalPanel(
                                                                             "input.assocOption=='Export Table'",
                                                                             downloadButton('assocDownload','Download', class = "butt"),
-                                                                            withSpinner(DT::dataTableOutput("assocTable"),color = "#2E86C1")
+                                                                            shinycssloaders::withSpinner(DT::dataTableOutput("assocTable"),color = "#2E86C1")
                                                                           )
                                                                  ),
                                                                  tabPanel("Bayesian Network",
@@ -318,7 +301,7 @@ dashboardPage(skin = "blue",
                                                                                   shiny::fluidRow(column(5,shiny::fileInput('priorFile',label = NULL,accept = c('.RData')))),
                                                                                   shiny::fluidRow(shiny::column(3,h5("from")),shiny::column(3,h5("to")),shiny::column(3,h5("")),shiny::column(3,h5("Select from table"))),
                                                                                   shiny::fluidRow(shiny::column(3,selectInput("fromarc1",label = NULL,choices=c())),shiny::column(3,selectInput("toarc1",label = NULL,choices=c())),column(3,actionButton("addarc1","Add", class = "butt")),actionButton("RemoveArc","Remove", class = "butt"),actionButton("ReverseArc","Reverse", class = "butt")),
-                                                                                  withSpinner(DT::dataTableOutput("priorout"),color = "#2E86C1")
+                                                                                  shinycssloaders::withSpinner(DT::dataTableOutput("priorout"),color = "#2E86C1")
                                                                                 ),
                                                                                 shiny::conditionalPanel(
                                                                                   "input.structureOption=='Learn ab initio'",
@@ -394,7 +377,7 @@ dashboardPage(skin = "blue",
                                                                                   "input.structureOption=='Post Edit(Optional)'",
                                                                                   shiny::fluidRow(shiny::column(3,h5("from")),shiny::column(3,h5("to")),shiny::column(3,h5("")),shiny::column(3,h5("Select from table"))),
                                                                                   shiny::fluidRow(shiny::column(3,selectInput("fromarc",label = NULL,choices=c())),shiny::column(3,selectInput("toarc",label = NULL,choices=c())),column(3,actionButton("addarc","Add", class = "butt")),actionButton("RemoveArc2","Remove", class = "butt"),actionButton("ReverseArc2","Reverse", class = "butt")),
-                                                                                  withSpinner(DT::dataTableOutput("postout"),color = "#2E86C1")
+                                                                                  shinycssloaders::withSpinner(DT::dataTableOutput("postout"),color = "#2E86C1")
                                                                                 ),
                                                                                 shiny::conditionalPanel(
                                                                                   "input.structureOption=='Validate Network'",
@@ -497,7 +480,7 @@ dashboardPage(skin = "blue",
                                                                                               ),
                                                                                               shiny::column(1, bsButton('graphBtn', 'Refresh', icon = icon("refresh"),style = "primary"))),
 
-                                                                                            withSpinner(visNetworkOutput("netPlot",height = "480px"), color= "#2E86C1")
+                                                                                            shinycssloaders::withSpinner(visNetworkOutput("netPlot",height = "480px"), color= "#2E86C1")
                                                                                             )
                                                                               ),
                                                                             shiny::conditionalPanel(
@@ -507,17 +490,17 @@ dashboardPage(skin = "blue",
                                                                                 actionButton("sortPlot","Sort X-axis", class = "butt"),
                                                                                 label = "Plot",circle = F, status = "primary", icon = icon("gear"), width = "400px",tooltip = tooltipOptions(title = "plot settings")
                                                                               ),
-                                                                              withSpinner(plotOutput("distPlot",height = "450px"), color="#2E86C1")
+                                                                              shinycssloaders::withSpinner(plotOutput("distPlot",height = "450px"), color="#2E86C1")
                                                                             ),
                                                                             shiny::conditionalPanel(
                                                                               "input.bayesianOption=='Explore Conditional Probabilities'",
                                                                               selectInput("paramSelect",label = "Variable",""),
-                                                                              withSpinner(plotOutput("parameterPlot",height = "450px"),color="#2E86C1")
+                                                                              shinycssloaders::withSpinner(plotOutput("parameterPlot",height = "450px"),color="#2E86C1")
                                                                             ),
                                                                             conditionalPanel(
                                                                               "input.bayesianOption=='Export Tables'",
                                                                               shiny::fluidRow(shiny::column(4,selectInput("tableName",label = NULL,"")),shiny::column(1,downloadButton("downloadData", "Download", class = "butt"))),
-                                                                              withSpinner(DT::dataTableOutput("tableOut"),color = "#2E86C1")
+                                                                              shinycssloaders::withSpinner(DT::dataTableOutput("tableOut"),color = "#2E86C1")
                                                                             )
                                                                             )
                                                                          ),

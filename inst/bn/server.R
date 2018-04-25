@@ -1,24 +1,8 @@
 library('bnlearn')
-library('rhandsontable')
 library('shiny')
 library('shinydashboard')
-library('dplyr')
 library('visNetwork')
 library('shinyWidgets')
-library('missRanger')
-library('tools')
-library('shinyalert')
-library('shinycssloaders')
-library('rintrojs')
-library('arules')
-library('rcompanion')
-library('psych')
-library('DescTools')
-library("DT")
-library("linkcomm")
-library('igraph')
-library("parallel")
-library("snow")
 library("shinyBS")
 source('error.bar.R')
 source('graph.custom.R')
@@ -35,7 +19,6 @@ source('graph.weight.R')
 shinyServer(function(input, output,session) {
   withProgress(message = "Initializing Dashboard", value = 0, {
   #Data upload limit and other options
-  #shinyalert("App come loaded with default Alarm data, you can upload your data or explore various other datasets available in the app")
   options(shiny.maxRequestSize=8000*1024^2)
   options(warn=-1)
   options("getSymbols.warning4.0"=FALSE)
@@ -74,12 +57,9 @@ shinyServer(function(input, output,session) {
   graph<-NULL
   blacklistEdges<-c()
   whitelistEdges<-c()
-  #bn.start<- empty.graph(names(DiscreteData))
   NetworkGraph <- NULL
   assocNetwork<-NULL
   predError<-NULL
-  #updateSelectInput(session,"freqSelect",choices = names(DiscreteData))
-  #updateSelectInput(session,"delSelect",choices = names(DiscreteData))
   updateSelectInput(session,'event',choices = "")
   updateSelectizeInput(session,'varselect',choices = "")
   updateSelectizeInput(session,'Avarselect',choices = "")
@@ -243,7 +223,7 @@ shinyServer(function(input, output,session) {
           output$tableOut<- DT::renderDataTable({whitelistEdges},options = list(scrollX = TRUE,pageLength = 10))
         }
       },error=function(e){
-        shinyalert(toString(e), type = "error")
+        shinyalert::shinyalert(toString(e), type = "error")
       })
       tooltip(session)
     }
@@ -259,12 +239,12 @@ shinyServer(function(input, output,session) {
           if(dim(blacklistEdges)[2]!=2)
           {
             blacklistEdges<<-c()
-            shinyalert("Please upload a .csv file containg edges in format 'from' and 'to'",type="error")
+            shinyalert::shinyalert("Please upload a .csv file containg edges in format 'from' and 'to'",type="error")
           }
           else if(!(unique(blacklistEdges[,1],blacklistEdges[,2]) %in% colnames(DiscreteData)))
           {
             blacklistEdges<<-c()
-            shinyalert("please upload a correct file containg only nodes as observed in the data",type="error")
+            shinyalert::shinyalert("please upload a correct file containg only nodes as observed in the data",type="error")
           }
         }
         else
@@ -273,16 +253,16 @@ shinyServer(function(input, output,session) {
           if(dim(whitelistEdges)[2]!=2)
           {
             whitelistEdges<<-c()
-            shinyalert("Please upload a .csv file containg edges in format 'from' and 'to'",type="error")
+            shinyalert::shinyalert("Please upload a .csv file containg edges in format 'from' and 'to'",type="error")
           }
           else if(!(unique(blacklistEdges[,1],blacklistEdges[,2]) %in% colnames(DiscreteData)))
           {
             whitelistEdges<<-c()
-            shinyalert("please upload a correct file containg only nodes as observed in the data",type="error")
+            shinyalert::shinyalert("please upload a correct file containg only nodes as observed in the data",type="error")
           }
         }
       },error=function(e){
-        shinyalert(toString(e), type = "error")
+        shinyalert::shinyalert(toString(e), type = "error")
       })
       tooltip(session)
     }
@@ -299,9 +279,9 @@ shinyServer(function(input, output,session) {
         {
           bn.start<<-set.arc(bn.start,edgeList[i,1],edgeList[i,2])
         }
-        shinyalert("File Successfully Uploaded",type="success")
+        shinyalert::shinyalert("File Successfully Uploaded",type="success")
       },error = function(e){
-        shinyalert(e,type = "error")
+        shinyalert::shinyalert(e,type = "error")
       })
       tooltip(session)
     }
@@ -312,7 +292,7 @@ shinyServer(function(input, output,session) {
       tryCatch({
         updateSelectInput(session,"toarc1",choices = setdiff(names(DiscreteData),input$fromarc1))
       },error=function(e){
-        shinyalert(toString(e), type = "error")
+        shinyalert::shinyalert(toString(e), type = "error")
       })
       tooltip(session)
     }
@@ -324,7 +304,7 @@ shinyServer(function(input, output,session) {
         bn.start<<-set.arc(bn.start,input$fromarc1,input$toarc1)
         output$priorout<-DT::renderDataTable({bn.start$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
       },error=function(e){
-        shinyalert(toString(e), type = "error")
+        shinyalert::shinyalert(toString(e), type = "error")
       })
       tooltip(session)
     }
@@ -339,7 +319,7 @@ shinyServer(function(input, output,session) {
           output$priorout<-DT::renderDataTable({bn.start$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
         }
       },error=function(e){
-        shinyalert(toString(e), type = "error")
+        shinyalert::shinyalert(toString(e), type = "error")
       })
       tooltip(session)
     }
@@ -354,7 +334,7 @@ shinyServer(function(input, output,session) {
           output$priorout<-DT::renderDataTable({bn.start$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
         }
       },error=function(e){
-        shinyalert(toString(e), type = "error")
+        shinyalert::shinyalert(toString(e), type = "error")
       })
       tooltip(session)
     }
@@ -367,11 +347,11 @@ shinyServer(function(input, output,session) {
         {
           if(check.NA(DiscreteData))
           {
-            shinyalert("Impute missing data using pre-process tab to procede",type="info")
+            shinyalert::shinyalert("Impute missing data using pre-process tab to procede",type="info")
           }
           else if(check.discrete(DiscreteData))
           {
-            shinyalert("Discretize data using pre-process tab to proceed",type="info")
+            shinyalert::shinyalert("Discretize data using pre-process tab to proceed",type="info")
           }
           else
           {
@@ -379,12 +359,12 @@ shinyServer(function(input, output,session) {
             shapeVectorAssoc<<- rep('dot',length(unique(c(assocNetworkprune[,1],assocNetworkprune[,2]))))
             updateSelectizeInput(session,'Avarselect',choices = unique(c(assocNetworkprune[,1],assocNetworkprune[,2])))
             output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$Adegree,input$Agraph_layout,shapeVectorAssoc)})
-            Agraph<<-graph_from_edgelist(as.matrix(assocNetworkprune[,1:2]),directed = F)
+            Agraph<<-igraph::graph_from_edgelist(as.matrix(assocNetworkprune[,1:2]),directed = F)
             updateSelectInput(session,"Aneighbornodes",choices = "")
           }
         }
       },error=function(e){
-        shinyalert(toString(e), type = "error")
+        shinyalert::shinyalert(toString(e), type = "error")
       })
       tooltip(session)
     }
@@ -396,29 +376,28 @@ shinyServer(function(input, output,session) {
         tryCatch({
           if(check.NA(DiscreteData))
           {
-            shinyalert("Impute missing data using pre-process tab to procede",type="info")
+            shinyalert::shinyalert("Impute missing data using pre-process tab to procede",type="info")
           }
           else if(check.discrete(DiscreteData))
           {
-            shinyalert("Discretize data using pre-process tab to proceed",type="info")
+            shinyalert::shinyalert("Discretize data using pre-process tab to proceed",type="info")
           }
           else
           {
             assocNetwork<<-custom.association(DiscreteData,input$assocType)
             colnames(assocNetwork)<<-c("V1","V2","Strength of Association")
-            print(assocNetwork)
             assocNetworkprune<<- assocNetwork[which(assocNetwork[,3]>input$threshold),]
             shapeVectorAssoc<<- rep('dot',length(unique(c(assocNetworkprune[,1],assocNetworkprune[,2]))))
             updateSelectizeInput(session,'Avarselect',choices = unique(c(assocNetworkprune[,1],assocNetworkprune[,2])))
             output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$Adegree,input$Agraph_layout,shapeVectorAssoc)})
             assocReset<<-2
             updateSelectInput(session,"Aneighbornodes",choices = "")
-            Agraph<<-graph_from_edgelist(as.matrix(assocNetworkprune[,1:2]),directed = F)
-            shinyalert("Association graph successfully built",type="success")
+            Agraph<<-igraph::graph_from_edgelist(as.matrix(assocNetworkprune[,1:2]),directed = F)
+            shinyalert::shinyalert("Association graph successfully built",type="success")
             output$assocTable<- DT::renderDataTable({assocNetwork},options = list(scrollX = TRUE,pageLength = 10))
           }
         },error=function(e){
-          shinyalert(toString(e), type = "error")
+          shinyalert::shinyalert(toString(e), type = "error")
         })
       })
       tooltip(session)
@@ -461,10 +440,10 @@ shinyServer(function(input, output,session) {
         }
         else
         {
-          shinyalert("Construct bayesian network for taking decisions", type = "info")
+          shinyalert::shinyalert("Construct bayesian network for taking decisions", type = "info")
         }
       },error=function(e){
-        shinyalert(toString(e), type = "error")
+        shinyalert::shinyalert(toString(e), type = "error")
       })
       tooltip(session)
     }
@@ -480,10 +459,10 @@ shinyServer(function(input, output,session) {
         }
         else
         {
-          shinyalert("Construct bayesian network for take decisions", type = "info")
+          shinyalert::shinyalert("Construct bayesian network for take decisions", type = "info")
         }
       },error=function(e){
-        shinyalert(toString(e), type = "error")
+        shinyalert::shinyalert(toString(e), type = "error")
       })
       tooltip(session)
     }
@@ -550,7 +529,7 @@ shinyServer(function(input, output,session) {
           }
           else
           {
-            shinyalert("Construct bayesian network for taking decisions",type="info")
+            shinyalert::shinyalert("Construct bayesian network for taking decisions",type="info")
           }
         })
       }
@@ -561,14 +540,14 @@ shinyServer(function(input, output,session) {
     inFile <- input$dataFile
     if (is.null(inFile))
     {
-      shinyalert("Data file is empty, upload a valid data file",type = "error")
+      shinyalert::shinyalert("Data file is empty, upload a valid data file",type = "error")
     }
     else
     {
       tryCatch({
         if(input$format==".RData")
         {
-          if(file_ext(inFile$datapath) == "RData")
+          if(tools::file_ext(inFile$datapath) == "RData")
           {
             tryCatch({
               DiscreteData <<- get(load(inFile$datapath))
@@ -578,19 +557,19 @@ shinyServer(function(input, output,session) {
           }
           else
           {
-            shinyalert("Added file is not a .RData file.Please upload a RData file.", type = "error")
+            shinyalert::shinyalert("Added file is not a .RData file.Please upload a RData file.", type = "error")
           }
 
         }
         else
         {
-          if(file_ext(inFile$datapath) == "csv")
+          if(tools::file_ext(inFile$datapath) == "csv")
           {
             DiscreteData <<- read.csv(inFile$datapath,stringsAsFactors = T,na.strings = c("NA","na","Na","nA","","?","-"))
           }
           else
           {
-            shinyalert("Added file is not a .csv file.Please upload a CSV file.", type = "error")
+            shinyalert::shinyalert("Added file is not a .csv file.Please upload a CSV file.", type = "error")
           }
         }
         check.discrete(DiscreteData)
@@ -660,7 +639,7 @@ shinyServer(function(input, output,session) {
         updateSelectInput(session,'modGroup',choices = "")
         output$postout<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
         },error = function(e){
-             shinyalert(c("Error in loading data: ",toString(e)), type = "error")
+             shinyalert::shinyalert(c("Error in loading data: ",toString(e)), type = "error")
            })
     }
     tooltip(session)
@@ -671,7 +650,7 @@ shinyServer(function(input, output,session) {
       tryCatch({
         if(check.NA(DiscreteData))
         {
-          shinyalert("Data has missing values,impute data under pre-process tab",type="info")
+          shinyalert::shinyalert("Data has missing values,impute data under pre-process tab",type="info")
         }
         else
         {
@@ -756,7 +735,7 @@ shinyServer(function(input, output,session) {
       },error = function(e){
         type <- toString(input$dtype)
         messageString <- paste(c("Error in discretising using method ", type, ". Try using other method or upload pre-discretised data."), collapse = '')
-        shinyalert(messageString, type = "error")
+        shinyalert::shinyalert(messageString, type = "error")
       })
       tooltip(session)
     }
@@ -774,7 +753,8 @@ shinyServer(function(input, output,session) {
               DiscreteData[,n]<<-as.factor(DiscreteData[,n])
             }
           }
-          DiscreteData <<- missRanger(DiscreteData,maxiter = 1,num.tree = 100)
+          DiscreteData <<- missRanger::missRanger(DiscreteData,maxiter = 1,num.tree = 100)
+          check.discrete(DiscreteData)
           output$datasetTable<-DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
           trueData<<-DiscreteData
           reset<<-1
@@ -839,7 +819,7 @@ shinyServer(function(input, output,session) {
         })}, error = function(e){
           type <- toString(input$dtype)
           messageString <- "Error imputing missingness. Try uploading complete data."
-          shinyalert(messageString, type = "error")
+          shinyalert::shinyalert(messageString, type = "error")
         })
       tooltip(session)
     }
@@ -1061,7 +1041,7 @@ shinyServer(function(input, output,session) {
         bn.start<<- empty.graph(names(DiscreteData))
         output$priorout<-DT::renderDataTable({bn.start$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
       },error=function(e){
-        shinyalert(toString(e), type = "error")
+        shinyalert::shinyalert(toString(e), type = "error")
       })
       tooltip(session)
     }
@@ -1072,7 +1052,7 @@ shinyServer(function(input, output,session) {
       tryCatch({
         if(dim(DiscreteData)[1]>dim(DiscreteData)[2])
         {
-          shinyalert("Transpose is only possible for datasest with no. of variables more than no. of samples",type="info")
+          shinyalert::shinyalert("Transpose is only possible for datasest with no. of variables more than no. of samples",type="info")
         }
         else
         {
@@ -1143,7 +1123,7 @@ shinyServer(function(input, output,session) {
           output$priorout<-DT::renderDataTable({bn.start$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
         }
       },error=function(e){
-        shinyalert(toString(e),type = 'error')
+        shinyalert::shinyalert(toString(e),type = 'error')
       })
       tooltip(session)
     }
@@ -1177,7 +1157,7 @@ shinyServer(function(input, output,session) {
           }
           else
           {
-            shinyalert(toString(e),type="error")
+            shinyalert::shinyalert(toString(e),type="error")
           }
         })
       }
@@ -1190,24 +1170,24 @@ shinyServer(function(input, output,session) {
     {
       if(check.NA(DiscreteData))
       {
-        shinyalert("Impute missing data using pre-process tab to procede",type="info")
+        shinyalert::shinyalert("Impute missing data using pre-process tab to procede",type="info")
       }
       else if(check.discrete(DiscreteData))
       {
-        shinyalert("Discretize data using pre-process tab to proceed",type="info")
+        shinyalert::shinyalert("Discretize data using pre-process tab to proceed",type="info")
       }
       else
       {
         inFile <- input$structFile
         if (is.null(inFile))
         {
-          shinyalert("Structure File is empty",type='error')
+          shinyalert::shinyalert("Structure File is empty",type='error')
         }
         else
         {
           if(is.null(DiscreteData))
           {
-            shinyalert("Upload Data file first",type = 'error')
+            shinyalert::shinyalert("Upload Data file first",type = 'error')
           }
           else
           {
@@ -1225,7 +1205,7 @@ shinyServer(function(input, output,session) {
               {
                 bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod)
               }
-              shinyalert("Structure loaded",type = "success")
+              shinyalert::shinyalert("Structure loaded",type = "success")
               for(elem in 1:length(inserted))
               {
                 removeUI(
@@ -1278,12 +1258,12 @@ shinyServer(function(input, output,session) {
                     valID = insertedV[which(inserted == id)]
                     updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
                   },error = function(e){
-                    shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+                    shinyalert::shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
                   })
                 }))
 
               },error = function(e){
-                shinyalert(toString(e), type = "error")
+                shinyalert::shinyalert(toString(e), type = "error")
               })
               shapeVector<<- rep('dot',length(nodeNames))
               updateSelectInput(session,'event',choices = nodeNames)
@@ -1297,7 +1277,7 @@ shinyServer(function(input, output,session) {
                                                                  "ellipse", "database", "text", "diamond"))
               updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
               updateSelectInput(session,'paramSelect',choices = nodeNames)
-              graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
+              graph<<-igraph::graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
               updateSelectInput(session,"neighbornodes",choices = "")
               updateSelectInput(session,"fromarc",choices = nodeNames)
               updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
@@ -1313,7 +1293,7 @@ shinyServer(function(input, output,session) {
               save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
               write.csv(input$name,file = "customDashboard/inst/cd/name.txt",row.names = FALSE)
             },error = function(e){
-              shinyalert(toString(e), type = "error")
+              shinyalert::shinyalert(toString(e), type = "error")
             })
           }
         }
@@ -1327,24 +1307,24 @@ shinyServer(function(input, output,session) {
     {
       if(check.NA(DiscreteData))
       {
-        shinyalert("Impute missing data using pre-process tab to procede",type="info")
+        shinyalert::shinyalert("Impute missing data using pre-process tab to procede",type="info")
       }
       else if(check.discrete(DiscreteData))
       {
-        shinyalert("Discretize data using pre-process tab to proceed",type="info")
+        shinyalert::shinyalert("Discretize data using pre-process tab to proceed",type="info")
       }
       else
       {
         inFile <- input$bootFile
         if (is.null(inFile))
         {
-          shinyalert("Structure File is empty",type='error')
+          shinyalert::shinyalert("Structure File is empty",type='error')
         }
         else
         {
           if(is.null(DiscreteData))
           {
-            shinyalert("Upload Data file first",type = 'error')
+            shinyalert::shinyalert("Upload Data file first",type = 'error')
           }
           else
           {
@@ -1364,7 +1344,7 @@ shinyServer(function(input, output,session) {
               {
                 bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod)
               }
-              shinyalert("Structure loaded",type = "success")
+              shinyalert::shinyalert("Structure loaded",type = "success")
               for(elem in 1:length(inserted))
               {
                 removeUI(
@@ -1417,12 +1397,12 @@ shinyServer(function(input, output,session) {
                     valID = insertedV[which(inserted == id)]
                     updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
                   },error = function(e){
-                    shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+                    shinyalert::shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
                   })
                 }))
 
               },error = function(e){
-                shinyalert(toString(e), type = "error")
+                shinyalert::shinyalert(toString(e), type = "error")
               })
               shapeVector<<- rep('dot',length(nodeNames))
               updateSelectInput(session,'event',choices = nodeNames)
@@ -1436,7 +1416,7 @@ shinyServer(function(input, output,session) {
                                                                  "ellipse", "database", "text", "diamond"))
               updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
               updateSelectInput(session,'paramSelect',choices = nodeNames)
-              graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
+              graph<<-igraph::graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
               updateSelectInput(session,"neighbornodes",choices = "")
               updateSelectInput(session,"fromarc",choices = nodeNames)
               updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
@@ -1452,7 +1432,7 @@ shinyServer(function(input, output,session) {
               save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
               write.csv(input$name,file = "customDashboard/inst/cd/name.txt",row.names = FALSE)
             },error = function(e){
-              shinyalert(toString(e), type = "error")
+              shinyalert::shinyalert(toString(e), type = "error")
             })
           }
         }
@@ -1529,12 +1509,12 @@ shinyServer(function(input, output,session) {
                   valID = insertedV[which(inserted == id)]
                   updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
                 },error = function(e){
-                  shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+                  shinyalert::shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
                 })
               }))
 
             },error = function(e){
-              shinyalert(toString(e), type = "error")
+              shinyalert::shinyalert(toString(e), type = "error")
             })
             shapeVector<<- rep('dot',length(nodeNames))
             updateSelectInput(session,'event',choices = nodeNames)
@@ -1549,7 +1529,7 @@ shinyServer(function(input, output,session) {
             updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
 
             updateSelectInput(session,'paramSelect',choices = nodeNames)
-            graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
+            graph<<-igraph::graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
             updateSelectInput(session,"neighbornodes",choices = "")
             updateSelectInput(session,"fromarc",choices = nodeNames)
             updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
@@ -1629,12 +1609,12 @@ shinyServer(function(input, output,session) {
                   valID = insertedV[which(inserted == id)]
                   updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
                 },error = function(e){
-                  shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+                  shinyalert::shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
                 })
               }))
 
             },error = function(e){
-              shinyalert(toString(e), type = "error")
+              shinyalert::shinyalert(toString(e), type = "error")
             })
             shapeVector<<- rep('dot',length(nodeNames))
             updateSelectInput(session,'event',choices = nodeNames)
@@ -1648,7 +1628,7 @@ shinyServer(function(input, output,session) {
                                                                "ellipse", "database", "text", "diamond"))
             updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
             updateSelectInput(session,'paramSelect',choices = nodeNames)
-            graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
+            graph<<-igraph::graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
             updateSelectInput(session,"neighbornodes",choices = "")
             updateSelectInput(session,"fromarc",choices = nodeNames)
             updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
@@ -1675,11 +1655,11 @@ shinyServer(function(input, output,session) {
     {
       if(check.NA(DiscreteData))
       {
-        shinyalert("Impute missing data using pre-process tab to procede",type="info")
+        shinyalert::shinyalert("Impute missing data using pre-process tab to procede",type="info")
       }
       else if(check.discrete(DiscreteData))
       {
-        shinyalert("Discretize data using pre-process tab to proceed",type="info")
+        shinyalert::shinyalert("Discretize data using pre-process tab to proceed",type="info")
       }
       else
       {
@@ -1709,7 +1689,7 @@ shinyServer(function(input, output,session) {
             bn.hc.boot.average <<- cextend(averaged.network(bn.hc.boot.pruned))
             bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod2)
           }
-          shinyalert("Structure learning complete",type="success")
+          shinyalert::shinyalert("Structure learning complete",type="success")
           simple<<-2
           upload<<-2
           for(elem in 1:length(inserted))
@@ -1764,12 +1744,12 @@ shinyServer(function(input, output,session) {
                 valID = insertedV[which(inserted == id)]
                 updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
               },error = function(e){
-                shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+                shinyalert::shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
               })
             }))
 
           },error = function(e){
-            shinyalert(toString(e), type = "error")
+            shinyalert::shinyalert(toString(e), type = "error")
           })
           shapeVector<<- rep('dot',length(nodeNames))
           updateSelectInput(session,'event',choices = nodeNames)
@@ -1786,7 +1766,7 @@ shinyServer(function(input, output,session) {
           updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
           updateSelectInput(session,'paramSelect',choices = nodeNames)
           updateSelectInput(session,"moduleSelection",choices = "graph")
-          graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
+          graph<<-igraph::graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
           updateSelectInput(session,"neighbornodes",choices = "")
           updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                              "ellipse", "database", "text", "diamond"))
@@ -1800,7 +1780,7 @@ shinyServer(function(input, output,session) {
           save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
           write.csv(input$name,file = "customDashboard/inst/cd/name.txt",row.names = FALSE)
         },error = function(e){
-          shinyalert(toString(e), type = "error")
+          shinyalert::shinyalert(toString(e), type = "error")
         })
       }
       tooltip(session)
@@ -1877,12 +1857,12 @@ shinyServer(function(input, output,session) {
                     valID = insertedV[which(inserted == id)]
                     updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
                   },error = function(e){
-                    shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+                    shinyalert::shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
                   })
                 }))
 
               },error = function(e){
-                shinyalert(toString(e), type = "error")
+                shinyalert::shinyalert(toString(e), type = "error")
               })
               shapeVector<<- rep('dot',length(nodeNames))
               updateSelectInput(session,'event',choices = nodeNames)
@@ -1898,7 +1878,7 @@ shinyServer(function(input, output,session) {
               updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
               updateSelectInput(session,'paramSelect',choices = nodeNames)
               updateSelectInput(session,"moduleSelection",choices = "graph")
-              graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
+              graph<<-igraph::graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
               updateSelectInput(session,"neighbornodes",choices = "")
               updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                                  "ellipse", "database", "text", "diamond"))
@@ -1965,7 +1945,7 @@ shinyServer(function(input, output,session) {
               updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
               updateSelectInput(session,'paramSelect',choices = nodeNames)
               updateSelectInput(session,"moduleSelection",choices = "graph")
-              graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
+              graph<<-igraph::graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
               updateSelectInput(session,"neighbornodes",choices = "")
               updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                                  "ellipse", "database", "text", "diamond"))
@@ -1982,7 +1962,7 @@ shinyServer(function(input, output,session) {
           }
         }
       },error=function(e){
-        shinyalert(toString(e), type = "error")
+        shinyalert::shinyalert(toString(e), type = "error")
       })
       tooltip(session)
     }
@@ -1992,11 +1972,11 @@ shinyServer(function(input, output,session) {
     {
       if(check.NA(DiscreteData))
       {
-        shinyalert("Impute missing data using pre-process tab to procede",type="info")
+        shinyalert::shinyalert("Impute missing data using pre-process tab to procede",type="info")
       }
       else if(check.discrete(DiscreteData))
       {
-        shinyalert("Discretize data using pre-process tab to proceed",type="info")
+        shinyalert::shinyalert("Discretize data using pre-process tab to proceed",type="info")
       }
       else
       {
@@ -2125,7 +2105,7 @@ shinyServer(function(input, output,session) {
             #bn.hc.boot.average <<- bnlearn::hc(DiscreteData)
             bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = input$paramMethod2)
           }
-          shinyalert("Structure learning complete",type="success")
+          shinyalert::shinyalert("Structure learning complete",type="success")
           simple<<-1
           upload<<-2
           type<<-1
@@ -2181,12 +2161,12 @@ shinyServer(function(input, output,session) {
                 valID = insertedV[which(inserted == id)]
                 updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
               },error = function(e){
-                shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+                shinyalert::shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
               })
             }))
 
           },error = function(e){
-            shinyalert(toString(e), type = "error")
+            shinyalert::shinyalert(toString(e), type = "error")
           })
           shapeVector<<- rep('dot',length(nodeNames))
           updateSelectInput(session,'event',choices = nodeNames)
@@ -2205,7 +2185,7 @@ shinyServer(function(input, output,session) {
           updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                              "ellipse", "database", "text", "diamond"))
           updateSelectInput(session,'modGroup',choices = "")
-          graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
+          graph<<-igraph::graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
           updateSelectInput(session,"neighbornodes",choices = "")
           updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
           reset<<-2
@@ -2215,7 +2195,7 @@ shinyServer(function(input, output,session) {
           save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
           write.csv(input$name,file = "customDashboard/inst/cd/name.txt",row.names = FALSE)
         },error = function(e){
-          shinyalert(toString(e), type = "error")
+          shinyalert::shinyalert(toString(e), type = "error")
         })
       }
       tooltip(session)
@@ -2228,7 +2208,7 @@ shinyServer(function(input, output,session) {
         updateSelectInput(session,"toarc",choices = setdiff(nodeNames,input$fromarc))
       }
     },error = function(e){
-      shinyalert(toString(e), type = "error")
+      shinyalert::shinyalert(toString(e), type = "error")
     })
     tooltip(session)
   })
@@ -2296,12 +2276,12 @@ shinyServer(function(input, output,session) {
             valID = insertedV[which(inserted == id)]
             updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
           },error = function(e){
-            shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+            shinyalert::shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
           })
         }))
 
       },error = function(e){
-        shinyalert(toString(e), type = "error")
+        shinyalert::shinyalert(toString(e), type = "error")
       })
       type<<-1
       shapeVector<<- rep('dot',length(nodeNames))
@@ -2321,7 +2301,7 @@ shinyServer(function(input, output,session) {
       updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                          "ellipse", "database", "text", "diamond"))
       updateSelectInput(session,'modGroup',choices = "")
-      graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
+      graph<<-igraph::graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
       updateSelectInput(session,"neighbornodes",choices = "")
       updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
       reset<<-2
@@ -2331,7 +2311,7 @@ shinyServer(function(input, output,session) {
       save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
       write.csv(input$name,file = "customDashboard/inst/cd/name.txt",row.names = FALSE)
     },error = function(e){
-      shinyalert(toString(e), type = "error")
+      shinyalert::shinyalert(toString(e), type = "error")
     })
     tooltip(session)
   })
@@ -2404,12 +2384,12 @@ shinyServer(function(input, output,session) {
                   valID = insertedV[which(inserted == id)]
                   updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
                 },error = function(e){
-                  shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+                  shinyalert::shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
                 })
               }))
 
             },error = function(e){
-              shinyalert(toString(e), type = "error")
+              shinyalert::shinyalert(toString(e), type = "error")
             })
             shapeVector<<- rep('dot',length(nodeNames))
             updateSelectInput(session,'event',choices = nodeNames)
@@ -2426,7 +2406,7 @@ shinyServer(function(input, output,session) {
             updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
             updateSelectInput(session,'paramSelect',choices = nodeNames)
             updateSelectInput(session,"moduleSelection",choices = "graph")
-            graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
+            graph<<-igraph::graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
             updateSelectInput(session,"neighbornodes",choices = "")
             updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
             reset<<-2
@@ -2441,7 +2421,7 @@ shinyServer(function(input, output,session) {
           }
         }
       },error = function(e){
-        shinyalert(toString(e), type = "error")
+        shinyalert::shinyalert(toString(e), type = "error")
       })
       tooltip(session)
     }
@@ -2515,12 +2495,12 @@ shinyServer(function(input, output,session) {
                   valID = insertedV[which(inserted == id)]
                   updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
                 },error = function(e){
-                  shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+                  shinyalert::shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
                 })
               }))
 
             },error = function(e){
-              shinyalert(toString(e), type = "error")
+              shinyalert::shinyalert(toString(e), type = "error")
             })
             shapeVector<<- rep('dot',length(nodeNames))
             updateSelectInput(session,'event',choices = nodeNames)
@@ -2537,7 +2517,7 @@ shinyServer(function(input, output,session) {
             updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
             updateSelectInput(session,'paramSelect',choices = nodeNames)
             updateSelectInput(session,"moduleSelection",choices = "graph")
-            graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
+            graph<<-igraph::graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
             updateSelectInput(session,"neighbornodes",choices = "")
             updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
             reset<<-2
@@ -2552,7 +2532,7 @@ shinyServer(function(input, output,session) {
           }
         }
       },error = function(e){
-        shinyalert(toString(e), type = "error")
+        shinyalert::shinyalert(toString(e), type = "error")
       })
       tooltip(session)
     }
@@ -2565,7 +2545,7 @@ shinyServer(function(input, output,session) {
         tryCatch({
           output$parameterPlot<-renderPlot({bn.fit.barchart(bn.hc.boot.fit[[input$paramSelect]])})
         },error = function(e){
-          shinyalert(toString(e), type = "error")
+          shinyalert::shinyalert(toString(e), type = "error")
         })
       }
       tooltip(session)
@@ -2577,19 +2557,19 @@ shinyServer(function(input, output,session) {
         if(input$parallel==TRUE)
         {
           check<<-2
-          cl <<- makeCluster(strtoi(input$clusters), type = "SOCK")
-          shinyalert("Parallel computing enabled",type="success")
+          cl <<- parallel::makeCluster(strtoi(input$clusters), type = "SOCK")
+          shinyalert::shinyalert("Parallel computing enabled",type="success")
         }
         else
         {
           if(check==2)
           {
-            stopCluster(cl)
+            parallel::stopCluster(cl)
             ckeck<<-1
           }
         }
       },error=function(e){
-        shinyalert(toString(e), type = "error")
+        shinyalert::shinyalert(toString(e), type = "error")
       })
     })
     tooltip(session)
@@ -2625,12 +2605,12 @@ shinyServer(function(input, output,session) {
                 valID = insertedV[which(inserted == id)]
                 updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
               },error = function(e){
-                shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+                shinyalert::shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
               })
             }))
 
           },error = function(e){
-            shinyalert(toString(e), type = "error")
+            shinyalert::shinyalert(toString(e), type = "error")
           })
         }
       })
@@ -2659,7 +2639,7 @@ shinyServer(function(input, output,session) {
           rvs$evidenceObserve <<- rvs$evidenceObserve[-length(inserted)]
           rvs$valueObserve <<- rvs$valueObserve[-length(insertedV)]
         },error=function(e){
-          shinyalert(toString(e), type = "error")
+          shinyalert::shinyalert(toString(e), type = "error")
         })
       }
       tooltip(session)
@@ -2681,7 +2661,7 @@ shinyServer(function(input, output,session) {
           }
           EventNode <<- input$event
         },error=function(e){
-          shinyalert(toString(e), type = "error")
+          shinyalert::shinyalert(toString(e), type = "error")
         })
       }
       tooltip(session)
@@ -2724,7 +2704,7 @@ shinyServer(function(input, output,session) {
             })
             updateRadioGroupButtons(session,'bayesianOption',selected = "Infer Decisions")
           },error = function(e){
-            shinyalert(toString(e), type = "error")
+            shinyalert::shinyalert(toString(e), type = "error")
           })
         }
       })
@@ -2777,7 +2757,7 @@ shinyServer(function(input, output,session) {
             updateRadioGroupButtons(session,'bayesianOption',selected = "Infer Decisions")
 
           },error = function(e){
-            shinyalert(toString(e), type = "error")
+            shinyalert::shinyalert(toString(e), type = "error")
           })
         }
       })
@@ -2824,7 +2804,7 @@ shinyServer(function(input, output,session) {
               updateRadioGroupButtons(session,'bayesianOption',selected = "Infer Decisions")
 
             },error = function(e){
-              shinyalert(toString(e), type = "error")
+              shinyalert::shinyalert(toString(e), type = "error")
             })
           }
           else
@@ -2869,7 +2849,7 @@ shinyServer(function(input, output,session) {
                 error.bar(barx,ee$mean[nm], 1.96*ee$sd[nm]/sqrt(input$plotStrengthBtn))})
               updateRadioGroupButtons(session,'bayesianOption',selected = "Infer Decisions")
             },error = function(e){
-              shinyalert(toString(e), type = "error")
+              shinyalert::shinyalert(toString(e), type = "error")
             })
           }
         }
@@ -2952,12 +2932,12 @@ shinyServer(function(input, output,session) {
                     valID = insertedV[which(inserted == id)]
                     updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
                   },error = function(e){
-                    shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+                    shinyalert::shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
                   })
                 }))
 
               },error = function(e){
-                shinyalert(toString(e), type = "error")
+                shinyalert::shinyalert(toString(e), type = "error")
               })
               shapeVector<<- rep('dot',length(nodeNames))
               updateSelectInput(session,'event',choices = nodeNames)
@@ -2980,7 +2960,7 @@ shinyServer(function(input, output,session) {
                                                                  "ellipse", "database", "text", "diamond"))
               updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
               updateSelectInput(session,'paramSelect',choices = nodeNames)
-              graph<<-graph_from_edgelist(as.matrix(pruneGraph),directed = TRUE)
+              graph<<-igraph::graph_from_edgelist(as.matrix(pruneGraph),directed = TRUE)
               updateSelectInput(session,"neighbornodes",choices = "")
               updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                                  "ellipse", "database", "text", "diamond"))
@@ -3039,12 +3019,12 @@ shinyServer(function(input, output,session) {
                     valID = insertedV[which(inserted == id)]
                     updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
                   },error = function(e){
-                    shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+                    shinyalert::shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
                   })
                 }))
 
               },error = function(e){
-                shinyalert(toString(e), type = "error")
+                shinyalert::shinyalert(toString(e), type = "error")
               })
               shapeVector<<- rep('dot',length(nodeNames))
               updateSelectInput(session,'event',choices = nodeNames)
@@ -3068,7 +3048,7 @@ shinyServer(function(input, output,session) {
                                                                  "ellipse", "database", "text", "diamond"))
               updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
               updateSelectInput(session,'paramSelect',choices = nodeNames)
-              graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
+              graph<<-igraph::graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
               updateSelectInput(session,"neighbornodes",choices = "")
               updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                                  "ellipse", "database", "text", "diamond"))
@@ -3076,7 +3056,7 @@ shinyServer(function(input, output,session) {
               updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
             }
           },error=function(e){
-            shinyalert(toString(e), type = "error")
+            shinyalert::shinyalert(toString(e), type = "error")
           })
         }
       })
@@ -3104,7 +3084,7 @@ shinyServer(function(input, output,session) {
 
         }
       },error=function(e){
-        shinyalert(toString(e), type = "error")
+        shinyalert::shinyalert(toString(e), type = "error")
       })
     }
     tooltip(session)
@@ -3132,7 +3112,7 @@ shinyServer(function(input, output,session) {
 
           }
         },error=function(e){
-          shinyalert(toString(e), type = "error")
+          shinyalert::shinyalert(toString(e), type = "error")
         })
       }
       tooltip(session)
@@ -3155,10 +3135,10 @@ shinyServer(function(input, output,session) {
           names(lengthCom)<<-paste("Module",c(1:length(communities)),sep=" ")
           updateSelectInput(session,"moduleSelection",choices = c("graph",names(communities)))
           updateSelectInput(session,'modGroup',choices = names(communities))
-          shinyalert("Module detection successfull",type="success")
+          shinyalert::shinyalert("Module detection successfull",type="success")
         }
       },error=function(e){
-        shinyalert("Module detection failed",type="error")
+        shinyalert::shinyalert("Module detection failed",type="error")
         updateSelectInput(session,"moduleSelection",choices = "graph")
         updateSelectInput(session,'modGroup',choices = "")
       })
@@ -3183,7 +3163,7 @@ shinyServer(function(input, output,session) {
             output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,weight,value)})
             updateSelectInput(session,"neighbornodes",choices = "")
           },error = function(e){
-            shinyalert(toString(e), type = "error")
+            shinyalert::shinyalert(toString(e), type = "error")
 
           })
         }
@@ -3205,7 +3185,7 @@ shinyServer(function(input, output,session) {
           output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,weight,value)})
           updateSelectInput(session,"neighbornodes",choices = "")
         },error = function(e){
-          shinyalert(toString(e), type = "error")
+          shinyalert::shinyalert(toString(e), type = "error")
 
         })
       }
@@ -3237,7 +3217,7 @@ shinyServer(function(input, output,session) {
           output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,weight,value)})
           updateSelectInput(session,"neighbornodes",choices = "")
         },error = function(e){
-          shinyalert(toString(e), type = "error")
+          shinyalert::shinyalert(toString(e), type = "error")
 
         })
       }
@@ -3269,7 +3249,7 @@ shinyServer(function(input, output,session) {
           output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,weight,value)})
           updateSelectInput(session,"neighbornodes",choices = "")
         },error = function(e){
-          shinyalert(toString(e), type = "error")
+          shinyalert::shinyalert(toString(e), type = "error")
 
         })
       }
@@ -3286,7 +3266,7 @@ shinyServer(function(input, output,session) {
           output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$Adegree,input$Agraph_layout,shapeVectorAssoc)})
           updateSelectInput(session,"Aneighbornodes",choices = "")
         },error = function(e){
-          shinyalert(toString(e), type = "error")
+          shinyalert::shinyalert(toString(e), type = "error")
 
         })
       }
@@ -3308,7 +3288,7 @@ shinyServer(function(input, output,session) {
           output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,weight,value)})
           updateSelectInput(session,"neighbornodes",choices = "")
         },error = function(e){
-          shinyalert(toString(e), type = "error")
+          shinyalert::shinyalert(toString(e), type = "error")
 
         })
       }
@@ -3356,7 +3336,7 @@ shinyServer(function(input, output,session) {
           output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,weight,value)})
           updateSelectInput(session,"neighbornodes",choices = "")
         },error = function(e){
-          shinyalert(toString(e), type = "error")
+          shinyalert::shinyalert(toString(e), type = "error")
 
         })
       }
@@ -3416,12 +3396,12 @@ shinyServer(function(input, output,session) {
       sink(fileName)
       cat(customString)
       sink()
-      shinyalert("Custom Dashboard successfully built. You can now download it as an R package",type="success")
+      shinyalert::shinyalert("Custom Dashboard successfully built. You can now download it as an R package",type="success")
       }
       }
       else
       {
-        shinyalert("Enter a dashboard name",type="error")
+        shinyalert::shinyalert("Enter a dashboard name",type="error")
       }
     }
   })

@@ -6,7 +6,6 @@ custom.discretize <- function(x,type)
     out <- try(bnlearn::discretize(data.frame(x),method="quantile"))
     if(class(out)=="try-error"){
       out <- try(bnlearn::discretize(data.frame(x),method="interval"))
-      #print("interval")
       shinyalert("Failed to discretize all variables using the desired method, used interval discretization for them instead",type = "info")
       if(class(out)=="try-error"){
         shinyalert("Failed to discretize some variables in the data. Please try again using some other method or input a discretized data",type = "error")
