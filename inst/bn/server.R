@@ -1249,6 +1249,38 @@ shinyServer(function(input, output,session) {
               nodeNames <<- names(bn.hc.boot.average$nodes)
               EventNode <<- nodeNames[1]
               EvidenceNode <<- c()
+              tryCatch({
+                btn <<- input$insertBtn
+                id <- paste0('Evidence', btn)
+                idL <- paste("Evidence", btn)
+                idV <- paste0('Value', btn)
+                idVL <- paste("Value", btn)
+                insertUI(selector = '#placeholder1',
+                         ui = tags$div(selectInput(id,'Evidence',nodeNames),
+                                       id = id
+                         )
+                )
+                insertUI(selector = '#placeholder2',
+                         ui = tags$div(selectInput(idV,'Value',levels(DiscreteData[,nodeNames[1]])),
+                                       id = idV
+                         )
+                )
+                inserted <<- c(id, inserted)
+                insertedV <<- c(idV,insertedV)
+                rvs$evidence <<- c(rvs$evidence,id)
+                rvs$value <<- c(rvs$value,id)
+                rvs$evidenceObserve <<- c(rvs$evidenceObserve,observeEvent(input[[id]],{
+                  tryCatch({
+                    valID = insertedV[which(inserted == id)]
+                    updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
+                  },error = function(e){
+                    shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+                  })
+                }))
+
+              },error = function(e){
+                shinyalert(toString(e), type = "error")
+              })
               shapeVector<<- rep('dot',length(nodeNames))
               updateSelectInput(session,'event',choices = nodeNames)
               weight <<- 1
@@ -1356,6 +1388,38 @@ shinyServer(function(input, output,session) {
               nodeNames <<- names(bn.hc.boot.average$nodes)
               EventNode <<- nodeNames[1]
               EvidenceNode <<- c()
+              tryCatch({
+                btn <<- input$insertBtn
+                id <- paste0('Evidence', btn)
+                idL <- paste("Evidence", btn)
+                idV <- paste0('Value', btn)
+                idVL <- paste("Value", btn)
+                insertUI(selector = '#placeholder1',
+                         ui = tags$div(selectInput(id,'Evidence',nodeNames),
+                                       id = id
+                         )
+                )
+                insertUI(selector = '#placeholder2',
+                         ui = tags$div(selectInput(idV,'Value',levels(DiscreteData[,nodeNames[1]])),
+                                       id = idV
+                         )
+                )
+                inserted <<- c(id, inserted)
+                insertedV <<- c(idV,insertedV)
+                rvs$evidence <<- c(rvs$evidence,id)
+                rvs$value <<- c(rvs$value,id)
+                rvs$evidenceObserve <<- c(rvs$evidenceObserve,observeEvent(input[[id]],{
+                  tryCatch({
+                    valID = insertedV[which(inserted == id)]
+                    updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
+                  },error = function(e){
+                    shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+                  })
+                }))
+
+              },error = function(e){
+                shinyalert(toString(e), type = "error")
+              })
               shapeVector<<- rep('dot',length(nodeNames))
               updateSelectInput(session,'event',choices = nodeNames)
               weight <<- graph.weight(bn.hc.boot,NetworkGraph)
@@ -1436,6 +1500,38 @@ shinyServer(function(input, output,session) {
             nodeNames <<- names(bn.hc.boot.average$nodes)
             EventNode <<- nodeNames[1]
             EvidenceNode <<- c()
+            tryCatch({
+              btn <<- input$insertBtn
+              id <- paste0('Evidence', btn)
+              idL <- paste("Evidence", btn)
+              idV <- paste0('Value', btn)
+              idVL <- paste("Value", btn)
+              insertUI(selector = '#placeholder1',
+                       ui = tags$div(selectInput(id,'Evidence',nodeNames),
+                                     id = id
+                       )
+              )
+              insertUI(selector = '#placeholder2',
+                       ui = tags$div(selectInput(idV,'Value',levels(DiscreteData[,nodeNames[1]])),
+                                     id = idV
+                       )
+              )
+              inserted <<- c(id, inserted)
+              insertedV <<- c(idV,insertedV)
+              rvs$evidence <<- c(rvs$evidence,id)
+              rvs$value <<- c(rvs$value,id)
+              rvs$evidenceObserve <<- c(rvs$evidenceObserve,observeEvent(input[[id]],{
+                tryCatch({
+                  valID = insertedV[which(inserted == id)]
+                  updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
+                },error = function(e){
+                  shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+                })
+              }))
+
+            },error = function(e){
+              shinyalert(toString(e), type = "error")
+            })
             shapeVector<<- rep('dot',length(nodeNames))
             updateSelectInput(session,'event',choices = nodeNames)
             weight <<- 1
@@ -1504,6 +1600,38 @@ shinyServer(function(input, output,session) {
             nodeNames <<- names(bn.hc.boot.average$nodes)
             EventNode <<- nodeNames[1]
             EvidenceNode <<- c()
+            tryCatch({
+              btn <<- input$insertBtn
+              id <- paste0('Evidence', btn)
+              idL <- paste("Evidence", btn)
+              idV <- paste0('Value', btn)
+              idVL <- paste("Value", btn)
+              insertUI(selector = '#placeholder1',
+                       ui = tags$div(selectInput(id,'Evidence',nodeNames),
+                                     id = id
+                       )
+              )
+              insertUI(selector = '#placeholder2',
+                       ui = tags$div(selectInput(idV,'Value',levels(DiscreteData[,nodeNames[1]])),
+                                     id = idV
+                       )
+              )
+              inserted <<- c(id, inserted)
+              insertedV <<- c(idV,insertedV)
+              rvs$evidence <<- c(rvs$evidence,id)
+              rvs$value <<- c(rvs$value,id)
+              rvs$evidenceObserve <<- c(rvs$evidenceObserve,observeEvent(input[[id]],{
+                tryCatch({
+                  valID = insertedV[which(inserted == id)]
+                  updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
+                },error = function(e){
+                  shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+                })
+              }))
+
+            },error = function(e){
+              shinyalert(toString(e), type = "error")
+            })
             shapeVector<<- rep('dot',length(nodeNames))
             updateSelectInput(session,'event',choices = nodeNames)
             weight <<- graph.weight(bn.hc.boot,NetworkGraph)
@@ -1607,6 +1735,38 @@ shinyServer(function(input, output,session) {
           nodeNames <<- names(bn.hc.boot.average$nodes)
           EventNode <<- nodeNames[1]
           EvidenceNode <<- c()
+          tryCatch({
+            btn <<- input$insertBtn
+            id <- paste0('Evidence', btn)
+            idL <- paste("Evidence", btn)
+            idV <- paste0('Value', btn)
+            idVL <- paste("Value", btn)
+            insertUI(selector = '#placeholder1',
+                     ui = tags$div(selectInput(id,'Evidence',nodeNames),
+                                   id = id
+                     )
+            )
+            insertUI(selector = '#placeholder2',
+                     ui = tags$div(selectInput(idV,'Value',levels(DiscreteData[,nodeNames[1]])),
+                                   id = idV
+                     )
+            )
+            inserted <<- c(id, inserted)
+            insertedV <<- c(idV,insertedV)
+            rvs$evidence <<- c(rvs$evidence,id)
+            rvs$value <<- c(rvs$value,id)
+            rvs$evidenceObserve <<- c(rvs$evidenceObserve,observeEvent(input[[id]],{
+              tryCatch({
+                valID = insertedV[which(inserted == id)]
+                updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
+              },error = function(e){
+                shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+              })
+            }))
+
+          },error = function(e){
+            shinyalert(toString(e), type = "error")
+          })
           shapeVector<<- rep('dot',length(nodeNames))
           updateSelectInput(session,'event',choices = nodeNames)
           weight <<- graph.weight(bn.hc.boot,NetworkGraph)
@@ -1688,6 +1848,38 @@ shinyServer(function(input, output,session) {
               nodeNames <<- names(bn.hc.boot.average$nodes)
               EventNode <<- nodeNames[1]
               EvidenceNode <<- c()
+              tryCatch({
+                btn <<- input$insertBtn
+                id <- paste0('Evidence', btn)
+                idL <- paste("Evidence", btn)
+                idV <- paste0('Value', btn)
+                idVL <- paste("Value", btn)
+                insertUI(selector = '#placeholder1',
+                         ui = tags$div(selectInput(id,'Evidence',nodeNames),
+                                       id = id
+                         )
+                )
+                insertUI(selector = '#placeholder2',
+                         ui = tags$div(selectInput(idV,'Value',levels(DiscreteData[,nodeNames[1]])),
+                                       id = idV
+                         )
+                )
+                inserted <<- c(id, inserted)
+                insertedV <<- c(idV,insertedV)
+                rvs$evidence <<- c(rvs$evidence,id)
+                rvs$value <<- c(rvs$value,id)
+                rvs$evidenceObserve <<- c(rvs$evidenceObserve,observeEvent(input[[id]],{
+                  tryCatch({
+                    valID = insertedV[which(inserted == id)]
+                    updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
+                  },error = function(e){
+                    shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+                  })
+                }))
+
+              },error = function(e){
+                shinyalert(toString(e), type = "error")
+              })
               shapeVector<<- rep('dot',length(nodeNames))
               updateSelectInput(session,'event',choices = nodeNames)
               weight <<- 1
@@ -1960,6 +2152,38 @@ shinyServer(function(input, output,session) {
           nodeNames <<- names(bn.hc.boot.average$nodes)
           EventNode <<- nodeNames[1]
           EvidenceNode <<- c()
+          tryCatch({
+            btn <<- input$insertBtn
+            id <- paste0('Evidence', btn)
+            idL <- paste("Evidence", btn)
+            idV <- paste0('Value', btn)
+            idVL <- paste("Value", btn)
+            insertUI(selector = '#placeholder1',
+                     ui = tags$div(selectInput(id,'Evidence',nodeNames),
+                                   id = id
+                     )
+            )
+            insertUI(selector = '#placeholder2',
+                     ui = tags$div(selectInput(idV,'Value',levels(DiscreteData[,nodeNames[1]])),
+                                   id = idV
+                     )
+            )
+            inserted <<- c(id, inserted)
+            insertedV <<- c(idV,insertedV)
+            rvs$evidence <<- c(rvs$evidence,id)
+            rvs$value <<- c(rvs$value,id)
+            rvs$evidenceObserve <<- c(rvs$evidenceObserve,observeEvent(input[[id]],{
+              tryCatch({
+                valID = insertedV[which(inserted == id)]
+                updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
+              },error = function(e){
+                shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+              })
+            }))
+
+          },error = function(e){
+            shinyalert(toString(e), type = "error")
+          })
           shapeVector<<- rep('dot',length(nodeNames))
           updateSelectInput(session,'event',choices = nodeNames)
           weight <<- 1
@@ -2043,6 +2267,38 @@ shinyServer(function(input, output,session) {
       nodeNames <<- names(bn.hc.boot.average$nodes)
       EventNode <<- nodeNames[1]
       EvidenceNode <<- c()
+      tryCatch({
+        btn <<- input$insertBtn
+        id <- paste0('Evidence', btn)
+        idL <- paste("Evidence", btn)
+        idV <- paste0('Value', btn)
+        idVL <- paste("Value", btn)
+        insertUI(selector = '#placeholder1',
+                 ui = tags$div(selectInput(id,'Evidence',nodeNames),
+                               id = id
+                 )
+        )
+        insertUI(selector = '#placeholder2',
+                 ui = tags$div(selectInput(idV,'Value',levels(DiscreteData[,nodeNames[1]])),
+                               id = idV
+                 )
+        )
+        inserted <<- c(id, inserted)
+        insertedV <<- c(idV,insertedV)
+        rvs$evidence <<- c(rvs$evidence,id)
+        rvs$value <<- c(rvs$value,id)
+        rvs$evidenceObserve <<- c(rvs$evidenceObserve,observeEvent(input[[id]],{
+          tryCatch({
+            valID = insertedV[which(inserted == id)]
+            updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
+          },error = function(e){
+            shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+          })
+        }))
+
+      },error = function(e){
+        shinyalert(toString(e), type = "error")
+      })
       type<<-1
       shapeVector<<- rep('dot',length(nodeNames))
       updateSelectInput(session,'event',choices = nodeNames)
@@ -2119,6 +2375,38 @@ shinyServer(function(input, output,session) {
             nodeNames <<- names(bn.hc.boot.average$nodes)
             EventNode <<- nodeNames[1]
             EvidenceNode <<- c()
+            tryCatch({
+              btn <<- input$insertBtn
+              id <- paste0('Evidence', btn)
+              idL <- paste("Evidence", btn)
+              idV <- paste0('Value', btn)
+              idVL <- paste("Value", btn)
+              insertUI(selector = '#placeholder1',
+                       ui = tags$div(selectInput(id,'Evidence',nodeNames),
+                                     id = id
+                       )
+              )
+              insertUI(selector = '#placeholder2',
+                       ui = tags$div(selectInput(idV,'Value',levels(DiscreteData[,nodeNames[1]])),
+                                     id = idV
+                       )
+              )
+              inserted <<- c(id, inserted)
+              insertedV <<- c(idV,insertedV)
+              rvs$evidence <<- c(rvs$evidence,id)
+              rvs$value <<- c(rvs$value,id)
+              rvs$evidenceObserve <<- c(rvs$evidenceObserve,observeEvent(input[[id]],{
+                tryCatch({
+                  valID = insertedV[which(inserted == id)]
+                  updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
+                },error = function(e){
+                  shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+                })
+              }))
+
+            },error = function(e){
+              shinyalert(toString(e), type = "error")
+            })
             shapeVector<<- rep('dot',length(nodeNames))
             updateSelectInput(session,'event',choices = nodeNames)
             weight <<- 1
@@ -2198,6 +2486,38 @@ shinyServer(function(input, output,session) {
             nodeNames <<- names(bn.hc.boot.average$nodes)
             EventNode <<- nodeNames[1]
             EvidenceNode <<- c()
+            tryCatch({
+              btn <<- input$insertBtn
+              id <- paste0('Evidence', btn)
+              idL <- paste("Evidence", btn)
+              idV <- paste0('Value', btn)
+              idVL <- paste("Value", btn)
+              insertUI(selector = '#placeholder1',
+                       ui = tags$div(selectInput(id,'Evidence',nodeNames),
+                                     id = id
+                       )
+              )
+              insertUI(selector = '#placeholder2',
+                       ui = tags$div(selectInput(idV,'Value',levels(DiscreteData[,nodeNames[1]])),
+                                     id = idV
+                       )
+              )
+              inserted <<- c(id, inserted)
+              insertedV <<- c(idV,insertedV)
+              rvs$evidence <<- c(rvs$evidence,id)
+              rvs$value <<- c(rvs$value,id)
+              rvs$evidenceObserve <<- c(rvs$evidenceObserve,observeEvent(input[[id]],{
+                tryCatch({
+                  valID = insertedV[which(inserted == id)]
+                  updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
+                },error = function(e){
+                  shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+                })
+              }))
+
+            },error = function(e){
+              shinyalert(toString(e), type = "error")
+            })
             shapeVector<<- rep('dot',length(nodeNames))
             updateSelectInput(session,'event',choices = nodeNames)
             type<<-1
@@ -2601,6 +2921,38 @@ shinyServer(function(input, output,session) {
               nodeNames <<- selectedNodes
               EventNode <<- nodeNames[1]
               EvidenceNode <<- c()
+              tryCatch({
+                btn <<- input$insertBtn
+                id <- paste0('Evidence', btn)
+                idL <- paste("Evidence", btn)
+                idV <- paste0('Value', btn)
+                idVL <- paste("Value", btn)
+                insertUI(selector = '#placeholder1',
+                         ui = tags$div(selectInput(id,'Evidence',nodeNames),
+                                       id = id
+                         )
+                )
+                insertUI(selector = '#placeholder2',
+                         ui = tags$div(selectInput(idV,'Value',levels(DiscreteData[,nodeNames[1]])),
+                                       id = idV
+                         )
+                )
+                inserted <<- c(id, inserted)
+                insertedV <<- c(idV,insertedV)
+                rvs$evidence <<- c(rvs$evidence,id)
+                rvs$value <<- c(rvs$value,id)
+                rvs$evidenceObserve <<- c(rvs$evidenceObserve,observeEvent(input[[id]],{
+                  tryCatch({
+                    valID = insertedV[which(inserted == id)]
+                    updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
+                  },error = function(e){
+                    shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+                  })
+                }))
+
+              },error = function(e){
+                shinyalert(toString(e), type = "error")
+              })
               shapeVector<<- rep('dot',length(nodeNames))
               updateSelectInput(session,'event',choices = nodeNames)
               if(type==2)
@@ -2656,6 +3008,38 @@ shinyServer(function(input, output,session) {
               nodeNames <<- names(bn.hc.boot.average$nodes)
               EventNode <<- nodeNames[1]
               EvidenceNode <<- c()
+              tryCatch({
+                btn <<- input$insertBtn
+                id <- paste0('Evidence', btn)
+                idL <- paste("Evidence", btn)
+                idV <- paste0('Value', btn)
+                idVL <- paste("Value", btn)
+                insertUI(selector = '#placeholder1',
+                         ui = tags$div(selectInput(id,'Evidence',nodeNames),
+                                       id = id
+                         )
+                )
+                insertUI(selector = '#placeholder2',
+                         ui = tags$div(selectInput(idV,'Value',levels(DiscreteData[,nodeNames[1]])),
+                                       id = idV
+                         )
+                )
+                inserted <<- c(id, inserted)
+                insertedV <<- c(idV,insertedV)
+                rvs$evidence <<- c(rvs$evidence,id)
+                rvs$value <<- c(rvs$value,id)
+                rvs$evidenceObserve <<- c(rvs$evidenceObserve,observeEvent(input[[id]],{
+                  tryCatch({
+                    valID = insertedV[which(inserted == id)]
+                    updateSelectInput(session,valID, choices = levels(DiscreteData[,input[[id]]]))
+                  },error = function(e){
+                    shinyalert(toString("Construct bayesian network for taking decision"), type = "error")
+                  })
+                }))
+
+              },error = function(e){
+                shinyalert(toString(e), type = "error")
+              })
               shapeVector<<- rep('dot',length(nodeNames))
               updateSelectInput(session,'event',choices = nodeNames)
               if(type==2)
