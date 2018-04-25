@@ -2355,6 +2355,7 @@ shinyServer(function(input, output,session) {
           {
             updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,input$event]),value = nlevels(DiscreteData[,input$event]))
           }
+          EventNode <<- input$event
         },error=function(e){
           shinyalert(toString(e), type = "error")
         })
@@ -2788,15 +2789,7 @@ shinyServer(function(input, output,session) {
             {
               EvidenceNode = c(EvidenceNode,input[[elem]])
             }
-            if(sanity==1)
-            {
-              EventNode = nodeNames[1]
-              sanity=sanity + 1
-            }
-            else
-            {
-              EventNode = input$event
-            }
+            EventNode = input$event
             output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,weight,value)})
             updateSelectInput(session,"neighbornodes",choices = "")
           },error = function(e){
@@ -2818,15 +2811,7 @@ shinyServer(function(input, output,session) {
           {
             EvidenceNode = c(EvidenceNode,input[[elem]])
           }
-          if(sanity==1)
-          {
-            EventNode = nodeNames[1]
-            sanity=sanity + 1
-          }
-          else
-          {
-            EventNode = input$event
-          }
+          EventNode = input$event
           output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,weight,value)})
           updateSelectInput(session,"neighbornodes",choices = "")
         },error = function(e){
@@ -2858,15 +2843,7 @@ shinyServer(function(input, output,session) {
           {
             EvidenceNode = c(EvidenceNode,input[[elem]])
           }
-          if(sanity==1)
-          {
-            EventNode = nodeNames[1]
-            sanity=sanity + 1
-          }
-          else
-          {
-            EventNode = input$event
-          }
+          EventNode<<-input$event
           output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,weight,value)})
           updateSelectInput(session,"neighbornodes",choices = "")
         },error = function(e){
@@ -2898,15 +2875,7 @@ shinyServer(function(input, output,session) {
           {
             EvidenceNode = c(EvidenceNode,input[[elem]])
           }
-          if(sanity==1)
-          {
-            EventNode = nodeNames[1]
-            sanity=sanity + 1
-          }
-          else
-          {
-            EventNode = input$event
-          }
+          EventNode<<-input$event
           output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,weight,value)})
           updateSelectInput(session,"neighbornodes",choices = "")
         },error = function(e){
@@ -2945,15 +2914,7 @@ shinyServer(function(input, output,session) {
           {
             EvidenceNode = c(EvidenceNode,input[[elem]])
           }
-          if(sanity==1)
-          {
-            EventNode = nodeNames[1]
-            sanity=sanity + 1
-          }
-          else
-          {
-            EventNode = input$event
-          }
+          EventNode<<-input$event
           output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,weight,value)})
           updateSelectInput(session,"neighbornodes",choices = "")
         },error = function(e){
@@ -3001,15 +2962,7 @@ shinyServer(function(input, output,session) {
           {
             EvidenceNode = c(EvidenceNode,input[[elem]])
           }
-          if(sanity==1)
-          {
-            EventNode = nodeNames[1]
-            sanity=sanity + 1
-          }
-          else
-          {
-            EventNode = input$event
-          }
+          EventNode<<-input$event
           output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,weight,value)})
           updateSelectInput(session,"neighbornodes",choices = "")
         },error = function(e){
