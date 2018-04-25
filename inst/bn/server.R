@@ -2718,6 +2718,7 @@ shinyServer(function(input, output,session) {
                              las=2)
               text(x = barx,y = round(probs,digits = 4),label = round(probs,digits = 4), pos = 3, cex = 0.8, col = "black")
             })
+            updateRadioGroupButtons(session,'bayesianOption',selected = "Inference Plot")
           },error = function(e){
             shinyalert(toString(e), type = "error")
           })
@@ -2769,6 +2770,7 @@ shinyServer(function(input, output,session) {
                               las=2)
               text(x = barx,y = round(ee$mean[1:input$NumBar],digits = 4),label = round(ee$mean[1:input$NumBar],digits = 4), pos = 3, cex = 0.8, col = "black")
               error.bar(barx,ee$mean[1:input$NumBar], 1.96*ee$sd[1:input$NumBar]/sqrt(input$plotStrengthBtn))})
+            updateRadioGroupButtons(session,'bayesianOption',selected = "Inference Plot")
 
           },error = function(e){
             shinyalert(toString(e), type = "error")
@@ -2815,7 +2817,7 @@ shinyServer(function(input, output,session) {
                                las=2)
                 text(x = barx,y = round(probs,digits = 4),label = round(probs,digits = 4), pos = 3, cex = 0.8, col = "black")
               })
-
+              updateRadioGroupButtons(session,'bayesianOption',selected = "Inference Plot")
 
             },error = function(e){
               shinyalert(toString(e), type = "error")
@@ -2861,7 +2863,7 @@ shinyServer(function(input, output,session) {
                                 las=2)
                 text(x = barx,y = round(ee$mean[nm],digits = 4),label = round(ee$mean[nm],digits = 4), pos = 3, cex = 0.8, col = "black")
                 error.bar(barx,ee$mean[nm], 1.96*ee$sd[nm]/sqrt(input$plotStrengthBtn))})
-
+              updateRadioGroupButtons(session,'bayesianOption',selected = "Inference Plot")
             },error = function(e){
               shinyalert(toString(e), type = "error")
             })
@@ -3419,4 +3421,5 @@ shinyServer(function(input, output,session) {
       }
     }
   })
+
 })
