@@ -133,7 +133,7 @@ dashboardPage(skin = "blue",
                                                                             fluidRow(style="padding:0px",
                                                                               shiny::column(2, dropdownButton(
                                                                                 h5('Choose default dataset'),
-                                                                                fluidRow(column(9,selectInput('defData',label = NULL,choices = c("Alarm","Asia","Coronary","Lizards","Marks","Insurance","Hailfinder"))),column(3,actionButton('loadDef','load'))),
+                                                                                fluidRow(column(9,selectInput('defData',label = NULL,choices = c("Alarm","Asia","Coronary","Lizards","Marks","Insurance","Hailfinder"))),column(3,actionButton('loadDef','load', class = "butt"))),
                                                                                 h5('Data Format:'),
                                                                                 shiny::selectInput('format',label = NULL,c(".RData",".CSV")),
                                                                                 h5('File Input:'),
@@ -146,23 +146,23 @@ dashboardPage(skin = "blue",
                                                                               shiny::column(2, dropdownButton(
                                                                                 div(id="dataImpute",
                                                                                     shiny::h4("Impute Missing Data:"),
-                                                                                    actionButton('impute','Impute')),
+                                                                                    actionButton('impute','Impute', class = "butt")),
                                                                                 div(id="dataDiscretize",
                                                                                     shiny::h4('Discretize Data'),
                                                                                     h5('Discretization Type:'),
-                                                                                    shiny::fluidRow(column(9,shiny::selectInput('dtype',label = NULL,c("hybrid discretization(Recommended)"="hybrid","interval discretization"="interval","quantile discretization"="quantile","frequency discretization"="frequency","K-means clustering"="cluster"))),column(3,actionButton('discretize',"Discretize")))
+                                                                                    shiny::fluidRow(column(9,shiny::selectInput('dtype',label = NULL,c("hybrid discretization(Recommended)"="hybrid","interval discretization"="interval","quantile discretization"="quantile","frequency discretization"="frequency","K-means clustering"="cluster"))),column(3,actionButton('discretize',"Discretize", class = "butt")))
                                                                                     #h5("subset columns in data using the tables")
 
                                                                                 ),
                                                                                 div(id="dataTranspose",
                                                                                     shiny::h4("Transpose data frame:"),
-                                                                                    actionButton('transpose','Transpose')),
+                                                                                    actionButton('transpose','Transpose', class = "butt")),
                                                                                 div(id="dataSort",
                                                                                     shiny::h4("Sort data frame:"),
-                                                                                    actionButton('sort','Arrange Columns')),
+                                                                                    actionButton('sort','Arrange Columns', class = "butt")),
                                                                                 div(id="dataDelete",
                                                                                     shiny::h4("Delete variables"),
-                                                                                    shiny::fluidRow(shiny::column(6,selectInput('delSelect',label = NULL,"",multiple = T)),shiny::column(3,actionButton('delete','Delete')),shiny::column(3,actionButton('reset','Reset')))
+                                                                                    shiny::fluidRow(shiny::column(6,selectInput('delSelect',label = NULL,"",multiple = T)),shiny::column(3,actionButton('delete','Delete', class = "butt")),shiny::column(3,actionButton('reset','Reset', class = "butt")))
                                                                                 ),
                                                                                 label = "Pre-Process",circle = F, status = "primary", icon = icon("edit"), width = "500px",tooltip = tooltipOptions(title = "prepare data for bayesian network analysis")
                                                                               )),
@@ -183,19 +183,19 @@ dashboardPage(skin = "blue",
                                                                           shiny::fluidRow(
                                                                             column(5,h5("")),
                                                                             column(4,shinyWidgets::radioGroupButtons(inputId = "assocOption",
-                                                                                                                     choices = c("Graph","Table"),
-                                                                                                                     selected = "Graph",
+                                                                                                                     choices = c("Association Network","Export Table"),
+                                                                                                                     selected = "Association Network",
                                                                                                                      justified = FALSE
                                                                             ))
                                                                           ),
                                                                           conditionalPanel(
-                                                                            "input.assocOption=='Graph'",
+                                                                            "input.assocOption=='Association Network'",
                                                                             shiny::fluidRow(
                                                                               shiny::column(1,
                                                                                             div(style="width: 500px;",
                                                                                                 dropdownButton(
                                                                                                   h5("Association Network"),
-                                                                                                  shiny::fluidRow(column(8,shiny::selectInput('assocType',label = NULL,c("cramer's V (Recommended)"="cramer's V","Cohen's D","Goodman Kruskal lambda","Tschuprow's T"))),column(4,actionButton('association',"Build"))),
+                                                                                                  shiny::fluidRow(column(8,shiny::selectInput('assocType',label = NULL,c("cramer's V (Recommended)"="cramer's V","Cohen's D","Goodman Kruskal lambda","Tschuprow's T"))),column(4,actionButton('association',"Build", class = "butt"))),
                                                                                                   sliderInput("threshold", label = "Association Threshold",min = 0, max = 1,value = 0.75),
 
                                                                                                   label = "` Build",circle = F, status = "primary", icon = icon("glyphicon glyphicon-wrench",lib = "glyphicon"), width = "400px",tooltip = tooltipOptions(title = "Build association Network")
@@ -207,14 +207,14 @@ dashboardPage(skin = "blue",
                                                                                                   h4('Highlight Variables'),
                                                                                                   shiny::fluidRow(shiny::column(6,selectInput('Avarselect',label = "Variables Names","",multiple = T)),
                                                                                                                   shiny::column(3,selectInput('Avarshape',label = "Shape","")),
-                                                                                                                  shiny::column(3,actionButton('Agroup','Group', style="margin-top:25px;"))
+                                                                                                                  shiny::column(3,actionButton('Agroup','Group', style="margin-top:25px;", class = "butt"))
 
 
                                                                                                   ),
                                                                                                   h4("Or"),
                                                                                                   shiny::fluidRow(shiny::column(6,textInput('Avarselectvector',label = "Column indices")),
                                                                                                                   shiny::column(3,selectInput('Avarshape2',label = "Shape","")),
-                                                                                                                  shiny::column(3,actionButton('Agroup2','Group', style="margin-top:25px;"))
+                                                                                                                  shiny::column(3,actionButton('Agroup2','Group', style="margin-top:25px;", class = "butt"))
                                                                                                   ),
                                                                                                   hr(),
                                                                                                   shiny::fluidRow(shiny::column(6,h4('Visible Neighbors chain'),div(id = "AgraphChain",
@@ -240,7 +240,7 @@ dashboardPage(skin = "blue",
                                                                               shiny::column(1,bsButton('graphBtn2', 'Refresh', icon = icon("refresh"),style = "primary")),
                                                                               shiny::column(3,
                                                                                             div(style = "position:absolute;right:0.1em;",
-                                                                                                h5("Nth Order neighbors:"))),
+                                                                                                h5("Nth neighbors(of selection):"))),
 
                                                                               shiny::column(4,
 
@@ -251,22 +251,22 @@ dashboardPage(skin = "blue",
                                                                             withSpinner(visNetworkOutput("assocPlot",height = "550px"), color= "#2E86C1")
                                                                           ),
                                                                           conditionalPanel(
-                                                                            "input.assocOption=='Table'",
-                                                                            downloadButton('assocDownload','Download'),
+                                                                            "input.assocOption=='Export Table'",
+                                                                            downloadButton('assocDownload','Download', class = "butt"),
                                                                             withSpinner(DT::dataTableOutput("assocTable"),color = "#2E86C1")
                                                                           )
                                                                  ),
                                                                  tabPanel("Bayesian Network",
                                                                           fluidPage(
                                                                             shiny::fluidRow(
-                                                                              shiny::column(1,dropdownButton(
+                                                                              shiny::column(2,dropdownButton(
                                                                                 shinyWidgets::radioGroupButtons(inputId = "structureOption",
-                                                                                                                choices = c("Upload Network","Initialize","Learn ab initio","Edit","Validate Network"),
-                                                                                                                selected = "Upload Network",
+                                                                                                                choices = c("Priors (Optional)","Learn ab initio","Upload Pre-learnt","Post Edit(Optional)","Validate Network"),
+                                                                                                                selected = "Priors (Optional)",
                                                                                                                 justified = FALSE
                                                                                 ),
                                                                                 shiny::conditionalPanel(
-                                                                                  "input.structureOption=='Upload Network'",
+                                                                                  "input.structureOption=='Upload Pre-learnt'",
                                                                                   h5("parameter learning algorithm"),
                                                                                   selectizeInput('paramMethod',label = NULL,choices = c("Bayesian parameter estimation" = "bayes","Maximum Likelihood parameter estimation" = "mle")),
                                                                                   hr(),
@@ -310,14 +310,14 @@ dashboardPage(skin = "blue",
                                                                                       )
                                                                                     )
                                                                                   ),
-                                                                                  actionButton("parameterTuningU","Parameter Tuning")
+                                                                                  actionButton("parameterTuningU","Parameter Tuning", class = "butt")
                                                                                 ),
                                                                                 shiny::conditionalPanel(
-                                                                                  "input.structureOption=='Initialize'",
-                                                                                  shiny::fluidRow(column(5,h5("Upload initialized Structure Object"))),
+                                                                                  "input.structureOption=='Priors (Optional)'",
+                                                                                  shiny::fluidRow(column(5,h5("Upload list of prior known edges (as .CSV)"))),
                                                                                   shiny::fluidRow(column(5,shiny::fileInput('priorFile',label = NULL,accept = c('.RData')))),
                                                                                   shiny::fluidRow(shiny::column(3,h5("from")),shiny::column(3,h5("to")),shiny::column(3,h5("")),shiny::column(3,h5("Select from table"))),
-                                                                                  shiny::fluidRow(shiny::column(3,selectInput("fromarc1",label = NULL,choices=c())),shiny::column(3,selectInput("toarc1",label = NULL,choices=c())),column(3,actionButton("addarc1","Add")),actionButton("RemoveArc","Remove"),actionButton("ReverseArc","Reverse")),
+                                                                                  shiny::fluidRow(shiny::column(3,selectInput("fromarc1",label = NULL,choices=c())),shiny::column(3,selectInput("toarc1",label = NULL,choices=c())),column(3,actionButton("addarc1","Add", class = "butt")),actionButton("RemoveArc","Remove", class = "butt"),actionButton("ReverseArc","Reverse", class = "butt")),
                                                                                   withSpinner(DT::dataTableOutput("priorout"),color = "#2E86C1")
                                                                                 ),
                                                                                 shiny::conditionalPanel(
@@ -382,37 +382,37 @@ dashboardPage(skin = "blue",
                                                                                                            min = 0, max = 1,
                                                                                                            value = 0.5))
                                                                                       ),
-                                                                                      actionButton('learnBtn', 'Bootstrap'),
-                                                                                      actionButton('learnSBtn','Direct'),
-                                                                                      actionButton('PruneBtn','Parameter Tuning'),
+                                                                                      actionButton('learnBtn', 'Bootstrap', class = "butt"),
+                                                                                      actionButton('learnSBtn','Direct', class = "butt"),
+                                                                                      actionButton('PruneBtn','Parameter Tuning', class = "butt"),
                                                                                       hr(),
                                                                                       shiny::h5("Save learned structure"),
-                                                                                      downloadButton('saveBtn','Save')
+                                                                                      downloadButton('saveBtn','Save', class = "butt")
                                                                                   )
                                                                                 ),
                                                                                 shiny::conditionalPanel(
-                                                                                  "input.structureOption=='Edit'",
+                                                                                  "input.structureOption=='Post Edit(Optional)'",
                                                                                   shiny::fluidRow(shiny::column(3,h5("from")),shiny::column(3,h5("to")),shiny::column(3,h5("")),shiny::column(3,h5("Select from table"))),
-                                                                                  shiny::fluidRow(shiny::column(3,selectInput("fromarc",label = NULL,choices=c())),shiny::column(3,selectInput("toarc",label = NULL,choices=c())),column(3,actionButton("addarc","Add")),actionButton("RemoveArc2","Remove"),actionButton("ReverseArc2","Reverse")),
+                                                                                  shiny::fluidRow(shiny::column(3,selectInput("fromarc",label = NULL,choices=c())),shiny::column(3,selectInput("toarc",label = NULL,choices=c())),column(3,actionButton("addarc","Add", class = "butt")),actionButton("RemoveArc2","Remove", class = "butt"),actionButton("ReverseArc2","Reverse", class = "butt")),
                                                                                   withSpinner(DT::dataTableOutput("postout"),color = "#2E86C1")
                                                                                 ),
                                                                                 shiny::conditionalPanel(
                                                                                   "input.structureOption=='Validate Network'",
-                                                                                  shiny::fluidRow(shiny::column(6,shiny::selectInput('crossFunc',label = "Validation Method",choices = c("k-fold","hold-out"))),shiny::column(6,shiny::selectInput('lossFunc',label = "Loss Function",choices = c("pred","pred-lw")))),
+                                                                                  shiny::fluidRow(shiny::column(6,shiny::selectInput('crossFunc',label = "Validation Method",choices = c("10-fold"="k-fold'","hold-out"))),shiny::column(6,shiny::selectInput('lossFunc',label = "Loss Function",choices = c("pred","pred-lw")))),
                                                                                   h5("Parameter Fitting Method"),
-                                                                                  shiny::fluidRow(shiny::column(8,shiny::selectInput('paramMethod3',label = NULL,choices = c("Maximum Likelihood parameter estimation" = "mle","Bayesian parameter estimation" = "bayes"))),shiny::column(4,shiny::actionButton("calLoss","Cross Validate"))),
+                                                                                  shiny::fluidRow(shiny::column(8,shiny::selectInput('paramMethod3',label = NULL,choices = c("Bayesian parameter estimation" = "bayes","Maximum Likelihood parameter estimation" = "mle"))),shiny::column(4,shiny::actionButton("calLoss","Cross Validate", class = "butt"))),
                                                                                   h5("Log-Likelihood Loss of the learned model"),
                                                                                   shiny::verbatimTextOutput("valLoss"),
                                                                                   h5("Network Score"),
-                                                                                  shiny::fluidRow(shiny::column(6,selectInput("scoreAlgo",label = NULL,choices = c("modified Bayesian Dirichelt equivalent"="mbde","log-likelihood"="loglik","Akaike Information Criterion"="aic","Bayesian Information Criterion"="bic","Bayesian Dirichelt sparse"="bds","locally averaged Bayesian Dirichelt"="bdla"))),shiny::column(2,actionButton("getScore","Score")),shiny::column(4,shiny::verbatimTextOutput("netScore")))
+                                                                                  shiny::fluidRow(shiny::column(6,selectInput("scoreAlgo",label = NULL,choices = c("modified Bayesian Dirichlet equivalent"="mbde","log-likelihood"="loglik","Akaike Information Criterion"="aic","Bayesian Information Criterion"="bic","Bayesian Dirichelt sparse"="bds","locally averaged Bayesian Dirichelt"="bdla"))),shiny::column(2,actionButton("getScore","Score", class = "butt")),shiny::column(4,shiny::verbatimTextOutput("netScore")))
                                                                                 ),
-                                                                                label = "Structure",circle = F, status = "primary", icon = icon("wrench"), width = "700px",tooltip = tooltipOptions(title = "Upload structure")
+                                                                                label = "Structure Learning",circle = F, status = "primary", icon = icon("wrench"), width = "700px",tooltip = tooltipOptions(title = "Upload structure")
                                                                               )),
                                                                               shiny::column(2, dropdownButton(
                                                                                 hr(),
                                                                                 h4("Select evidence to add to the model"),
-                                                                                shiny::fluidRow(shiny::column(6,actionButton('insertBtn', 'Insert')),
-                                                                                                shiny::column(6,actionButton('removeBtn', 'Remove'))
+                                                                                shiny::fluidRow(shiny::column(6,actionButton('insertBtn', 'Insert', class = "butt")),
+                                                                                                shiny::column(6,actionButton('removeBtn', 'Remove', class = "butt"))
                                                                                 ),
                                                                                 shiny::fluidRow(shiny::column(6,tags$div(id = 'placeholder1')),
                                                                                                 shiny::column(6,tags$div(id = 'placeholder2'))
@@ -424,56 +424,56 @@ dashboardPage(skin = "blue",
                                                                                                    label = NULL,
                                                                                                    ""),
                                                                                 shiny::h4("Display inference plot"),
-                                                                                shiny::fluidRow(shiny::column(5,actionButton('plotBtn', 'Simple Plot')),shiny::column(4,actionButton('plotStrengthBtn', 'Confidence Plot'))),
+                                                                                shiny::fluidRow(shiny::column(5,actionButton('plotBtn', 'without error bars', class = "butt")),shiny::column(4,actionButton('plotStrengthBtn', 'with error bars', class = "butt"))),
                                                                                 hr(),
-                                                                                shiny::h4("No of iterations for confidence plot"),
+                                                                                shiny::h4("No. of resampling iterations for error bars"),
                                                                                 textInput("numInterval", label = NULL,placeholder = 25),
-                                                                                label = "Inference",circle = F, status = "primary", icon = icon("bar-chart-o"), width = "300px",tooltip = tooltipOptions(title = "Learn Inferences")
+                                                                                label = "Inference",circle = F, status = "primary", icon = icon("bar-chart-o"), width = "350px",tooltip = tooltipOptions(title = "Learn Inferences")
                                                                               )),
-                                                                              shiny::column(5,shinyWidgets::radioGroupButtons(inputId = "bayesianOption",
-                                                                                                                              choices = c("Graph","CP Distribution", "Inference Plot","Tables"),
-                                                                                                                              selected = "Graph",
+                                                                              shiny::column(7,shinyWidgets::radioGroupButtons(inputId = "bayesianOption",
+                                                                                                                              choices = c("Bayesian Network","Explore Conditional Probabilities", "Infer Decisions","Export Tables"),
+                                                                                                                              selected = "Bayesian Network",
                                                                                                                               justified = FALSE
                                                                               ))
                                                                               ),
                                                                             shiny::conditionalPanel(
-                                                                              "input.bayesianOption=='Graph'",
-                                                                              shiny::column(11,
+                                                                              "input.bayesianOption=='Bayesian Network'",
+                                                                              shiny::column(12,
                                                                                             shiny::fluidRow(
 
                                                                                               shiny::column(2,
                                                                                                             div(
-                                                                                                                h5("Nth Order Neigbors:"))),
+                                                                                                                h5("Nth Neighbors(of selection):"))),
 
-                                                                                              shiny::column(3,style="padding-right:0px",
+                                                                                              shiny::column(2,style="padding-right:0px",
                                                                                                             shiny::selectInput("neighbornodes",label = NULL,choices = "")),
                                                                                               shiny::column(1,
                                                                                                             div(style = "position:absolute;right:0em;",
                                                                                                                 h5("Modules:"))),
-                                                                                              shiny::column(2,style="padding-right:0px",
+                                                                                              shiny::column(1,style="padding-right:0px",
                                                                                                             shiny::selectInput("moduleSelection",label = NULL,"graph")),
-                                                                                              shiny::column(1,style="margin-right:20px",dropdownButton(
+                                                                                              shiny::column(2,style="margin-right:20px",dropdownButton(
                                                                                                 shiny::fluidRow(shiny::column(6,selectInput('moduleAlgo',label = NULL,choices = c("ward.D","ward.D2", "single", "complete", "average", "mcquitty", "median","centroid"))),shiny::column(1,bsButton("Bcommunities","Build Modules", style="primary"))),
-                                                                                                label = "Modules",circle = F, status = "primary", width = "300px",tooltip = tooltipOptions(title = "Build modules in the graph")
+                                                                                                label = "Detect Modules",circle = F, status = "primary", width = "300px",tooltip = tooltipOptions(title = "Build modules in the graph")
                                                                                               )),
-                                                                                              shiny::column(1,style = "margin-right:8px",
+                                                                                              shiny::column(2,style = "margin-right:8px",
                                                                                                             dropdownButton(
                                                                                                               div(id="Bgraph",
                                                                                                                   h4('Highlight variables:'),
                                                                                                                   shiny::fluidRow(shiny::column(6,selectizeInput('varselect',label = "Variable names","",multiple = T)),
                                                                                                                                   shiny::column(3,selectInput('varshape',label = "Shape","")),
-                                                                                                                                  shiny::column(3, actionButton('group','Group', style="margin-top:25px;"))
+                                                                                                                                  shiny::column(3, actionButton('group','Group', style="margin-top:25px;", class = "butt"))
 
                                                                                                                   ),
                                                                                                                   h3("Or"),
                                                                                                                   shiny::fluidRow(shiny::column(6,textInput('varselectvector',label = "Column indices")),
                                                                                                                                   shiny::column(3,selectInput('varshape2',label = "Shape","")),
-                                                                                                                                  shiny::column(3, actionButton('group2','Group', style="margin-top:25px;"))
+                                                                                                                                  shiny::column(3, actionButton('group2','Group', style="margin-top:25px;", class = "butt"))
                                                                                                                   ),
                                                                                                                   h3("Or"),
-                                                                                                                  shiny::fluidRow(shiny::column(6,selectInput('modGroup',label = "module variables",choices = "")),
+                                                                                                                  shiny::fluidRow(shiny::column(6,selectInput('modGroup',label = "Module",choices = "")),
                                                                                                                                   shiny::column(3,selectInput('varshape3',label = "Shape","")),
-                                                                                                                                  shiny::column(3, actionButton('group3','Group', style="margin-top:25px;"))
+                                                                                                                                  shiny::column(3, actionButton('group3','Group', style="margin-top:25px;", class = "butt"))
                                                                                                                   ),
                                                                                                                   shiny::fluidRow(shiny::column(6,h4('Visible Neighbors'),div(id = "graphChain",
                                                                                                                                                                                     sliderInput("degree", label = NULL,
@@ -492,7 +492,7 @@ dashboardPage(skin = "blue",
                                                                                                                       h4("Select Graph Layout"),
                                                                                                                       shiny::selectInput('graph_layout',label = NULL,"layout_nicely"))
                                                                                                               ),
-                                                                                                              label = "Settings",circle = F, status = "primary", icon = icon("gear"), width = "400px",tooltip = tooltipOptions(title = "graph settings")
+                                                                                                              label = "Visual Settings",circle = F, status = "primary", icon = icon("gear"), width = "400px",tooltip = tooltipOptions(title = "graph settings")
                                                                                                             )
                                                                                               ),
                                                                                               shiny::column(1, bsButton('graphBtn', 'Refresh', icon = icon("refresh"),style = "primary"))),
@@ -501,35 +501,35 @@ dashboardPage(skin = "blue",
                                                                                             )
                                                                               ),
                                                                             shiny::conditionalPanel(
-                                                                              "input.bayesianOption=='Inference Plot'",
+                                                                              "input.bayesianOption=='Infer Decisions'",
                                                                               dropdownButton(
                                                                                 sliderInput("NumBar", label = "No. of bars",min = 0, max = 1,value = 1,step=1),
-                                                                                actionButton("sortPlot","Sort X-axis"),
+                                                                                actionButton("sortPlot","Sort X-axis", class = "butt"),
                                                                                 label = "Plot",circle = F, status = "primary", icon = icon("gear"), width = "400px",tooltip = tooltipOptions(title = "plot settings")
                                                                               ),
                                                                               withSpinner(plotOutput("distPlot",height = "450px"), color="#2E86C1")
                                                                             ),
                                                                             shiny::conditionalPanel(
-                                                                              "input.bayesianOption=='CP Distribution'",
+                                                                              "input.bayesianOption=='Explore Conditional Probabilities'",
                                                                               selectInput("paramSelect",label = "Variable",""),
                                                                               withSpinner(plotOutput("parameterPlot",height = "450px"),color="#2E86C1")
                                                                             ),
                                                                             conditionalPanel(
-                                                                              "input.bayesianOption=='Tables'",
-                                                                              shiny::fluidRow(shiny::column(4,selectInput("tableName",label = NULL,"")),shiny::column(1,downloadButton("downloadData", "Download"))),
+                                                                              "input.bayesianOption=='Export Tables'",
+                                                                              shiny::fluidRow(shiny::column(4,selectInput("tableName",label = NULL,"")),shiny::column(1,downloadButton("downloadData", "Download", class = "butt"))),
                                                                               withSpinner(DT::dataTableOutput("tableOut"),color = "#2E86C1")
                                                                             )
                                                                             )
                                                                          ),
-                                                                 tabPanel("Custom Dashboard",
+                                                                 tabPanel("Publish your dashboard",
                                                                           shiny::fluidRow(
                                                                             column(3,h5("Name")),
                                                                             column(3,h5("Theme"))),
                                                                           shiny::fluidRow(
                                                                             column(3,textInput("name",placeholder = NULL,label = NULL)),
                                                                             column(3,selectInput("theme",label = NULL,choices = c("Blue gradient"="blue_gradient","BoE website"="boe_website","Grey light"="grey_light","Grey dark"="grey_dark","OneNote"="onenote","Poor man's Flatly"="poor_mans_flatly","Purple gradient"="purple_gradient"))),
-                                                                            column(2,actionButton("build",'build')),
-                                                                            column(3,downloadButton('dashboard','Custom Dashboard')))
+                                                                            column(2,actionButton("build",'build', class = "butt")),
+                                                                            column(3,downloadButton('dashboard','Download', class = "butt")))
                                                                  )
                                                                  )
 

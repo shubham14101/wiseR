@@ -84,7 +84,7 @@ shinyServer(function(input, output,session) {
   updateSelectizeInput(session,'varselect',choices = "")
   updateSelectizeInput(session,'Avarselect',choices = "")
   updateSelectInput(session,'paramSelect',choices = "")
-  updateSelectInput(session,"tableName",choices = c("Bayesian Graph","Cross Validation Results","blacklist edges","whitelist edges","Association Graph"))
+  updateSelectInput(session,"tableName",choices = c("blacklist edges","whitelist edges","Bayesian Graph","Cross Validation Results"))
   updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
   updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
   updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
@@ -104,9 +104,9 @@ shinyServer(function(input, output,session) {
   output$valLoss<-renderText({0})
   output$netScore<-renderText({0})
   output$assocPlot<-renderVisNetwork({validate("Explore the association network on your data")})
-  output$netPlot<-renderVisNetwork({validate("Construct bayesian network to take decision")})
-  output$parameterPlot<-renderPlot({validate("Construct bayesian network to take decision")})
-  output$distPlot<-renderPlot({validate("Construct bayesian network to take decision")})
+  output$netPlot<-renderVisNetwork({validate("Construct bayesian network for taking decision")})
+  output$parameterPlot<-renderPlot({validate("Construct bayesian network for taking decision")})
+  output$distPlot<-renderPlot({validate("Construct bayesian network for taking decision")})
   output$freqPlot<-renderPlot({validate("You have to preprocess data to built the plot")})
   output$datasetTable<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
   output$priorout<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
@@ -255,7 +255,7 @@ shinyServer(function(input, output,session) {
         file=input$listFile
         if(input$listType=="Blacklist")
         {
-          blacklistEdges=read.csv(file$datapath,stringsAsFactors = T,na.strings = c("NA","na","Na","nA","","?","-"))
+          blacklistEdges=read.csv(file$datapath,stringsAsFactors = T,na.strings = c("NA","na","Na","nA","","?","-"),row.names = F)
           if(dim(blacklistEdges)[2]!=2)
           {
             blacklistEdges<<-c()
@@ -269,7 +269,7 @@ shinyServer(function(input, output,session) {
         }
         else
         {
-          whitelistEdges=read.csv(file$datapath,stringsAsFactors = T,na.strings = c("NA","na","Na","nA","","?","-"))
+          whitelistEdges=read.csv(file$datapath,stringsAsFactors = T,na.strings = c("NA","na","Na","nA","","?","-"),row.names = F)
           if(dim(whitelistEdges)[2]!=2)
           {
             whitelistEdges<<-c()
@@ -292,12 +292,16 @@ shinyServer(function(input, output,session) {
     {
       file = input$priorFile
       tryCatch({
-        bn.start <<- get(load(file))
+        edgeList<<-read.csv(file,stringsAsFactors = T,na.strings = c("NA","na","Na","nA","","?","-"),row.names = F)
+        colnames(edgeList)<<-c("from","to")
         output$priorout<-DT::renderDataTable({bn.start$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
+        for(i in 1:dim(edgeList)[1])
+        {
+          bn.start<<-set.arc(bn.start,edgeList[i,1],edgeList[i,2])
+        }
         shinyalert("File Successfully Uploaded",type="success")
       },error = function(e){
-        bn.start<<- readRDS(file)
-        output$priorout<-DT::renderDataTable({bn.start$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
+        shinyalert(e,type = "error")
       })
       tooltip(session)
     }
@@ -429,11 +433,11 @@ shinyServer(function(input, output,session) {
           withProgress(message = "Validating Model", value = 0, {
             if(input$parallel==T)
             {
-              bn.validate<<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,method = input$crossFunc,cluster = cl)
+              bn.validate<<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,method = input$crossFunc,cluster = cl,k=10)
               predError<<-c()
               for(n in nodeNames)
               {
-                targetLoss<<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,loss = input$lossFunc,method = input$crossFunc,loss.args = list(target = n),cluster = cl)
+                targetLoss<<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,loss = input$lossFunc,method = input$crossFunc,loss.args = list(target = n),cluster = cl,k=10)
                 predError<<-rbind(predError,targetLoss[[1]]$loss)
               }
               rownames(predError)<<-nodeNames
@@ -442,11 +446,11 @@ shinyServer(function(input, output,session) {
             }
             else
             {
-              bn.validate<<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,method = input$crossFunc)
+              bn.validate<<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,method = input$crossFunc,k=10)
               predError<<-c()
               for(n in nodeNames)
               {
-                targetLoss<<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,loss = input$lossFunc,method = input$crossFunc,loss.args = list(target = n))
+                targetLoss<<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,loss = input$lossFunc,method = input$crossFunc,loss.args = list(target = n),k=10)
                 predError<<-rbind(predError,targetLoss[[1]]$loss)
               }
               rownames(predError)<<-nodeNames
@@ -2710,7 +2714,7 @@ shinyServer(function(input, output,session) {
               par(oma=c(5,3,3,3))
               barx<<-barplot(probs,
                              col = "lightblue",
-                             main = paste("probability of ",input$event," conditioned on evidence ",substr(str2,1,(nchar(str2)-2))),
+                             main = paste("probability of ",input$event," conditioned on ",substr(str2,1,(nchar(str2)-2))),
                              border = NA,
                              xlab = "",
                              ylab = "Probabilities",
@@ -2718,7 +2722,7 @@ shinyServer(function(input, output,session) {
                              las=2)
               text(x = barx,y = round(probs,digits = 4),label = round(probs,digits = 4), pos = 3, cex = 0.8, col = "black")
             })
-            updateRadioGroupButtons(session,'bayesianOption',selected = "Inference Plot")
+            updateRadioGroupButtons(session,'bayesianOption',selected = "Infer Decisions")
           },error = function(e){
             shinyalert(toString(e), type = "error")
           })
@@ -2762,7 +2766,7 @@ shinyServer(function(input, output,session) {
               par(oma=c(5,3,3,3))
               barx <<-barplot(ee$mean[1:input$NumBar],
                               col = "lightblue",
-                              main = paste("probability of ",input$event," conditioned on evidence ",substr(str2,1,(nchar(str2)-2))),
+                              main = paste("probability of ",input$event," conditioned on ",substr(str2,1,(nchar(str2)-2))),
                               border = NA,
                               xlab = "",
                               ylab = "Probabilities",
@@ -2770,7 +2774,7 @@ shinyServer(function(input, output,session) {
                               las=2)
               text(x = barx,y = round(ee$mean[1:input$NumBar],digits = 4),label = round(ee$mean[1:input$NumBar],digits = 4), pos = 3, cex = 0.8, col = "black")
               error.bar(barx,ee$mean[1:input$NumBar], 1.96*ee$sd[1:input$NumBar]/sqrt(input$plotStrengthBtn))})
-            updateRadioGroupButtons(session,'bayesianOption',selected = "Inference Plot")
+            updateRadioGroupButtons(session,'bayesianOption',selected = "Infer Decisions")
 
           },error = function(e){
             shinyalert(toString(e), type = "error")
@@ -2809,7 +2813,7 @@ shinyServer(function(input, output,session) {
                 par(oma=c(5,3,3,3))
                 barx<<-barplot(probs,
                                col = "lightblue",
-                               main = paste("probability of ",input$event," conditioned on evidence ",substr(str2,1,(nchar(str2)-2))),
+                               main = paste("probability of ",input$event," conditioned on ",substr(str2,1,(nchar(str2)-2))),
                                border = NA,
                                xlab = "",
                                ylab = "Probabilities",
@@ -2817,7 +2821,7 @@ shinyServer(function(input, output,session) {
                                las=2)
                 text(x = barx,y = round(probs,digits = 4),label = round(probs,digits = 4), pos = 3, cex = 0.8, col = "black")
               })
-              updateRadioGroupButtons(session,'bayesianOption',selected = "Inference Plot")
+              updateRadioGroupButtons(session,'bayesianOption',selected = "Infer Decisions")
 
             },error = function(e){
               shinyalert(toString(e), type = "error")
@@ -2855,7 +2859,7 @@ shinyServer(function(input, output,session) {
                 par(oma=c(5,3,3,3))
                 barx <<-barplot(ee$mean[nm],
                                 col = "lightblue",
-                                main = paste("probability of ",input$event," conditioned on evidence ",substr(str2,1,(nchar(str2)-2))),
+                                main = paste("probability of ",input$event," conditioned on ",substr(str2,1,(nchar(str2)-2))),
                                 border = NA,
                                 xlab = "",
                                 ylab = "Probabilities",
@@ -2863,7 +2867,7 @@ shinyServer(function(input, output,session) {
                                 las=2)
                 text(x = barx,y = round(ee$mean[nm],digits = 4),label = round(ee$mean[nm],digits = 4), pos = 3, cex = 0.8, col = "black")
                 error.bar(barx,ee$mean[nm], 1.96*ee$sd[nm]/sqrt(input$plotStrengthBtn))})
-              updateRadioGroupButtons(session,'bayesianOption',selected = "Inference Plot")
+              updateRadioGroupButtons(session,'bayesianOption',selected = "Infer Decisions")
             },error = function(e){
               shinyalert(toString(e), type = "error")
             })
@@ -2974,7 +2978,7 @@ shinyServer(function(input, output,session) {
                                                                 "ellipse", "database", "text", "diamond"))
               updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                                  "ellipse", "database", "text", "diamond"))
-              updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+              updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
               updateSelectInput(session,'paramSelect',choices = nodeNames)
               graph<<-graph_from_edgelist(as.matrix(pruneGraph),directed = TRUE)
               updateSelectInput(session,"neighbornodes",choices = "")
@@ -3062,7 +3066,7 @@ shinyServer(function(input, output,session) {
                                                                 "ellipse", "database", "text", "diamond"))
               updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                                  "ellipse", "database", "text", "diamond"))
-              updateSelectInput(session,'graph_layout',choices = c("layout_nicely","layout_as_star","layout_as_tree","layout_in_circle","layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+              updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
               updateSelectInput(session,'paramSelect',choices = nodeNames)
               graph<<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
               updateSelectInput(session,"neighbornodes",choices = "")
