@@ -4,6 +4,8 @@ library('shinydashboard')
 library('visNetwork')
 library('shinyWidgets')
 library("shinyBS")
+library('shinyalert')
+library('rintrojs')
 source('error.bar.R')
 source('graph.custom.R')
 source('graph.custom.assoc.R')
@@ -119,7 +121,7 @@ dashboardPage(skin = "blue",
                                                                                 h5('Choose default dataset'),
                                                                                 fluidRow(column(9,selectInput('defData',label = NULL,choices = c("Alarm","Asia","Coronary","Lizards","Marks","Insurance","Hailfinder"))),column(3,actionButton('loadDef','load', class = "butt"))),
                                                                                 h5('Data Format:'),
-                                                                                shiny::selectInput('format',label = NULL,c(".RData",".CSV")),
+                                                                                shiny::selectInput('format',label = NULL,c(".CSV",".RData")),
                                                                                 h5('File Input:'),
                                                                                 shiny::fileInput('dataFile',
                                                                                                  label = NULL,
@@ -244,12 +246,12 @@ dashboardPage(skin = "blue",
                                                                             shiny::fluidRow(
                                                                               shiny::column(2,dropdownButton(
                                                                                 shinyWidgets::radioGroupButtons(inputId = "structureOption",
-                                                                                                                choices = c("Priors (Optional)","Learn ab initio","Upload Pre-learnt","Post Edit(Optional)","Validate Network"),
-                                                                                                                selected = "Priors (Optional)",
+                                                                                                                choices = c("Specify Known Edges (optional)","Learn Network From Data","Upload Saved Network","Edit Learnt Network (optional)","Validate Network"),
+                                                                                                                selected = "Specify Known Edges (optional)",
                                                                                                                 justified = FALSE
                                                                                 ),
                                                                                 shiny::conditionalPanel(
-                                                                                  "input.structureOption=='Upload Pre-learnt'",
+                                                                                  "input.structureOption=='Upload Saved Network'",
                                                                                   h5("parameter learning algorithm"),
                                                                                   selectizeInput('paramMethod',label = NULL,choices = c("Bayesian parameter estimation" = "bayes","Maximum Likelihood parameter estimation" = "mle")),
                                                                                   hr(),
@@ -296,7 +298,7 @@ dashboardPage(skin = "blue",
                                                                                   actionButton("parameterTuningU","Parameter Tuning", class = "butt")
                                                                                 ),
                                                                                 shiny::conditionalPanel(
-                                                                                  "input.structureOption=='Priors (Optional)'",
+                                                                                  "input.structureOption=='Specify Known Edges (optional)'",
                                                                                   shiny::fluidRow(column(5,h5("Upload list of prior known edges (as .CSV)"))),
                                                                                   shiny::fluidRow(column(5,shiny::fileInput('priorFile',label = NULL,accept = c('.RData')))),
                                                                                   shiny::fluidRow(shiny::column(3,h5("from")),shiny::column(3,h5("to")),shiny::column(3,h5("")),shiny::column(3,h5("Select from table"))),
@@ -304,7 +306,7 @@ dashboardPage(skin = "blue",
                                                                                   shinycssloaders::withSpinner(DT::dataTableOutput("priorout"),color = "#2E86C1")
                                                                                 ),
                                                                                 shiny::conditionalPanel(
-                                                                                  "input.structureOption=='Learn ab initio'",
+                                                                                  "input.structureOption=='Learn Network From Data'",
                                                                                   div(style ='overflow-y:scroll;height:600px;padding-right:20px;',
 
                                                                                       # Structural learning algorithm input select
@@ -374,14 +376,14 @@ dashboardPage(skin = "blue",
                                                                                   )
                                                                                 ),
                                                                                 shiny::conditionalPanel(
-                                                                                  "input.structureOption=='Post Edit(Optional)'",
+                                                                                  "input.structureOption=='Edit Learnt Network (optional)'",
                                                                                   shiny::fluidRow(shiny::column(3,h5("from")),shiny::column(3,h5("to")),shiny::column(3,h5("")),shiny::column(3,h5("Select from table"))),
                                                                                   shiny::fluidRow(shiny::column(3,selectInput("fromarc",label = NULL,choices=c())),shiny::column(3,selectInput("toarc",label = NULL,choices=c())),column(3,actionButton("addarc","Add", class = "butt")),actionButton("RemoveArc2","Remove", class = "butt"),actionButton("ReverseArc2","Reverse", class = "butt")),
                                                                                   shinycssloaders::withSpinner(DT::dataTableOutput("postout"),color = "#2E86C1")
                                                                                 ),
                                                                                 shiny::conditionalPanel(
                                                                                   "input.structureOption=='Validate Network'",
-                                                                                  shiny::fluidRow(shiny::column(6,shiny::selectInput('crossFunc',label = "Validation Method",choices = c("10-fold"="k-fold'","hold-out"))),shiny::column(6,shiny::selectInput('lossFunc',label = "Loss Function",choices = c("pred","pred-lw")))),
+                                                                                  shiny::fluidRow(shiny::column(6,shiny::selectInput('crossFunc',label = "Validation Method",choices = c("10-fold"="k-fold","hold-out"))),shiny::column(6,shiny::selectInput('lossFunc',label = "Loss Function",choices = c("pred","pred-lw")))),
                                                                                   h5("Parameter Fitting Method"),
                                                                                   shiny::fluidRow(shiny::column(8,shiny::selectInput('paramMethod3',label = NULL,choices = c("Bayesian parameter estimation" = "bayes","Maximum Likelihood parameter estimation" = "mle"))),shiny::column(4,shiny::actionButton("calLoss","Cross Validate", class = "butt"))),
                                                                                   h5("Log-Likelihood Loss of the learned model"),
@@ -389,7 +391,7 @@ dashboardPage(skin = "blue",
                                                                                   h5("Network Score"),
                                                                                   shiny::fluidRow(shiny::column(6,selectInput("scoreAlgo",label = NULL,choices = c("modified Bayesian Dirichlet equivalent"="mbde","log-likelihood"="loglik","Akaike Information Criterion"="aic","Bayesian Information Criterion"="bic","Bayesian Dirichelt sparse"="bds","locally averaged Bayesian Dirichelt"="bdla"))),shiny::column(2,actionButton("getScore","Score", class = "butt")),shiny::column(4,shiny::verbatimTextOutput("netScore")))
                                                                                 ),
-                                                                                label = "Structure Learning",circle = F, status = "primary", icon = icon("wrench"), width = "700px",tooltip = tooltipOptions(title = "Upload structure")
+                                                                                label = "Structure Learning",circle = F, status = "primary", icon = icon("wrench"), width = "800px",tooltip = tooltipOptions(title = "Upload structure")
                                                                               )),
                                                                               shiny::column(2, dropdownButton(
                                                                                 hr(),
@@ -411,7 +413,7 @@ dashboardPage(skin = "blue",
                                                                                 hr(),
                                                                                 shiny::h4("No. of resampling iterations for error bars"),
                                                                                 textInput("numInterval", label = NULL,placeholder = 25),
-                                                                                label = "Inference",circle = F, status = "primary", icon = icon("bar-chart-o"), width = "350px",tooltip = tooltipOptions(title = "Learn Inferences")
+                                                                                label = "Inference Learning",circle = F, status = "primary", icon = icon("bar-chart-o"), width = "350px",tooltip = tooltipOptions(title = "Learn Inferences")
                                                                               )),
                                                                               shiny::column(7,shinyWidgets::radioGroupButtons(inputId = "bayesianOption",
                                                                                                                               choices = c("Bayesian Network","Explore Conditional Probabilities", "Infer Decisions","Export Tables"),

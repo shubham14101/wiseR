@@ -4,6 +4,8 @@ library('shinydashboard')
 library('visNetwork')
 library('shinyWidgets')
 library("shinyBS")
+library('shinyalert')
+library('rintrojs')
 source('error.bar.R')
 source('graph.custom.R')
 source('graph.custom.assoc.R')
@@ -15,10 +17,12 @@ source('custom.Modules.R')
 source('tooltip.R')
 source('dashboardthemes.R')
 source('graph.weight.R')
+source('dependency.R')
 
 shinyServer(function(input, output,session) {
   withProgress(message = "Initializing Dashboard", value = 0, {
   #Data upload limit and other options
+  dependency()
   options(shiny.maxRequestSize=8000*1024^2)
   options(warn=-1)
   options("getSymbols.warning4.0"=FALSE)
@@ -64,7 +68,7 @@ shinyServer(function(input, output,session) {
   updateSelectizeInput(session,'varselect',choices = "")
   updateSelectizeInput(session,'Avarselect',choices = "")
   updateSelectInput(session,'paramSelect',choices = "")
-  updateSelectInput(session,"tableName",choices = c("blacklist edges","whitelist edges","Bayesian Graph","Cross Validation Results"))
+  updateSelectInput(session,"tableName",choices = c("Bayesian Graph","blacklist edges","whitelist edges","Cross Validation Results"))
   updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
   updateSelectInput(session,'varshape2',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
   updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
@@ -88,6 +92,7 @@ shinyServer(function(input, output,session) {
   output$parameterPlot<-renderPlot({validate("Construct bayesian network for taking decision")})
   output$distPlot<-renderPlot({validate("Construct bayesian network for taking decision")})
   output$freqPlot<-renderPlot({validate("You have to preprocess data to built the plot")})
+  output$tableOut<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
   output$datasetTable<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
   output$priorout<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
   output$postout<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
@@ -239,12 +244,12 @@ shinyServer(function(input, output,session) {
           if(dim(blacklistEdges)[2]!=2)
           {
             blacklistEdges<<-c()
-            shinyalert::shinyalert("Please upload a .csv file containg edges in format 'from' and 'to'",type="error")
+            shinyalert::shinyalert("Upload a .csv file containg edges in format 'from' and 'to'",type="error")
           }
           else if(!(unique(blacklistEdges[,1],blacklistEdges[,2]) %in% colnames(DiscreteData)))
           {
             blacklistEdges<<-c()
-            shinyalert::shinyalert("please upload a correct file containg only nodes as observed in the data",type="error")
+            shinyalert::shinyalert("Upload a correct file containg only nodes as observed in the data",type="error")
           }
         }
         else
@@ -253,12 +258,12 @@ shinyServer(function(input, output,session) {
           if(dim(whitelistEdges)[2]!=2)
           {
             whitelistEdges<<-c()
-            shinyalert::shinyalert("Please upload a .csv file containg edges in format 'from' and 'to'",type="error")
+            shinyalert::shinyalert("Upload a .csv file containg edges in format 'from' and 'to'",type="error")
           }
           else if(!(unique(blacklistEdges[,1],blacklistEdges[,2]) %in% colnames(DiscreteData)))
           {
             whitelistEdges<<-c()
-            shinyalert::shinyalert("please upload a correct file containg only nodes as observed in the data",type="error")
+            shinyalert::shinyalert("Upload a correct file containg only nodes as observed in the data",type="error")
           }
         }
       },error=function(e){
@@ -412,7 +417,7 @@ shinyServer(function(input, output,session) {
           withProgress(message = "Validating Model", value = 0, {
             if(input$parallel==T)
             {
-              bn.validate<<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,method = input$crossFunc,cluster = cl,k=10)
+              bn.validate<<-bn.cv(DiscreteData[,nodeNames],bn=bn.hc.boot.average,fit = input$paramMethod3,method = input$crossFunc,cluster = cl)
               predError<<-c()
               for(n in nodeNames)
               {
@@ -557,7 +562,7 @@ shinyServer(function(input, output,session) {
           }
           else
           {
-            shinyalert::shinyalert("Added file is not a .RData file.Please upload a RData file.", type = "error")
+            shinyalert::shinyalert("Added file is not a .RData file.Upload a RData file.", type = "error")
           }
 
         }
@@ -569,7 +574,7 @@ shinyServer(function(input, output,session) {
           }
           else
           {
-            shinyalert::shinyalert("Added file is not a .csv file.Please upload a CSV file.", type = "error")
+            shinyalert::shinyalert("Added file is not a .csv file.Upload a CSV file.", type = "error")
           }
         }
         check.discrete(DiscreteData)
@@ -673,6 +678,7 @@ shinyServer(function(input, output,session) {
             output$datasetTable<-DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
             reset<<-1
             assocReset<<-1
+            shinyalert("Discretization successfull",type="success")
             weight<<-1
             value<<-1
             blacklistEdges<<-c()
@@ -755,6 +761,7 @@ shinyServer(function(input, output,session) {
           }
           DiscreteData <<- missRanger::missRanger(DiscreteData,maxiter = 1,num.tree = 100)
           check.discrete(DiscreteData)
+          shinyalert("Imputation successfull",type="success")
           output$datasetTable<-DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
           trueData<<-DiscreteData
           reset<<-1
@@ -1133,7 +1140,7 @@ shinyServer(function(input, output,session) {
     {
       if((check.discrete(DiscreteData)||check.NA(DiscreteData)))
       {
-        output$freqPlot<<-renderPlot({validate("Please make sure data is complete and discretized before using the feature")})
+        output$freqPlot<<-renderPlot({validate("Make sure data is complete and discretized before using this feature")})
       }
       else
       {
@@ -1289,6 +1296,26 @@ shinyServer(function(input, output,session) {
               upload<<-1
               uploadtype<<-1
               type<<-1
+              tryCatch({
+                if(input$tableName=="Bayesian Graph")
+                {
+                  output$tableOut<- DT::renderDataTable({NetworkGraph},options = list(scrollX = TRUE,pageLength = 10))
+                }
+                else if(input$tableName=="Cross Validation Results")
+                {
+                  output$tableOut<- DT::renderDataTable({predError},options = list(scrollX = TRUE,pageLength = 10))
+                }
+                else if(input$tableName=="blacklist edges")
+                {
+                  output$tableOut<- DT::renderDataTable({blacklistEdges},options = list(scrollX = TRUE,pageLength = 10))
+                }
+                else if(input$tableName=="whitelist edges")
+                {
+                  output$tableOut<- DT::renderDataTable({whitelistEdges},options = list(scrollX = TRUE,pageLength = 10))
+                }
+              },error=function(e){
+                shinyalert::shinyalert(toString(e), type = "error")
+              })
               save(DiscreteData,file="customDashboard/inst/cd/data.RData")
               save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
               write.csv(input$name,file = "customDashboard/inst/cd/name.txt",row.names = FALSE)
@@ -1428,6 +1455,26 @@ shinyServer(function(input, output,session) {
               upload<<-1
               uploadtype<<-2
               type<<-2
+              tryCatch({
+                if(input$tableName=="Bayesian Graph")
+                {
+                  output$tableOut<- DT::renderDataTable({NetworkGraph},options = list(scrollX = TRUE,pageLength = 10))
+                }
+                else if(input$tableName=="Cross Validation Results")
+                {
+                  output$tableOut<- DT::renderDataTable({predError},options = list(scrollX = TRUE,pageLength = 10))
+                }
+                else if(input$tableName=="blacklist edges")
+                {
+                  output$tableOut<- DT::renderDataTable({blacklistEdges},options = list(scrollX = TRUE,pageLength = 10))
+                }
+                else if(input$tableName=="whitelist edges")
+                {
+                  output$tableOut<- DT::renderDataTable({whitelistEdges},options = list(scrollX = TRUE,pageLength = 10))
+                }
+              },error=function(e){
+                shinyalert::shinyalert(toString(e), type = "error")
+              })
               save(DiscreteData,file="customDashboard/inst/cd/data.RData")
               save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
               write.csv(input$name,file = "customDashboard/inst/cd/name.txt",row.names = FALSE)
@@ -1541,6 +1588,26 @@ shinyServer(function(input, output,session) {
             upload<<-1
             uploadtype<<-1
             type<<-1
+            tryCatch({
+              if(input$tableName=="Bayesian Graph")
+              {
+                output$tableOut<- DT::renderDataTable({NetworkGraph},options = list(scrollX = TRUE,pageLength = 10))
+              }
+              else if(input$tableName=="Cross Validation Results")
+              {
+                output$tableOut<- DT::renderDataTable({predError},options = list(scrollX = TRUE,pageLength = 10))
+              }
+              else if(input$tableName=="blacklist edges")
+              {
+                output$tableOut<- DT::renderDataTable({blacklistEdges},options = list(scrollX = TRUE,pageLength = 10))
+              }
+              else if(input$tableName=="whitelist edges")
+              {
+                output$tableOut<- DT::renderDataTable({whitelistEdges},options = list(scrollX = TRUE,pageLength = 10))
+              }
+            },error=function(e){
+              shinyalert::shinyalert(toString(e), type = "error")
+            })
             save(DiscreteData,file="customDashboard/inst/cd/data.RData")
             save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
             write.csv(input$name,file = "customDashboard/inst/cd/name.txt",row.names = FALSE)
@@ -1640,6 +1707,26 @@ shinyServer(function(input, output,session) {
             upload<<-1
             uploadtype<<-2
             type<<-2
+            tryCatch({
+              if(input$tableName=="Bayesian Graph")
+              {
+                output$tableOut<- DT::renderDataTable({NetworkGraph},options = list(scrollX = TRUE,pageLength = 10))
+              }
+              else if(input$tableName=="Cross Validation Results")
+              {
+                output$tableOut<- DT::renderDataTable({predError},options = list(scrollX = TRUE,pageLength = 10))
+              }
+              else if(input$tableName=="blacklist edges")
+              {
+                output$tableOut<- DT::renderDataTable({blacklistEdges},options = list(scrollX = TRUE,pageLength = 10))
+              }
+              else if(input$tableName=="whitelist edges")
+              {
+                output$tableOut<- DT::renderDataTable({whitelistEdges},options = list(scrollX = TRUE,pageLength = 10))
+              }
+            },error=function(e){
+              shinyalert::shinyalert(toString(e), type = "error")
+            })
             save(DiscreteData,file="customDashboard/inst/cd/data.RData")
             save(bn.hc.boot.average,file="customDashboard/inst/cd/structure.RData")
             write.csv(input$name,file = "customDashboard/inst/cd/name.txt",row.names = FALSE)
@@ -1774,6 +1861,26 @@ shinyServer(function(input, output,session) {
           updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
           reset<<-2
           type<<-2
+          tryCatch({
+            if(input$tableName=="Bayesian Graph")
+            {
+              output$tableOut<- DT::renderDataTable({NetworkGraph},options = list(scrollX = TRUE,pageLength = 10))
+            }
+            else if(input$tableName=="Cross Validation Results")
+            {
+              output$tableOut<- DT::renderDataTable({predError},options = list(scrollX = TRUE,pageLength = 10))
+            }
+            else if(input$tableName=="blacklist edges")
+            {
+              output$tableOut<- DT::renderDataTable({blacklistEdges},options = list(scrollX = TRUE,pageLength = 10))
+            }
+            else if(input$tableName=="whitelist edges")
+            {
+              output$tableOut<- DT::renderDataTable({whitelistEdges},options = list(scrollX = TRUE,pageLength = 10))
+            }
+          },error=function(e){
+            shinyalert::shinyalert(toString(e), type = "error")
+          })
           updateSelectInput(session,"fromarc",choices = nodeNames)
           output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
           save(DiscreteData,file="customDashboard/inst/cd/data.RData")
@@ -1886,6 +1993,26 @@ shinyServer(function(input, output,session) {
               updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
               reset<<-2
               type<<-1
+              tryCatch({
+                if(input$tableName=="Bayesian Graph")
+                {
+                  output$tableOut<- DT::renderDataTable({NetworkGraph},options = list(scrollX = TRUE,pageLength = 10))
+                }
+                else if(input$tableName=="Cross Validation Results")
+                {
+                  output$tableOut<- DT::renderDataTable({predError},options = list(scrollX = TRUE,pageLength = 10))
+                }
+                else if(input$tableName=="blacklist edges")
+                {
+                  output$tableOut<- DT::renderDataTable({blacklistEdges},options = list(scrollX = TRUE,pageLength = 10))
+                }
+                else if(input$tableName=="whitelist edges")
+                {
+                  output$tableOut<- DT::renderDataTable({whitelistEdges},options = list(scrollX = TRUE,pageLength = 10))
+                }
+              },error=function(e){
+                shinyalert::shinyalert(toString(e), type = "error")
+              })
               updateSelectInput(session,"fromarc",choices = nodeNames)
               output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
             }
@@ -1953,6 +2080,26 @@ shinyServer(function(input, output,session) {
               updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
               reset<<-2
               type<<-2
+              tryCatch({
+                if(input$tableName=="Bayesian Graph")
+                {
+                  output$tableOut<- DT::renderDataTable({NetworkGraph},options = list(scrollX = TRUE,pageLength = 10))
+                }
+                else if(input$tableName=="Cross Validation Results")
+                {
+                  output$tableOut<- DT::renderDataTable({predError},options = list(scrollX = TRUE,pageLength = 10))
+                }
+                else if(input$tableName=="blacklist edges")
+                {
+                  output$tableOut<- DT::renderDataTable({blacklistEdges},options = list(scrollX = TRUE,pageLength = 10))
+                }
+                else if(input$tableName=="whitelist edges")
+                {
+                  output$tableOut<- DT::renderDataTable({whitelistEdges},options = list(scrollX = TRUE,pageLength = 10))
+                }
+              },error=function(e){
+                shinyalert::shinyalert(toString(e), type = "error")
+              })
               updateSelectInput(session,"fromarc",choices = nodeNames)
               output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
               save(DiscreteData,file="customDashboard/inst/cd/data.RData")
@@ -2189,6 +2336,26 @@ shinyServer(function(input, output,session) {
           updateSelectInput(session,"neighbornodes",choices = "")
           updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
           reset<<-2
+          tryCatch({
+            if(input$tableName=="Bayesian Graph")
+            {
+              output$tableOut<- DT::renderDataTable({NetworkGraph},options = list(scrollX = TRUE,pageLength = 10))
+            }
+            else if(input$tableName=="Cross Validation Results")
+            {
+              output$tableOut<- DT::renderDataTable({predError},options = list(scrollX = TRUE,pageLength = 10))
+            }
+            else if(input$tableName=="blacklist edges")
+            {
+              output$tableOut<- DT::renderDataTable({blacklistEdges},options = list(scrollX = TRUE,pageLength = 10))
+            }
+            else if(input$tableName=="whitelist edges")
+            {
+              output$tableOut<- DT::renderDataTable({whitelistEdges},options = list(scrollX = TRUE,pageLength = 10))
+            }
+          },error=function(e){
+            shinyalert::shinyalert(toString(e), type = "error")
+          })
           updateSelectInput(session,"fromarc",choices = nodeNames)
           output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
           save(DiscreteData,file="customDashboard/inst/cd/data.RData")
@@ -2305,6 +2472,26 @@ shinyServer(function(input, output,session) {
       updateSelectInput(session,"neighbornodes",choices = "")
       updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
       reset<<-2
+      tryCatch({
+        if(input$tableName=="Bayesian Graph")
+        {
+          output$tableOut<- DT::renderDataTable({NetworkGraph},options = list(scrollX = TRUE,pageLength = 10))
+        }
+        else if(input$tableName=="Cross Validation Results")
+        {
+          output$tableOut<- DT::renderDataTable({predError},options = list(scrollX = TRUE,pageLength = 10))
+        }
+        else if(input$tableName=="blacklist edges")
+        {
+          output$tableOut<- DT::renderDataTable({blacklistEdges},options = list(scrollX = TRUE,pageLength = 10))
+        }
+        else if(input$tableName=="whitelist edges")
+        {
+          output$tableOut<- DT::renderDataTable({whitelistEdges},options = list(scrollX = TRUE,pageLength = 10))
+        }
+      },error=function(e){
+        shinyalert::shinyalert(toString(e), type = "error")
+      })
       updateSelectInput(session,"fromarc",choices = nodeNames)
       output$postout<-DT::renderDataTable({bn.hc.boot.average$arcs},options = list(scrollX = TRUE,pageLength = 10),selection = 'single')
       save(DiscreteData,file="customDashboard/inst/cd/data.RData")
@@ -2396,6 +2583,26 @@ shinyServer(function(input, output,session) {
             weight <<- 1
             value <<- 1
             type<<-1
+            tryCatch({
+              if(input$tableName=="Bayesian Graph")
+              {
+                output$tableOut<- DT::renderDataTable({NetworkGraph},options = list(scrollX = TRUE,pageLength = 10))
+              }
+              else if(input$tableName=="Cross Validation Results")
+              {
+                output$tableOut<- DT::renderDataTable({predError},options = list(scrollX = TRUE,pageLength = 10))
+              }
+              else if(input$tableName=="blacklist edges")
+              {
+                output$tableOut<- DT::renderDataTable({blacklistEdges},options = list(scrollX = TRUE,pageLength = 10))
+              }
+              else if(input$tableName=="whitelist edges")
+              {
+                output$tableOut<- DT::renderDataTable({whitelistEdges},options = list(scrollX = TRUE,pageLength = 10))
+              }
+            },error=function(e){
+              shinyalert::shinyalert(toString(e), type = "error")
+            })
             output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,weight,value)})
             updateSelectInput(session,'event',choices = nodeNames)
             updateSelectizeInput(session,'varselect',choices = nodeNames)
@@ -2521,6 +2728,26 @@ shinyServer(function(input, output,session) {
             updateSelectInput(session,"neighbornodes",choices = "")
             updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
             reset<<-2
+            tryCatch({
+              if(input$tableName=="Bayesian Graph")
+              {
+                output$tableOut<- DT::renderDataTable({NetworkGraph},options = list(scrollX = TRUE,pageLength = 10))
+              }
+              else if(input$tableName=="Cross Validation Results")
+              {
+                output$tableOut<- DT::renderDataTable({predError},options = list(scrollX = TRUE,pageLength = 10))
+              }
+              else if(input$tableName=="blacklist edges")
+              {
+                output$tableOut<- DT::renderDataTable({blacklistEdges},options = list(scrollX = TRUE,pageLength = 10))
+              }
+              else if(input$tableName=="whitelist edges")
+              {
+                output$tableOut<- DT::renderDataTable({whitelistEdges},options = list(scrollX = TRUE,pageLength = 10))
+              }
+            },error=function(e){
+              shinyalert::shinyalert(toString(e), type = "error")
+            })
             updateSelectInput(session,"fromarc",choices = nodeNames)
             updateSelectInput(session,'varshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                                "ellipse", "database", "text", "diamond"))
