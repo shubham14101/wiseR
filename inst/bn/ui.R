@@ -539,22 +539,41 @@ dashboardPage(skin = "blue",
                                         status = "primary",
                                         width = 12,
                                         div(style="text-align:center",
-                                            h1('Creators')
+                                            h2('Team')
                                         ),
                                         fluidRow(
                                           style = "margin-left:50px;padding:10px;",
+                                          column(width=3, align = "center",
+                                                 #img(src = "tps.jpg", style = "max-width: 50%; width: 50%; height: auto;"),
+                                                 h4('Tavpritesh Sethi'),
+                                                 h5('Assistant Professor, IIIT-Delhi'),
+                                                 h5('Visiting Assistant Professor, Stanford Medicine'),
+                                                 h5('tavpriteshsethi@iiitd.ac.in'),
+                                            
+                                                 
+                                                 fluidRow(width = 12,
+                                                          column(width=2, a(img(src = "email.png", style = "margin:5px; width: 20px; height: 20px"), href = "mailto:tavpriteshsethi@iiitd.ac.in"), target = "_blank"),
+                                                          column(width=2, a(img(src = "email.png", style = "margin:5px; width: 20px; height: 20px"), href = "mailto:tavsethi@stanford.edu"), target = "_blank"),
+                                                          column(width=2, a(img(src = "github.png", width = '30px', height = '30px'), href = "https://github.com/SAFE-ICU?tab=repositories"), target = "_blank"),
+                                                          column(width=2, a(img(src = "facebook.png", style = "margin:5px; width: 20px; height: 20px"), href = "https://www.facebook.com/tavpritesh.sethi"), target = "_blank"),
+                                                          column(width=2, a(img(src = "linkedin.png", style = "margin:5px; width: 20px; height: 20px"), href = "https://in.linkedin.com/in/tavpritesh"), target = "_blank"),
+                                                          column(width=2, a(img(src = "twitter.png", style = "margin:6px; width: 18px; height: 18px"), href = "https://twitter.com/tavpritesh"), target = "_blank")
+                                                 )),
+                                          column(width=1, align = "center", img(src = "vertical-line.png",style = "max-width: 100%; width: 100%; height: auto;")),
                                           column(width=3, align = "center",
                                                  #img(src = "shubham.jpg",style = "max-width: 50%; width: 50%; height: auto"),
                                                  h4('Shubham Maheshwari'),
                                                  h5('Data Scientist, Stockroom.io'),
                                                  h5('B.Tech Computer Science, IIIT-Delhi'),
+                                                 h5('shubham14101@iiitd.ac.in'),
 
 
                                                  fluidRow(width = 12,
-                                                   column(width=3, a(img(src = "github.png", width = '30px', height = '30px'), href = "https://github.com/shubham14101"),target = "_blank"),
-                                                   column(width=3, a(img(src = "facebook.png", style = "margin:5px; width: 20px; height: 20px"), href = "https://www.facebook.com/shubham.maheshwari3"),target = "_blank"),
-                                                   column(width=3, a(img(src = "linkedin.png", style = "margin:5px; width: 20px; height: 20px"), href = "https://www.linkedin.com/in/shubham-maheshwari-93a35b108/"),target = "_blank"),
-                                                   column(width=3, a(img(src = "twitter.png", style = "margin:6px; width: 18px; height: 18px"), href = "https://twitter.com/real_SM96"),target = "_blank")
+                                                   column(width=2, a(img(src = "email.png", style = "margin:5px; width: 20px; height: 20px"), href = "mailto:shubham14101@iiitd.ac.in"), target = "_blank"),  
+                                                   column(width=2, a(img(src = "github.png", width = '30px', height = '30px'), href = "https://github.com/shubham14101"),target = "_blank"),
+                                                   column(width=2, a(img(src = "facebook.png", style = "margin:5px; width: 20px; height: 20px"), href = "https://www.facebook.com/shubham.maheshwari3"),target = "_blank"),
+                                                   column(width=2, a(img(src = "linkedin.png", style = "margin:5px; width: 20px; height: 20px"), href = "https://www.linkedin.com/in/shubham-maheshwari-93a35b108/"),target = "_blank"),
+                                                   column(width=2, a(img(src = "twitter.png", style = "margin:6px; width: 18px; height: 18px"), href = "https://twitter.com/real_SM96"),target = "_blank")
                                                  )),
                                           column(width=1, align = "center", img(src = "vertical-line.png",style = "max-width: 100%; width: 100%; height: 100%;")),
                                           column(width=3, align = "center",
@@ -562,43 +581,39 @@ dashboardPage(skin = "blue",
                                                  h4('Anant Mittal'),
                                                  h5('Data Scientist, Egregore Labs'),
                                                  h5('B.Tech Computer Science, IIIT-Delhi'),
+                                                 h5('anant14015@iiitd.ac.in'),
 
 
                                                  fluidRow(width = 12,
-                                                          column(width=3, a(img(src = "github.png", width = '30px', height = '30px'), href = "https://github.com/anant15"), target = "_blank"),
-                                                          column(width=3, a(img(src = "facebook.png", style = "margin:5px; width: 20px; height: 20px"), href = "https://www.facebook.com/shubham.maheshwari3"), target = "_blank"),
-                                                          column(width=3, a(img(src = "linkedin.png", style = "margin:5px; width: 20px; height: 20px"), href = "https://www.linkedin.com/in/shubham-maheshwari-93a35b108/"), target = "_blank"),
-                                                          column(width=3, a(img(src = "twitter.png", style = "margin:6px; width: 18px; height: 18px"), href = "https://twitter.com/real_SM96"),target = "_blank")
-                                                 )),
-                                          column(width=1, align = "center", img(src = "vertical-line.png",style = "max-width: 100%; width: 100%; height: auto;")),
-                                          column(width=3, align = "center",
-                                                 #img(src = "tps.jpg", style = "max-width: 50%; width: 50%; height: auto;"),
-                                                 h4('Tavpritesh Sethi'),
-                                                 h5('Assistant Professor, IIIT-Delhi'),
-                                                 h5('Visiting Assistant Professor, Stanford Medicine'),
-
-                                                 fluidRow(width = 12,
-                                                          column(width=3, a(img(src = "github.png", width = '30px', height = '30px'), href = "https://github.com/SAFE-ICU?tab=repositories"), target = "_blank"),
-                                                          column(width=3, a(img(src = "facebook.png", style = "margin:5px; width: 20px; height: 20px"), href = "https://www.facebook.com/tavpritesh.sethi"), target = "_blank"),
-                                                          column(width=3, a(img(src = "linkedin.png", style = "margin:5px; width: 20px; height: 20px"), href = "https://in.linkedin.com/in/tavpritesh"), target = "_blank"),
-                                                          column(width=3, a(img(src = "twitter.png", style = "margin:6px; width: 18px; height: 18px"), href = "https://twitter.com/tavpritesh"), target = "_blank")
+                                                          column(width=2, a(img(src = "email.png", style = "margin:5px; width: 20px; height: 20px"), href = "mailto:anant14015@iiitd.ac.in"), target = "_blank"),  
+                                                          column(width=2, a(img(src = "github.png", width = '30px', height = '30px'), href = "https://github.com/anant15"), target = "_blank"),
+                                                          column(width=2, a(img(src = "facebook.png", style = "margin:5px; width: 20px; height: 20px"), href = "https://www.facebook.com/shubham.maheshwari3"), target = "_blank"),
+                                                          column(width=2, a(img(src = "linkedin.png", style = "margin:5px; width: 20px; height: 20px"), href = "https://www.linkedin.com/in/shubham-maheshwari-93a35b108/"), target = "_blank"),
+                                                          column(width=2, a(img(src = "twitter.png", style = "margin:6px; width: 18px; height: 18px"), href = "https://twitter.com/real_SM96"),target = "_blank")
                                                  ))
+                                          
                                         ),
                                         hr(),
-                                        div(style="text-align:center",
-                                            h4("Correspondence: tavpriteshsethi@iiitd.ac.in"),
-                                            hr(),
-                                            h4("Acknowledgements - We acknowledge the insights provided
-                                               by Prof. Rakesh Lodha, Professor, All India Institute of Medical Sciences, New Delhi, India")
+                                            div(style="text-align:center",
+                                                h3('Reference'),
+                                                h5('Placeholder'),
+                                                hr(),
+                                                h3('Acknowlegments'),
+                                                h5("Rakesh Lodha, Professor (Pediatrics), All India Institute of Medical Sciences, New Delhi, India"),
+                                                h5("Nigam Shah, Associate Professor (Biomedical Informatics), Stanford University, USA"),
+                                                hr(),
+                                                h3('Funding support'),
+                                                h5('The Wellcome Trust/DBT India Alliance Early Career Award IA/CPHE/14/1/501504') 
+                                                
                                         )
-
+                                        
 
                                       )
 
                                       )
                                     )
 ),
-tags$footer("Funding Support: The Wellcome Trust/DBT India Alliance grant IA/CPHE/14/1/501504 to Tavpritesh Sethi", align = "center", style = "
+tags$footer("Funding Support: The Wellcome Trust/DBT India Alliance grant IA/CPHE/14/1/501504", align = "center", style = "
 position:absolute;
             bottom:0;
             width:100%;
