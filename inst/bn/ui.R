@@ -136,7 +136,9 @@ dashboardPage(skin = "blue",
                                                                                 div(id="dataDiscretize",
                                                                                     shiny::h4('Discretize Data'),
                                                                                     h5('Discretization Type:'),
-                                                                                    shiny::fluidRow(column(9,shiny::selectInput('dtype',label = NULL,c("hybrid discretization(Recommended)"="hybrid","interval discretization"="interval","quantile discretization"="quantile","frequency discretization"="frequency","K-means clustering"="cluster"))),column(3,actionButton('discretize',"Discretize", class = "butt")))
+                                                                                    shiny::fluidRow(column(9,shiny::selectInput('dtype',label = NULL,c("hybrid discretization(Recommended)"="hybrid","Hartemink Discretization(Recommended)"="hartemink","interval discretization"="interval","quantile discretization"="quantile","frequency discretization"="frequency","K-means clustering"="cluster"))),column(3,actionButton('discretize',"Discretize", class = "butt"))),
+                                                                                    h5('Hartemink Discritization Parameters:'),
+                                                                                    shiny::fluidRow(column(4,shiny::textInput('breakH',label = 'breaks',placeholder = 5)),column(4,shiny::textInput('ibreakH',label = 'ibreaks',placeholder = 5)))
 
                                                                                 ),
                                                                                 div(id="dataTranspose",

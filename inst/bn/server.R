@@ -669,11 +669,21 @@ shinyServer(function(input, output,session) {
         {
           withProgress(message = "Discretizing data", value = 0, {
             tempDiscreteData <- DiscreteData
+            if(input$ibreakH=="" || input$breakH=="")
+            {
+              bk = 5
+              ibk = 5
+            }
+            else
+            {
+              bk= as.numeric(input$breakH)
+              ibk= as.numeric(input$ibreakH)
+            }
             for(n in colnames(tempDiscreteData))
             {
               if(is.numeric(tempDiscreteData[,n])|| is.integer(tempDiscreteData[,n]))
               {
-                temp = custom.discretize(as.numeric(tempDiscreteData[,n]),input$dtype)
+                temp = custom.discretize(as.numeric(tempDiscreteData[,n]),input$dtype,bk,ibk)
                 tempDiscreteData[,n]<-temp
               }
             }
@@ -686,7 +696,7 @@ shinyServer(function(input, output,session) {
             output$datasetTable<-DT::renderDataTable({DiscreteData},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'))
             reset<<-1
             assocReset<<-1
-            shinyalert("Discretization successfull",type="success")
+            #shinyalert("Discretization successfull",type="success")
             weight<<-1
             value<<-1
             blacklistEdges<<-c()
@@ -738,6 +748,29 @@ shinyServer(function(input, output,session) {
             updateSelectInput(session,"Aneighbornodes",choices = "")
             updateSliderInput(session,"NumBar",min = 1, max = 2,value = 1)
             updateSelectInput(session,"freqSelect",choices = names(DiscreteData))
+            tryCatch({
+              val = table(DiscreteData[,input$freqSelect])/nrow(DiscreteData)
+              output$freqPlot = renderPlot({par(mar=c(5,3,3,3))
+                par(oma=c(5,3,3,3))
+                barx <<-barplot(val,
+                                col = "lightblue",
+                                main = paste("Observed frequency of ",input$freqSelect),
+                                border = NA,
+                                xlab = "",
+                                ylab = "Frequency",
+                                ylim = c(0,1),
+                                las=2)
+                text(x = barx,y = round(val,digits = 4),label = round(val,digits = 4), pos = 3, cex = 0.8, col = "black")})
+            },error=function(e){
+              if(input$freqSelect=="")
+              {
+
+              }
+              else
+              {
+                shinyalert::shinyalert(toString(e),type="error")
+              }
+            })
             updateSelectInput(session,"delSelect",choices = names(DiscreteData))
             updateSelectInput(session,"fromarc",choices=c())
             updateSelectInput(session,"toarc",choices = c())
