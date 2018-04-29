@@ -549,8 +549,8 @@ dashboardPage(skin = "blue",
                                                  h5('Assistant Professor, IIIT-Delhi'),
                                                  h5('Visiting Assistant Professor, Stanford Medicine'),
                                                  h5('tavpriteshsethi@iiitd.ac.in'),
-                                            
-                                                 
+
+
                                                  fluidRow(width = 12,
                                                           column(width=2, a(img(src = "email.png", style = "margin:5px; width: 20px; height: 20px"), href = "mailto:tavpriteshsethi@iiitd.ac.in"), target = "_blank"),
                                                           column(width=2, a(img(src = "email.png", style = "margin:5px; width: 20px; height: 20px"), href = "mailto:tavsethi@stanford.edu"), target = "_blank"),
@@ -569,7 +569,7 @@ dashboardPage(skin = "blue",
 
 
                                                  fluidRow(width = 12,
-                                                   column(width=2, a(img(src = "email.png", style = "margin:5px; width: 20px; height: 20px"), href = "mailto:shubham14101@iiitd.ac.in"), target = "_blank"),  
+                                                   column(width=2, a(img(src = "email.png", style = "margin:5px; width: 20px; height: 20px"), href = "mailto:shubham14101@iiitd.ac.in"), target = "_blank"),
                                                    column(width=2, a(img(src = "github.png", width = '30px', height = '30px'), href = "https://github.com/shubham14101"),target = "_blank"),
                                                    column(width=2, a(img(src = "facebook.png", style = "margin:5px; width: 20px; height: 20px"), href = "https://www.facebook.com/shubham.maheshwari3"),target = "_blank"),
                                                    column(width=2, a(img(src = "linkedin.png", style = "margin:5px; width: 20px; height: 20px"), href = "https://www.linkedin.com/in/shubham-maheshwari-93a35b108/"),target = "_blank"),
@@ -585,13 +585,13 @@ dashboardPage(skin = "blue",
 
 
                                                  fluidRow(width = 12,
-                                                          column(width=2, a(img(src = "email.png", style = "margin:5px; width: 20px; height: 20px"), href = "mailto:anant14015@iiitd.ac.in"), target = "_blank"),  
+                                                          column(width=2, a(img(src = "email.png", style = "margin:5px; width: 20px; height: 20px"), href = "mailto:anant14015@iiitd.ac.in"), target = "_blank"),
                                                           column(width=2, a(img(src = "github.png", width = '30px', height = '30px'), href = "https://github.com/anant15"), target = "_blank"),
                                                           column(width=2, a(img(src = "facebook.png", style = "margin:5px; width: 20px; height: 20px"), href = "https://www.facebook.com/shubham.maheshwari3"), target = "_blank"),
                                                           column(width=2, a(img(src = "linkedin.png", style = "margin:5px; width: 20px; height: 20px"), href = "https://www.linkedin.com/in/shubham-maheshwari-93a35b108/"), target = "_blank"),
                                                           column(width=2, a(img(src = "twitter.png", style = "margin:6px; width: 18px; height: 18px"), href = "https://twitter.com/real_SM96"),target = "_blank")
                                                  ))
-                                          
+
                                         ),
                                         hr(),
                                             div(style="text-align:center",
@@ -603,23 +603,16 @@ dashboardPage(skin = "blue",
                                                 h5("Nigam Shah, Associate Professor (Biomedical Informatics), Stanford University, USA"),
                                                 hr(),
                                                 h3('Funding support'),
-                                                h5('The Wellcome Trust/DBT India Alliance Early Career Award IA/CPHE/14/1/501504') 
-                                                
+                                                h5('The Wellcome Trust/DBT India Alliance Early Career Award IA/CPHE/14/1/501504')
+
                                         )
-                                        
+
 
                                       )
 
                                       )
                                     )
-),
-tags$footer("Funding Support: The Wellcome Trust/DBT India Alliance grant IA/CPHE/14/1/501504", align = "center", style = "
-position:absolute;
-            bottom:0;
-            width:100%;
-            height:30px;
-            padding:5px;
-            background-color: white;z-index:1200;")
+)
 )
 
 
