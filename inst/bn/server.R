@@ -18,6 +18,7 @@ source('tooltip.R')
 source('dashboardthemes.R')
 source('graph.weight.R')
 source('dependency.R')
+source('custom.Modules.assoc.R')
 
 shinyServer(function(input, output,session) {
   withProgress(message = "Initializing Dashboard", value = 0, {
@@ -58,6 +59,7 @@ shinyServer(function(input, output,session) {
   value<-1
   #load<-1
   communities<-NULL
+  Acommunities<-NULL
   graph<-NULL
   blacklistEdges<-c()
   whitelistEdges<-c()
@@ -75,6 +77,7 @@ shinyServer(function(input, output,session) {
   updateSelectInput(session,'modGroup',choices = "")
   updateSelectInput(session,'Avarshape',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
   updateSelectInput(session,'Avarshape2',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
+  updateSelectInput(session,'Avarshape3',choices = c( "dot","square", "triangle", "box", "circle", "star","ellipse", "database", "text", "diamond"))
   updateSelectInput(session,'graph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
   updateSelectInput(session,'Agraph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
   updateSelectInput(session,"moduleSelection",choices = "")
@@ -366,6 +369,9 @@ shinyServer(function(input, output,session) {
             output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$Adegree,input$Agraph_layout,shapeVectorAssoc)})
             Agraph<<-igraph::graph_from_edgelist(as.matrix(assocNetworkprune[,1:2]),directed = F)
             updateSelectInput(session,"Aneighbornodes",choices = "")
+            output$assocTable<- DT::renderDataTable({assocNetworkprune},options = list(scrollX = TRUE,pageLength = 10))
+            updateSelectInput(session,"AmoduleSelection",choices = "graph")
+            updateSelectInput(session,'AmodGroup',choices = "")
           }
         }
       },error=function(e){
@@ -399,7 +405,9 @@ shinyServer(function(input, output,session) {
             updateSelectInput(session,"Aneighbornodes",choices = "")
             Agraph<<-igraph::graph_from_edgelist(as.matrix(assocNetworkprune[,1:2]),directed = F)
             shinyalert::shinyalert("Association graph successfully built",type="success")
-            output$assocTable<- DT::renderDataTable({assocNetwork},options = list(scrollX = TRUE,pageLength = 10))
+            output$assocTable<- DT::renderDataTable({assocNetworkprune},options = list(scrollX = TRUE,pageLength = 10))
+            updateSelectInput(session,"AmoduleSelection",choices = "graph")
+            updateSelectInput(session,'AmodGroup',choices = "")
           }
         },error=function(e){
           shinyalert::shinyalert(toString(e), type = "error")
@@ -3180,6 +3188,26 @@ shinyServer(function(input, output,session) {
                 value <<- 1
                 output$netPlot<-renderVisNetwork({graph.custom(pruneGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,weight,value)})
               }
+              tryCatch({
+                if(input$tableName=="Bayesian Graph")
+                {
+                  output$tableOut<- DT::renderDataTable({NetworkGraph},options = list(scrollX = TRUE,pageLength = 10))
+                }
+                else if(input$tableName=="Cross Validation Results")
+                {
+                  output$tableOut<- DT::renderDataTable({predError},options = list(scrollX = TRUE,pageLength = 10))
+                }
+                else if(input$tableName=="blacklist edges")
+                {
+                  output$tableOut<- DT::renderDataTable({blacklistEdges},options = list(scrollX = TRUE,pageLength = 10))
+                }
+                else if(input$tableName=="whitelist edges")
+                {
+                  output$tableOut<- DT::renderDataTable({whitelistEdges},options = list(scrollX = TRUE,pageLength = 10))
+                }
+              },error=function(e){
+                shinyalert::shinyalert(toString(e), type = "error")
+              })
               updateSelectizeInput(session,'varselect',choices = nodeNames)
               updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                                 "ellipse", "database", "text", "diamond"))
@@ -3267,6 +3295,26 @@ shinyServer(function(input, output,session) {
                 value <<- 1
                 output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,weight,value)})
               }
+              tryCatch({
+                if(input$tableName=="Bayesian Graph")
+                {
+                  output$tableOut<- DT::renderDataTable({NetworkGraph},options = list(scrollX = TRUE,pageLength = 10))
+                }
+                else if(input$tableName=="Cross Validation Results")
+                {
+                  output$tableOut<- DT::renderDataTable({predError},options = list(scrollX = TRUE,pageLength = 10))
+                }
+                else if(input$tableName=="blacklist edges")
+                {
+                  output$tableOut<- DT::renderDataTable({blacklistEdges},options = list(scrollX = TRUE,pageLength = 10))
+                }
+                else if(input$tableName=="whitelist edges")
+                {
+                  output$tableOut<- DT::renderDataTable({whitelistEdges},options = list(scrollX = TRUE,pageLength = 10))
+                }
+              },error=function(e){
+                shinyalert::shinyalert(toString(e), type = "error")
+              })
               updateSelectInput(session,'event',choices = nodeNames)
               updateSelectizeInput(session,'varselect',choices = nodeNames)
               updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
@@ -3369,6 +3417,120 @@ shinyServer(function(input, output,session) {
         updateSelectInput(session,"moduleSelection",choices = "graph")
         updateSelectInput(session,'modGroup',choices = "")
       })
+      tooltip(session)
+    }
+  })
+  observeEvent(input$Acommunities,{
+    if(load==2)
+    {
+      tryCatch({
+        if(assocReset==2)
+        {
+          Acommunities<<-custom.Modules(assocNetworkprune,input$AmoduleAlgo)
+          names(Acommunities)<<-paste("Module",c(1:length(Acommunities)),sep=" ")
+          AlengthCom<<-c()
+          for(n in names(Acommunities))
+          {
+            AlengthCom<<-c(AlengthCom,length(Acommunities[[n]]))
+          }
+          AlengthCom<<-order(AlengthCom,decreasing = T)
+          names(AlengthCom)<<-paste("Module",c(1:length(Acommunities)),sep=" ")
+          updateSelectInput(session,"AmoduleSelection",choices = c("graph",names(Acommunities)))
+          updateSelectInput(session,'AmodGroup',choices = names(Acommunities))
+          shinyalert::shinyalert("Module detection successfull",type="success")
+        }
+      },error=function(e){
+        shinyalert::shinyalert("Module detection failed",type="error")
+        updateSelectInput(session,"AmoduleSelection",choices = "graph")
+        updateSelectInput(session,'AmodGroup',choices = "")
+      })
+      tooltip(session)
+    }
+  })
+  observeEvent(input$AmoduleSelection,{
+    if(load==2)
+    {
+      withProgress(message = "Loading Module", value = 0, {
+        if(assocReset==2)
+        {
+          tryCatch({
+            if(input$AmoduleSelection!='graph')
+            {
+              AselectedNodes<<-Acommunities[[AlengthCom[input$AmoduleSelection]]]
+              from<-c()
+              to<-c()
+              for(i in 1:dim(data.frame(assocNetwork[which(assocNetwork[,3]>input$threshold),]))[1])
+              {
+                if(is.element(data.frame(assocNetwork[which(assocNetwork[,3]>input$threshold),])[i,1],AselectedNodes))
+                {
+                  from<-c(from,i)
+                }
+                if(is.element(data.frame(assocNetwork[which(assocNetwork[,3]>input$threshold),])[i,2],AselectedNodes))
+                {
+                  to<-c(to,i)
+                }
+              }
+              assocNetworkprune<<-assocNetwork[which(assocNetwork[,3]>input$threshold),]
+              assocNetworkprune<<-assocNetworkprune[intersect(from,to),]
+              shapeVectorAssoc<<-rep('dot',length(unique(c(assocNetworkprune[,1],assocNetworkprune[,2]))))
+              updateSelectizeInput(session,'Avarselect',choices = unique(c(assocNetworkprune[,1],assocNetworkprune[,2])))
+              updateSelectInput(session,'Avarshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                                "ellipse", "database", "text", "diamond"))
+              updateSelectInput(session,'Avarshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                                 "ellipse", "database", "text", "diamond"))
+              updateSelectInput(session,'Agraph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+              updateSelectInput(session,"Aneighbornodes",choices = "")
+              updateSelectInput(session,'Avarshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                                 "ellipse", "database", "text", "diamond"))
+              updateSelectInput(session,'AmodGroup',choices = input$AmoduleSelection)
+              output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$Adegree,input$Agraph_layout,shapeVectorAssoc)})
+              updateSelectInput(session,"Aneighbornodes",choices = "")
+              output$assocTable<- DT::renderDataTable({assocNetworkprune},options = list(scrollX = TRUE,pageLength = 10))
+            }
+            else
+            {
+              assocNetworkprune<<-assocNetwork[which(assocNetwork[,3]>input$threshold),]
+              shapeVectorAssoc<<- rep('dot',length(unique(c(assocNetworkprune[,1],assocNetworkprune[,2]))))
+              updateSelectizeInput(session,'Avarselect',choices = unique(c(assocNetworkprune[,1],assocNetworkprune[,2])))
+              updateSelectInput(session,'Avarshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                                "ellipse", "database", "text", "diamond"))
+              updateSelectInput(session,'Avarshape2',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                                 "ellipse", "database", "text", "diamond"))
+              updateSelectInput(session,'Agraph_layout',choices = c("layout_nicely (Recommended)"="layout_nicely","layout_as_star","layout_as_tree (Recommended)"="layout_as_tree","layout_in_circle","layout_with_sugiyama (Recommended)"="layout_with_sugiyama","layout_on_sphere","layout_randomly","layout_with_fr","layout_with_kk","layout_with_lgl","layout_with_mds (Recommended)"="layout_with_mds","layout_on_grid","layout_with_graphopt","layout_with_gem","layout_with_dh"))
+              updateSelectInput(session,"Aneighbornodes",choices = "")
+              updateSelectInput(session,'Avarshape3',choices = c( "dot","square", "triangle", "box", "circle", "star",
+                                                                 "ellipse", "database", "text", "diamond"))
+              updateSelectInput(session,'AmodGroup',choices = names(Acommunities))
+              output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$Adegree,input$Agraph_layout,shapeVectorAssoc)})
+              updateSelectInput(session,"Aneighbornodes",choices = "")
+              output$assocTable<- DT::renderDataTable({assocNetworkprune},options = list(scrollX = TRUE,pageLength = 10))
+            }
+          },error=function(e){
+            shinyalert::shinyalert(toString(e), type = "error")
+          })
+        }
+      })
+      tooltip(session)
+    }
+  })
+  observeEvent(input$Agroup3,{
+    if(load==2)
+    {
+      if(assocReset==2)
+      {
+        if(input$AmodGroup!="")
+        {
+          tryCatch({
+            AselectedNodes<<-Acommunities[[AlengthCom[input$AmodGroup]]]
+            shapeVectorAssoc[which(unique(c(assocNetworkprune[,1],assocNetworkprune[,2])) %in% AselectedNodes)] <<- input$Avarshape3
+            output$assocPlot<-renderVisNetwork({graph.custom.assoc(assocNetworkprune,unique(c(assocNetworkprune[,1],assocNetworkprune[,2])),input$Adegree,input$Agraph_layout,shapeVectorAssoc)})
+            updateSelectInput(session,"Aneighbornodes",choices = "")
+          },error = function(e){
+            shinyalert::shinyalert(toString(e), type = "error")
+
+          })
+        }
+      }
       tooltip(session)
     }
   })

@@ -201,6 +201,11 @@ dashboardPage(skin = "blue",
                                                                                                                   shiny::column(3,selectInput('Avarshape2',label = "Shape","")),
                                                                                                                   shiny::column(3,actionButton('Agroup2','Group', style="margin-top:25px;", class = "butt"))
                                                                                                   ),
+                                                                                                  h3("Or"),
+                                                                                                  shiny::fluidRow(shiny::column(6,selectInput('AmodGroup',label = "Module",choices = "")),
+                                                                                                                  shiny::column(3,selectInput('Avarshape3',label = "Shape","")),
+                                                                                                                  shiny::column(3, actionButton('Agroup3','Group', style="margin-top:25px;", class = "butt"))
+                                                                                                  ),
                                                                                                   hr(),
                                                                                                   shiny::fluidRow(shiny::column(6,h4('Visible Neighbors chain'),div(id = "AgraphChain",
                                                                                                                                                                     sliderInput("Adegree", label = NULL,
@@ -223,14 +228,20 @@ dashboardPage(skin = "blue",
                                                                                             )
                                                                               ),
                                                                               shiny::column(1,bsButton('graphBtn2', 'Refresh', icon = icon("refresh"),style = "primary")),
-                                                                              shiny::column(3,
+                                                                              shiny::column(2,
                                                                                             div(style = "position:absolute;right:0.1em;",
                                                                                                 h5("Nth neighbors(of selection):"))),
 
-                                                                              shiny::column(4,
+                                                                              shiny::column(2,
 
                                                                                             shiny::selectInput("Aneighbornodes",label = NULL,choices = "")
-                                                                              )
+                                                                              ),
+                                                                              shiny::column(1,style="padding-right:0px",
+                                                                                            shiny::selectInput("AmoduleSelection",label = NULL,"graph")),
+                                                                              shiny::column(2,style="margin-right:20px",dropdownButton(
+                                                                                shiny::fluidRow(shiny::column(6,selectInput('AmoduleAlgo',label = NULL,choices = c("ward.D","ward.D2", "single", "complete", "average", "mcquitty", "median","centroid"))),shiny::column(1,bsButton("Acommunities","Build Modules", style="primary"))),
+                                                                                label = "Detect Modules",circle = F, status = "primary", width = "300px",tooltip = tooltipOptions(title = "Build modules in the graph")
+                                                                              ))
                                                                             ),
                                                                             br(),
                                                                             shinycssloaders::withSpinner(visNetworkOutput("assocPlot",height = "550px"), color= "#2E86C1")
@@ -416,7 +427,7 @@ dashboardPage(skin = "blue",
                                                                                 label = "Inference Learning",circle = F, status = "primary", icon = icon("bar-chart-o"), width = "350px",tooltip = tooltipOptions(title = "Learn Inferences")
                                                                               )),
                                                                               shiny::column(7,shinyWidgets::radioGroupButtons(inputId = "bayesianOption",
-                                                                                                                              choices = c("Bayesian Network","Explore Conditional Probabilities", "Infer Decisions","Export Tables"),
+                                                                                                                              choices = c("Bayesian Network","Fitted Local Distributions", "Infer Decisions","Export Tables"),
                                                                                                                               selected = "Bayesian Network",
                                                                                                                               justified = FALSE
                                                                               ))
@@ -495,7 +506,7 @@ dashboardPage(skin = "blue",
                                                                               shinycssloaders::withSpinner(plotOutput("distPlot",height = "450px"), color="#2E86C1")
                                                                             ),
                                                                             shiny::conditionalPanel(
-                                                                              "input.bayesianOption=='Explore Conditional Probabilities'",
+                                                                              "input.bayesianOption=='Fitted Local Distributions'",
                                                                               selectInput("paramSelect",label = "Variable",""),
                                                                               shinycssloaders::withSpinner(plotOutput("parameterPlot",height = "450px"),color="#2E86C1")
                                                                             ),

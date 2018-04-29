@@ -33,7 +33,7 @@ graph.custom <- function(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNo
              visEvents(select = "function(nodes) {
                 Shiny.onInputChange('current_node_id', nodes.nodes);
                        ;}")%>%
-             visExport(type = "png", name = "bayesian network",
+             visExport(type = "pdf", name = "bayesian network",
                        float = "right", label = "Save network", background = "white", style= "")
            )
   },error=function(e){

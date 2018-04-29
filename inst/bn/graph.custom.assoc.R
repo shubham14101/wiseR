@@ -21,7 +21,7 @@ graph.custom.assoc <- function(assocNetwork,nodeNames,Ndegree,Tlayout,shapeVecto
                           list(enabled = TRUE, style = 'width: 100px; height: 20px;background: #f8f8f8;border:none;outline:none;'))%>%
              visInteraction(navigationButtons = TRUE)%>%
              visIgraphLayout(layout = Tlayout)%>%
-             visExport(type = "png", name = "association network",
+             visExport(type = "pdf", name = "association network",
                        float = "right", label = "Save network", background = "white", style= "")%>%
              visEvents(select = "function(nodes) {
                        Shiny.onInputChange('Acurrent_node_id', nodes.nodes);

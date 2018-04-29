@@ -1,0 +1,12 @@
+---
+title: 'wiseR: Enabling Decisions with Bayesian Networks Artificial Intelligence'
+author: "Shubham Maheshwari, Anant Mittal, Tavpritesh Sethi"
+date: "April 28, 2018"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Discover Dark Knowledge}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+wiseR is 
