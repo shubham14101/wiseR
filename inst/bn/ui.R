@@ -136,7 +136,7 @@ dashboardPage(skin = "blue",
                                                                                 div(id="dataDiscretize",
                                                                                     shiny::h4('Discretize Data'),
                                                                                     h5('Discretization Type:'),
-                                                                                    shiny::fluidRow(column(9,shiny::selectInput('dtype',label = NULL,c("hybrid discretization(Recommended)"="hybrid","Hartemink Discretization(Recommended)"="hartemink","interval discretization"="interval","quantile discretization"="quantile","frequency discretization"="frequency","K-means clustering"="cluster"))),column(3,actionButton('discretize',"Discretize", class = "butt"))),
+                                                                                    shiny::fluidRow(column(9,shiny::selectInput('dtype',label = NULL,c("hybrid discretization(Recommended)"="hybrid","hartemink discretization(Recommended)"="hartemink","interval discretization"="interval","quantile discretization"="quantile","frequency discretization"="frequency","K-means clustering"="cluster"))),column(3,actionButton('discretize',"Discretize", class = "butt"))),
                                                                                     h5('Hartemink Discritization Parameters:'),
                                                                                     shiny::fluidRow(column(4,shiny::textInput('breakH',label = 'breaks',placeholder = 5)),column(4,shiny::textInput('ibreakH',label = 'ibreaks',placeholder = 5)))
 
@@ -355,6 +355,13 @@ dashboardPage(skin = "blue",
                                                                                         shiny::column(7,
                                                                                                       selectizeInput("paramMethod2",label = "Parameter fitting algorithm",choices = c("Bayesian parameter estimation" = "bayes","Maximum Likelihood parameter estimation" = "mle"))
                                                                                         )
+
+                                                                                      ),
+                                                                                      shiny::fluidRow(
+                                                                                        shiny::column(6,selectInput("algoscore",label = "Network Score",choices = c("modified Bayesian Dirichlet equivalent"="mbde","log-likelihood"="loglik","Akaike Information Criterion"="aic","Bayesian Information Criterion"="bic","Bayesian Dirichlet equivalent"="bde","Bayesian Dirichlet sparse"="bds","locally averaged Bayesian Dirichlet"="bdla"))),
+                                                                                        shiny::column(6,sliderInput("iss", label = "Imaginary sample size",
+                                                                                                                    min = 1, max = 1000,
+                                                                                                                    value = 10))
                                                                                       ),
                                                                                       h5("Use Expert Knowledge by Forcing/Prohibiting Edges"),
                                                                                       shiny::fluidRow(shiny::column(6,selectInput("listType",label = NULL,choices = c("Blacklist","Whitelist"))),shiny::column(6,shiny::fileInput('listFile',label = NULL,accept = c('.csv')))),
@@ -402,7 +409,7 @@ dashboardPage(skin = "blue",
                                                                                   h5("Log-Likelihood Loss of the learned model"),
                                                                                   shiny::verbatimTextOutput("valLoss"),
                                                                                   h5("Network Score"),
-                                                                                  shiny::fluidRow(shiny::column(6,selectInput("scoreAlgo",label = NULL,choices = c("modified Bayesian Dirichlet equivalent"="mbde","log-likelihood"="loglik","Akaike Information Criterion"="aic","Bayesian Information Criterion"="bic","Bayesian Dirichelt sparse"="bds","locally averaged Bayesian Dirichelt"="bdla"))),shiny::column(2,actionButton("getScore","Score", class = "butt")),shiny::column(4,shiny::verbatimTextOutput("netScore")))
+                                                                                  shiny::fluidRow(shiny::column(6,selectInput("scoreAlgo",label = NULL,choices = c("modified Bayesian Dirichlet equivalent"="mbde","log-likelihood"="loglik","Akaike Information Criterion"="aic","Bayesian Information Criterion"="bic","Bayesian Dirichlet equivalent"="bde","Bayesian Dirichlet sparse"="bds","locally averaged Bayesian Dirichlet"="bdla"))),shiny::column(2,actionButton("getScore","Score", class = "butt")),shiny::column(4,shiny::verbatimTextOutput("netScore")))
                                                                                 ),
                                                                                 label = "Structure Learning",circle = F, status = "primary", icon = icon("wrench"), width = "800px",tooltip = tooltipOptions(title = "Upload structure")
                                                                               )),
