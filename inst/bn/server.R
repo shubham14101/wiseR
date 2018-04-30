@@ -574,7 +574,7 @@ shinyServer(function(input, output,session) {
           }
 
         }
-        else
+        else if(input$format==".CSV")
         {
           if(tools::file_ext(inFile$datapath) == "csv")
           {
@@ -584,6 +584,23 @@ shinyServer(function(input, output,session) {
           {
             shinyalert::shinyalert("Added file is not a .csv file.Upload a CSV file.", type = "error")
           }
+        }
+        else
+        {
+          tryCatch({
+            if(input$format=="Comma Seperated")
+            {
+              DiscreteData <<- read.csv(inFile$datapath,stringsAsFactors = T,na.strings = c("NA","na","Na","nA","","?","-"),sep = ",")
+            }
+            else if(input$format=="Semicolon Seperated")
+            {
+              DiscreteData <<- read.csv(inFile$datapath,stringsAsFactors = T,na.strings = c("NA","na","Na","nA","","?","-"),sep = ";")
+            }
+            else
+            {
+              DiscreteData <<- read.csv(inFile$datapath,stringsAsFactors = T,na.strings = c("NA","na","Na","nA","","?","-"),sep = "\t")
+            }
+          })
         }
         check.discrete(DiscreteData)
         check.NA(DiscreteData)
@@ -669,22 +686,38 @@ shinyServer(function(input, output,session) {
         {
           withProgress(message = "Discretizing data", value = 0, {
             tempDiscreteData <- DiscreteData
-            if(input$ibreakH=="" || input$breakH=="")
+            if(input$dtype!='hartemink')
             {
-              bk = 5
-              ibk = 5
+              for(n in colnames(tempDiscreteData))
+              {
+                if(is.numeric(tempDiscreteData[,n])|| is.integer(tempDiscreteData[,n]))
+                {
+                  temp = custom.discretize(as.numeric(tempDiscreteData[,n]),input$dtype,1,1)
+                  tempDiscreteData[,n]<-temp
+                }
+              }
             }
             else
             {
-              bk= as.numeric(input$breakH)
-              ibk= as.numeric(input$ibreakH)
-            }
-            for(n in colnames(tempDiscreteData))
-            {
-              if(is.numeric(tempDiscreteData[,n])|| is.integer(tempDiscreteData[,n]))
+              if(input$ibreakH=="" || input$breakH=="")
               {
-                temp = custom.discretize(as.numeric(tempDiscreteData[,n]),input$dtype,bk,ibk)
-                tempDiscreteData[,n]<-temp
+                bk = 5
+                ibk = 5
+              }
+              else
+              {
+                bk= as.numeric(input$breakH)
+                ibk= as.numeric(input$ibreakH)
+              }
+              numV<- unlist(lapply(tempDiscreteData, is.numeric))
+              out <- tempDiscreteData[,numV]<-bnlearn::discretize(tempDiscreteData[,numV],method = "hartemink",breaks = bk, ibreaks = ibk, idisc = "quantile")
+              if(class(out)=="try-error"){
+                out <- try(bnlearn::discretize(tempDiscreteData[,numV],method="interval"))
+                shinyalert("Failed to discretize all variables using the desired method, used interval discretization for them instead",type = "info")
+                if(class(out)=="try-error"){
+                  shinyalert("Failed to discretize some variables in the data. Try again using some other method or input a discretized data",type = "error")
+                }
+
               }
             }
             tempDiscreteData[,which(lapply(tempDiscreteData,nlevels)<2)] = NULL

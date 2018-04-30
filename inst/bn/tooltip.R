@@ -1,7 +1,7 @@
 tooltip<-function(session)
 {
   addPopover(session,'clusters',title=NULL,content = 'Set the no. of parallel clusters to be used', placement = "top", trigger = "hover",options = NULL)
-  addPopover(session,'format',title=NULL,content = 'Select between .RData and .CSV file format. File upload limit is 8000mb.It is recommended to upload large datasets in .RData format', placement = "top", trigger = "hover",options = NULL)
+  addPopover(session,'format',title=NULL,content = 'Select between given file formats. File upload limit is 8000mb.It is recommended to upload large datasets in .RData format', placement = "top", trigger = "hover",options = NULL)
   addPopover(session,'impute',title=NULL,content = 'Impute missing data', placement = "top", trigger = "hover",options = NULL)
   addPopover(session,'dtype',title=NULL,content = 'Choose data discretization algorithm (Hybrid is recommended)', placement = "top", trigger = "hover",options = NULL)
   addPopover(session,'discretize',title=NULL,content = 'Discretize continous variables', placement = "top", trigger = "hover",options = NULL)
