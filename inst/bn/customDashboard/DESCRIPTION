@@ -7,7 +7,7 @@ Maintainer:
 Description: The package can be used to perform graphical visualization and chained inferences learned bayesian structures
 biocViews:
 Depends: R (>= 3.3.1)
-Imports: bnlearn,rhandsontable,shiny,shinydashboard,dplyr,visNetwork,shinyWidgets,missRanger,tools,shinyalert,shinycssloaders,rintrojs,arules,psych,DescTools,DT,linkcomm,igraph,parallel,snow,shinyBS,gRain,gRbase,RGBL,graph,rcompanion
+Imports: bnlearn,rhandsontable,shiny,shinydashboard,dplyr,visNetwork,shinyWidgets,missRanger,tools,shinyalert,shinycssloaders,rintrojs,arules,psych,DescTools,DT,linkcomm,igraph,parallel,snow,shinyBS,gRain,gRbase,RGBL,graph
 License: GPL-2
 Encoding: UTF-8
 LazyData: true
