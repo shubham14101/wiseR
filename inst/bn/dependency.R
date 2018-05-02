@@ -13,7 +13,6 @@ dependency<-function()
   require(shinycssloaders)
   require(rintrojs)
   require(arules)
-  require(rcompanion)
   require(psych)
   require(DescTools)
   require(DT)
@@ -22,4 +21,12 @@ dependency<-function()
   require(parallel)
   require(snow)
   require(shinyBS)
+  if(require('gRbase')==F)
+  {
+    install.packages('gRbase')
+  }
+  if(require('gRain')==F)
+  {
+    install.packages('gRain')
+  }
 }

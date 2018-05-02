@@ -23,6 +23,7 @@ source('custom.Modules.assoc.R')
 
 
 shinyServer(function(input, output,session) {
+  dependency()
   withProgress(message = "Initializing Dashboard", value = 0, {
   #Data upload limit and other options
   dependency()
