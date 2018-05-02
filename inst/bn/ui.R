@@ -6,6 +6,7 @@ library('shinyWidgets')
 library("shinyBS")
 library('shinyalert')
 library('rintrojs')
+library('gRain')
 source('error.bar.R')
 source('graph.custom.R')
 source('graph.custom.assoc.R')
@@ -121,7 +122,7 @@ dashboardPage(skin = "blue",
                                                                                 h5('Choose default dataset'),
                                                                                 fluidRow(column(9,selectInput('defData',label = NULL,choices = c("Alarm","Asia","Coronary","Lizards","Marks","Insurance","Hailfinder"))),column(3,actionButton('loadDef','load', class = "butt"))),
                                                                                 h5('Data Format:'),
-                                                                                shiny::selectInput('format',label = NULL,c(".CSV",".RData","Comma Seperated","Semicolon Seperated","Tab Seperated")),
+                                                                                shiny::selectInput('format',label = NULL,c(".CSV",".RData","Comma Seperated","Semicolon Seperated","Tab Seperated","Space Seperated")),
                                                                                 h5('File Input:'),
                                                                                 shiny::fileInput('dataFile',
                                                                                                  label = NULL,
@@ -150,6 +151,10 @@ dashboardPage(skin = "blue",
                                                                                 div(id="dataDelete",
                                                                                     shiny::h4("Delete variables"),
                                                                                     shiny::fluidRow(shiny::column(6,selectInput('delSelect',label = NULL,"",multiple = T)),shiny::column(3,actionButton('delete','Delete', class = "butt")),shiny::column(3,actionButton('reset','Reset', class = "butt")))
+                                                                                ),
+                                                                                div(id="dataIntervention",
+                                                                                    shiny::h4("Adjust Interventional Data"),
+                                                                                    shiny::fluidRow(shiny::column(4,selectInput('intSelect',label = NULL,"")),shiny::column(8,actionButton('intervention','Adjust', class = "butt")))
                                                                                 ),
                                                                                 label = "Pre-Process",circle = F, status = "primary", icon = icon("edit"), width = "500px",tooltip = tooltipOptions(title = "prepare data for bayesian network analysis")
                                                                               )),
@@ -324,7 +329,7 @@ dashboardPage(skin = "blue",
 
                                                                                       # Structural learning algorithm input select
                                                                                       shiny::fluidRow(
-                                                                                        shiny::column(5,
+                                                                                        shiny::column(6,
                                                                                                       shiny::selectizeInput(
                                                                                                         inputId = "alg",
                                                                                                         label="Learning Algorithm",
@@ -352,7 +357,7 @@ dashboardPage(skin = "blue",
                                                                                                         )
                                                                                                       )
                                                                                         ),
-                                                                                        shiny::column(7,
+                                                                                        shiny::column(6,
                                                                                                       selectizeInput("paramMethod2",label = "Parameter fitting algorithm",choices = c("Bayesian parameter estimation" = "bayes","Maximum Likelihood parameter estimation" = "mle"))
                                                                                         )
 
@@ -414,6 +419,7 @@ dashboardPage(skin = "blue",
                                                                                 label = "Structure Learning",circle = F, status = "primary", icon = icon("wrench"), width = "800px",tooltip = tooltipOptions(title = "Upload structure")
                                                                               )),
                                                                               shiny::column(2, dropdownButton(
+                                                                                fluidRow(column(6,actionButton("exactInference","Learn Exact Inference",class="butt")),column(6,materialSwitch(inputId = "exact", label = "Enable Exact Inferences", status = "primary", right = TRUE))),
                                                                                 hr(),
                                                                                 h4("Select evidence to add to the model"),
                                                                                 shiny::fluidRow(shiny::column(6,actionButton('insertBtn', 'Insert', class = "butt")),
@@ -433,7 +439,7 @@ dashboardPage(skin = "blue",
                                                                                 hr(),
                                                                                 shiny::h4("No. of resampling iterations for error bars"),
                                                                                 textInput("numInterval", label = NULL,placeholder = 25),
-                                                                                label = "Inference Learning",circle = F, status = "primary", icon = icon("bar-chart-o"), width = "350px",tooltip = tooltipOptions(title = "Learn Inferences")
+                                                                                label = "Inference Learning",circle = F, status = "primary", icon = icon("bar-chart-o"), width = "500px",tooltip = tooltipOptions(title = "Learn Inferences")
                                                                               )),
                                                                               shiny::column(7,shinyWidgets::radioGroupButtons(inputId = "bayesianOption",
                                                                                                                               choices = c("Bayesian Network","Fitted Local Distributions", "Infer Decisions","Export Tables"),

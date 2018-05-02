@@ -20,6 +20,7 @@ library('igraph')
 library("parallel")
 library("snow")
 library("shinyBS")
+library('gRain')
 source('error.bar.R')
 source('graph.custom.R')
 source('custom.Modules.R')
@@ -79,9 +80,11 @@ dashboardPage(skin = "blue",
                                                                           fluidPage(
                                                                             shiny::fluidRow(
                                                                               shiny::column(2, dropdownButton(
+                                                                                fluidRow(column(6,actionButton("exactInference","Learn Exact Inference",class="butt")),column(6,materialSwitch(inputId = "exact", label = "Enable Exact Inferences", status = "primary", right = TRUE))),
+                                                                                hr(),
                                                                                 h4("Select evidence to add to the model"),
-                                                                                shiny::fluidRow(shiny::column(6,actionButton('insertBtn', 'Insert')),
-                                                                                                shiny::column(6,actionButton('removeBtn', 'Remove'))
+                                                                                shiny::fluidRow(shiny::column(6,actionButton('insertBtn', 'Insert', class = "butt")),
+                                                                                                shiny::column(6,actionButton('removeBtn', 'Remove', class = "butt"))
                                                                                 ),
                                                                                 shiny::fluidRow(shiny::column(6,tags$div(id = 'placeholder1')),
                                                                                                 shiny::column(6,tags$div(id = 'placeholder2'))
@@ -93,20 +96,20 @@ dashboardPage(skin = "blue",
                                                                                                    label = NULL,
                                                                                                    ""),
                                                                                 shiny::h4("Display inference plot"),
-                                                                                shiny::fluidRow(shiny::column(5,actionButton('plotBtn', 'Simple Plot')),shiny::column(4,actionButton('plotStrengthBtn', 'Confidence Plot'))),
+                                                                                shiny::fluidRow(shiny::column(5,actionButton('plotBtn', 'without error bars', class = "butt")),shiny::column(4,actionButton('plotStrengthBtn', 'with error bars', class = "butt"))),
                                                                                 hr(),
-                                                                                shiny::h4("No of iterations for confidence plot"),
+                                                                                shiny::h4("No. of resampling iterations for error bars"),
                                                                                 textInput("numInterval", label = NULL,placeholder = 25),
-                                                                                label = "Inference",circle = F, status = "primary", icon = icon("bar-chart-o"), width = "300px",tooltip = tooltipOptions(title = "Learn Inferences")
+                                                                                label = "Inference",circle = F, status = "primary", icon = icon("bar-chart-o"), width = "500px",tooltip = tooltipOptions(title = "Learn Inferences")
                                                                               )),
                                                                               shiny::column(9,shinyWidgets::radioGroupButtons(inputId = "bayesianOption",
-                                                                                                                              choices = c("Graph","CP Distribution", "Inference Plot"),
-                                                                                                                              selected = "Graph",
+                                                                                                                              choices = c("Bayesian Network","Fitted Local Distributions", "Infer Decisions"),
+                                                                                                                              selected = "Bayesian Network",
                                                                                                                               justified = FALSE
                                                                               ))
                                                                               ),
                                                                             shiny::conditionalPanel(
-                                                                              "input.bayesianOption=='Graph'",
+                                                                              "input.bayesianOption=='Bayesian Network'",
                                                                               shiny::column(11,
                                                                                             shiny::fluidRow(
 
@@ -171,7 +174,7 @@ dashboardPage(skin = "blue",
                                                                                             )
                                                                               ),
                                                                             shiny::conditionalPanel(
-                                                                              "input.bayesianOption=='Inference Plot'",
+                                                                              "input.bayesianOption=='Infer Decisions'",
                                                                               dropdownButton(
                                                                                 sliderInput("NumBar", label = "No. of bars",min = 0, max = 1,value = 1,step=1),
                                                                                 actionButton("sortPlot","Sort X-axis"),
@@ -180,7 +183,7 @@ dashboardPage(skin = "blue",
                                                                               withSpinner(plotOutput("distPlot",height = "450px"), color="#2E86C1")
                                                                             ),
                                                                             shiny::conditionalPanel(
-                                                                              "input.bayesianOption=='CP Distribution'",
+                                                                              "input.bayesianOption=='Fitted Local Distributions'",
                                                                               selectInput("paramSelect",label = "Variable",""),
                                                                               withSpinner(plotOutput("parameterPlot",height = "450px"),color="#2E86C1")
                                                                             )

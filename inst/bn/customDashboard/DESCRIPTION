@@ -2,10 +2,12 @@ Package: customDashboard
 Type: Package
 Title: Bayesian Network with Chained Inferences
 Version: 0.1.0
-Author: Shubham Maheshwari
-Maintainer: The package maintainer <shubham14101@iiitd.ac.in>
+Author: 
+Maintainer: 
 Description: The package can be used to perform graphical visualization and chained inferences learned bayesian structures
-Imports: bnlearn,rhandsontable,shiny,shinydashboard,dplyr,visNetwork,shinyWidgets,missRanger,tools,shinyalert,shinycssloaders,rintrojs,arules,rcompanion,psych,DescTools,DT,linkcomm,igraph,parallel,snow,shinyBS
+biocViews:
+Depends: R (>= 3.3.1)
+Imports: bnlearn,rhandsontable,shiny,shinydashboard,dplyr,visNetwork,shinyWidgets,missRanger,tools,shinyalert,shinycssloaders,rintrojs,arules,psych,DescTools,DT,linkcomm,igraph,parallel,snow,shinyBS,gRain,gRbase,RGBL,graph,rcompanion
 License: GPL-2
 Encoding: UTF-8
 LazyData: true

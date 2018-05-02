@@ -39,6 +39,7 @@ shinyServer(function(input, output,session) {
   sanity<-1
   confidence<-1
   check<-1
+  exactCheck<-1
   #Initialization
   rvs <<- reactiveValues(evidence = list(),values = list(),evidenceObserve = list(),valueObserve = list())
   insertedV <- c()
@@ -154,30 +155,62 @@ shinyServer(function(input, output,session) {
       shinyalert(toString(e), type = "error")
     })
   })
+  observeEvent(input$exactInference,{
+    tryCatch({
+      withProgress(message = "Learning Exact Inference", value = 0, {
+        bn.jtree <<- compile(as.grain(bn.hc.boot.fit))
+        exactCheck<<-2
+        shinyalert("Exact inferences learned",type = "success")
+      })
+    },error=function(e)
+    {
+      exactCheck<<-1
+      shinyalert(e,type="error")
+    })
+  })
   observeEvent(input$plotBtn,{
     withProgress(message = "Learning Inference", value = 0, {
       tryCatch({
         confidence<<-1
         str1 <<- ""
         str2<<-""
+        str3<<-""
         count =1
         for(elem in inserted)
         {
           vid = insertedV[which(inserted == elem)]
           str1 <<- paste0(str1,"(", input[[elem]], "=='", input[[vid]], "')")
           str2<<-paste(str2,input[[elem]],", ")
+          str3<<-paste0(str3, input[[elem]], "='", input[[vid]], "'")
           if(count!=length(inserted))
           {
             str1 <<- paste0(str1," & ")
+            str3 <<- paste0(str3,",")
           }
           count = count + 1
         }
-        probs = prop.table(table(cpdist(bn.hc.boot.fit,input$event,evidence = eval(parse(text = str1)))))[1:input$NumBar]
+        str3<<-paste0("list(",str3,")")
+        if(input$exact==T)
+        {
+          if(exactCheck==2)
+          {
+            evidenceV = setEvidence(bn.jtree, evidence=eval(parse(text = str3)))
+            probs = ((querygrain(evidenceV,nodes=input$event))[[input$event]])[1:input$NumBar]
+          }
+          else
+          {
+            shinyalert("Learn exact inferences on the new or modified structure",type = "info")
+          }
+        }
+        else
+        {
+          probs = prop.table(table(cpdist(bn.hc.boot.fit,input$event,evidence = eval(parse(text = str1)))))[1:input$NumBar]
+        }
         output$distPlot = renderPlot({par(mar=c(5,3,3,3))
           par(oma=c(5,3,3,3))
           barx<<-barplot(probs,
                          col = "lightblue",
-                         main = paste("probability of ",input$event," conditioned on evidence ",substr(str2,1,(nchar(str2)-2))),
+                         main = paste("probability of ",input$event," conditioned on ",substr(str2,1,(nchar(str2)-2))),
                          border = NA,
                          xlab = "",
                          ylab = "Probabilities",
@@ -185,8 +218,9 @@ shinyServer(function(input, output,session) {
                          las=2)
           text(x = barx,y = round(probs,digits = 4),label = round(probs,digits = 4), pos = 3, cex = 0.8, col = "black")
         })
+        updateRadioGroupButtons(session,'bayesianOption',selected = "Infer Decisions")
       },error = function(e){
-        shinyalert(toString(e), type = "error")
+        shinyalert::shinyalert(toString(e), type = "error")
       })
     })
   })
@@ -199,19 +233,38 @@ shinyServer(function(input, output,session) {
         {
           str1 <<- ""
           str2<<-""
+          str3<<-""
           count =1
           for(elem in inserted)
           {
             vid = insertedV[which(inserted == elem)]
             str1 <<- paste0(str1,"(", input[[elem]], "=='", input[[vid]], "')")
             str2<<-paste(str2,input[[elem]],", ")
+            str3<<-paste0(str3, input[[elem]], "='", input[[vid]], "'")
             if(count!=length(inserted))
             {
               str1 <<- paste0(str1," & ")
+              str3 <<- paste0(str3,",")
             }
             count = count + 1
           }
-          probs = prop.table(table(cpdist(bn.hc.boot.fit,input$event,evidence = eval(parse(text = str1)))))
+          str3<<-paste0("list(",str3,")")
+          if(input$exact==T)
+          {
+            if(exactCheck==2)
+            {
+              evidenceV = setEvidence(bn.jtree, evidence=eval(parse(text = str3)))
+              probs = ((querygrain(evidenceV,nodes=input$event))[[input$event]])
+            }
+            else
+            {
+              shinyalert("Learn exact inferences on the new or modified structure",type = "info")
+            }
+          }
+          else
+          {
+            probs = prop.table(table(cpdist(bn.hc.boot.fit,input$event,evidence = eval(parse(text = str1)))))
+          }
           probT = rbind(probT,probs)
         }
         ee = 1
@@ -221,7 +274,7 @@ shinyServer(function(input, output,session) {
           par(oma=c(5,3,3,3))
           barx <<-barplot(ee$mean[1:input$NumBar],
                           col = "lightblue",
-                          main = paste("probability of ",input$event," conditioned on evidence ",substr(str2,1,(nchar(str2)-2))),
+                          main = paste("probability of ",input$event," conditioned on ",substr(str2,1,(nchar(str2)-2))),
                           border = NA,
                           xlab = "",
                           ylab = "Probabilities",
@@ -229,9 +282,10 @@ shinyServer(function(input, output,session) {
                           las=2)
           text(x = barx,y = round(ee$mean[1:input$NumBar],digits = 4),label = round(ee$mean[1:input$NumBar],digits = 4), pos = 3, cex = 0.8, col = "black")
           error.bar(barx,ee$mean[1:input$NumBar], 1.96*ee$sd[1:input$NumBar]/sqrt(input$plotStrengthBtn))})
+        updateRadioGroupButtons(session,'bayesianOption',selected = "Infer Decisions")
 
       },error = function(e){
-        shinyalert(toString(e), type = "error")
+        shinyalert::shinyalert(toString(e), type = "error")
       })
     })
   })
@@ -243,24 +297,43 @@ shinyServer(function(input, output,session) {
           confidence<<-1
           str1 <<- ""
           str2<<-""
+          str3<<-""
           count =1
           for(elem in inserted)
           {
             vid = insertedV[which(inserted == elem)]
             str1 <<- paste0(str1,"(", input[[elem]], "=='", input[[vid]], "')")
             str2<<-paste(str2,input[[elem]],", ")
+            str3<<-paste0(str3, input[[elem]], "='", input[[vid]], "'")
             if(count!=length(inserted))
             {
               str1 <<- paste0(str1," & ")
+              str3 <<- paste0(str3,",")
             }
             count = count + 1
           }
-          probs = sort(prop.table(table(cpdist(bn.hc.boot.fit,input$event,evidence = eval(parse(text = str1))))),decreasing = T)[1:input$NumBar]
+          str3<<-paste0("list(",str3,")")
+          if(input$exact==T)
+          {
+            if(exactCheck==2)
+            {
+              evidenceV = setEvidence(bn.jtree, evidence=eval(parse(text = str3)))
+              probs = sort(((querygrain(evidenceV,nodes=input$event))[[input$event]]),decreasing = T)[1:input$NumBar]
+            }
+            else
+            {
+              shinyalert("Learn exact inferences on the new or modified structure",type = "info")
+            }
+          }
+          else
+          {
+            probs = sort(prop.table(table(cpdist(bn.hc.boot.fit,input$event,evidence = eval(parse(text = str1))))),decreasing = T)[1:input$NumBar]
+          }
           output$distPlot = renderPlot({par(mar=c(5,3,3,3))
             par(oma=c(5,3,3,3))
             barx<<-barplot(probs,
                            col = "lightblue",
-                           main = paste("probability of ",input$event," conditioned on evidence ",substr(str2,1,(nchar(str2)-2))),
+                           main = paste("probability of ",input$event," conditioned on ",substr(str2,1,(nchar(str2)-2))),
                            border = NA,
                            xlab = "",
                            ylab = "Probabilities",
@@ -268,10 +341,10 @@ shinyServer(function(input, output,session) {
                            las=2)
             text(x = barx,y = round(probs,digits = 4),label = round(probs,digits = 4), pos = 3, cex = 0.8, col = "black")
           })
-
+          updateRadioGroupButtons(session,'bayesianOption',selected = "Infer Decisions")
 
         },error = function(e){
-          shinyalert(toString(e), type = "error")
+          shinyalert::shinyalert(toString(e), type = "error")
         })
       }
       else
@@ -283,19 +356,37 @@ shinyServer(function(input, output,session) {
           {
             str1 <<- ""
             str2<<-""
+            str3<<-""
             count =1
             for(elem in inserted)
             {
               vid = insertedV[which(inserted == elem)]
               str1 <<- paste0(str1,"(", input[[elem]], "=='", input[[vid]], "')")
               str2<<-paste(str2,input[[elem]],", ")
+              str3<<-paste0(str3, input[[elem]], "='", input[[vid]], "'")
               if(count!=length(inserted))
               {
                 str1 <<- paste0(str1," & ")
+                str3 <<- paste0(str3,",")
               }
               count = count + 1
             }
-            probs = prop.table(table(cpdist(bn.hc.boot.fit,input$event,evidence = eval(parse(text = str1)))))
+            if(input$exact==T)
+            {
+              if(exactCheck==2)
+              {
+                evidenceV = setEvidence(bn.jtree, evidence=eval(parse(text = str3)))
+                probs = ((querygrain(evidenceV,nodes=input$event))[[input$event]])
+              }
+              else
+              {
+                shinyalert("Learn exact inferences on the new or modified structure",type = "info")
+              }
+            }
+            else
+            {
+              probs = prop.table(table(cpdist(bn.hc.boot.fit,input$event,evidence = eval(parse(text = str1)))))
+            }
             probT = rbind(probT,probs)
           }
           ee = 1
@@ -306,7 +397,7 @@ shinyServer(function(input, output,session) {
             par(oma=c(5,3,3,3))
             barx <<-barplot(ee$mean[nm],
                             col = "lightblue",
-                            main = paste("probability of ",input$event," conditioned on evidence ",substr(str2,1,(nchar(str2)-2))),
+                            main = paste("probability of ",input$event," conditioned on ",substr(str2,1,(nchar(str2)-2))),
                             border = NA,
                             xlab = "",
                             ylab = "Probabilities",
@@ -314,9 +405,9 @@ shinyServer(function(input, output,session) {
                             las=2)
             text(x = barx,y = round(ee$mean[nm],digits = 4),label = round(ee$mean[nm],digits = 4), pos = 3, cex = 0.8, col = "black")
             error.bar(barx,ee$mean[nm], 1.96*ee$sd[nm]/sqrt(input$plotStrengthBtn))})
-
+          updateRadioGroupButtons(session,'bayesianOption',selected = "Infer Decisions")
         },error = function(e){
-          shinyalert(toString(e), type = "error")
+          shinyalert::shinyalert(toString(e), type = "error")
         })
       }
     })
