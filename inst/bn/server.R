@@ -6,7 +6,6 @@ library('shinyWidgets')
 library("shinyBS")
 library('shinyalert')
 library('rintrojs')
-library('gRain')
 source('error.bar.R')
 source('graph.custom.R')
 source('graph.custom.assoc.R')
@@ -20,10 +19,12 @@ source('dashboardthemes.R')
 source('graph.weight.R')
 source('dependency.R')
 source('custom.Modules.assoc.R')
+dependency()
+library('gRain')
 
 
 shinyServer(function(input, output,session) {
-  dependency()
+
   withProgress(message = "Initializing Dashboard", value = 0, {
   #Data upload limit and other options
   dependency()
