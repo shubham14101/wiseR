@@ -15,6 +15,8 @@ source('check.discrete.R')
 source('custom.association.R')
 source('custom.Modules.R')
 source('dashboardthemes.R')
+source('dependency.R')
+dependency()
 
 
 myDashboardHeader <- function (..., title = NULL, titleWidth = NULL, disable = FALSE,
@@ -562,7 +564,7 @@ dashboardPage(skin = "blue",
                                                  h4('Tavpritesh Sethi'),
                                                  h5('Assistant Professor, IIIT-Delhi'),
                                                  h5('Visiting Assistant Professor, Stanford Medicine'),
-                                                 h5('tavpriteshsethi@iiitd.ac.in'),
+                                                 h5('tavpriteshsethi@iiitd.ac.in | tavsethi@stanford.edu'),
 
 
                                                  fluidRow(width = 12,
@@ -577,11 +579,11 @@ dashboardPage(skin = "blue",
                                           column(width=3, align = "center",
                                                  #img(src = "shubham.jpg",style = "max-width: 50%; width: 50%; height: auto"),
                                                  h4('Shubham Maheshwari'),
-                                                 h5('Data Scientist, Stockroom.io'),
                                                  h5('B.Tech Computer Science, IIIT-Delhi'),
                                                  h5('shubham14101@iiitd.ac.in'),
-
-
+                                                 br(),
+                                                 br(),
+                                                 br(),
                                                  fluidRow(width = 12,
                                                    column(width=2, a(img(src = "email.png", style = "margin:5px; width: 20px; height: 20px"), href = "mailto:shubham14101@iiitd.ac.in"), target = "_blank"),
                                                    column(width=2, a(img(src = "github.png", width = '30px', height = '30px'), href = "https://github.com/shubham14101"),target = "_blank"),
@@ -593,11 +595,11 @@ dashboardPage(skin = "blue",
                                           column(width=3, align = "center",
                                                  #img(src = "anant.jpg", style = "max-width: 50%; width: 50%; height: auto"),
                                                  h4('Anant Mittal'),
-                                                 h5('Data Scientist, Egregore Labs'),
                                                  h5('B.Tech Computer Science, IIIT-Delhi'),
                                                  h5('anant14015@iiitd.ac.in'),
-
-
+                                                 br(),
+                                                 br(),
+                                                 br(),
                                                  fluidRow(width = 12,
                                                           column(width=2, a(img(src = "email.png", style = "margin:5px; width: 20px; height: 20px"), href = "mailto:anant14015@iiitd.ac.in"), target = "_blank"),
                                                           column(width=2, a(img(src = "github.png", width = '30px', height = '30px'), href = "https://github.com/anant15"), target = "_blank"),
@@ -615,9 +617,7 @@ dashboardPage(skin = "blue",
                                                 h3('Acknowlegments'),
                                                 h5("Rakesh Lodha, Professor (Pediatrics), All India Institute of Medical Sciences, New Delhi, India"),
                                                 h5("Nigam Shah, Associate Professor (Biomedical Informatics), Stanford University, USA"),
-                                                hr(),
-                                                h3('Funding support'),
-                                                h5('The Wellcome Trust/DBT India Alliance Early Career Award IA/CPHE/14/1/501504')
+                                                h5('Funding Support: The Wellcome Trust/DBT India Alliance Early Career Award IA/CPHE/14/1/501504')
 
                                         )
 
