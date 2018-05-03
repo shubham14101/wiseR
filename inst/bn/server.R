@@ -19,11 +19,12 @@ source('dashboardthemes.R')
 source('graph.weight.R')
 source('dependency.R')
 source('custom.Modules.assoc.R')
-library('gRain')
-
 
 shinyServer(function(input, output,session) {
-
+  withProgress(message = "Wait, installing one time dependencies", value = 0, {
+    dependency()
+  })
+  library('gRain')
   withProgress(message = "Initializing Dashboard", value = 0, {
   #Data upload limit and other options
   dependency()
