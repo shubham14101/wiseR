@@ -717,9 +717,24 @@ shinyServer(function(input, output,session) {
             }
           })
         }
+        DiscreteData<<-as.data.frame(DiscreteData)
+        if(input$factorCheck==T)
+        {
+          for(nms in names(DiscreteData))
+          {
+            tryCatch({
+              DiscreteData[,nms]<<-as.factor(DiscreteData[,nms])
+              if(nlevels(DiscreteData[,nms]>52))
+              {
+                DiscreteData[,nms]<<-as.numeric(DiscreteData[,nms])
+              }
+            },error=function(e){
+              DiscreteData[,nms]<<-as.numeric(DiscreteData[,nms])
+            })
+          }
+        }
         check.discrete(DiscreteData)
         check.NA(DiscreteData)
-        DiscreteData<<-as.data.frame(DiscreteData)
         trueData<<-DiscreteData
         #Reset APP
         reset<<-1
