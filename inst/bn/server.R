@@ -21,7 +21,7 @@ source('dependency.R')
 source('custom.Modules.assoc.R')
 
 shinyServer(function(input, output,session) {
-  withProgress(message = "Wait, installing one time dependencies", value = 0, {
+  withProgress(message = "Starting app for the first time, installing one-time dependencies, please be patient...", value = 0, {
     dependency()
   })
   library('gRain')
