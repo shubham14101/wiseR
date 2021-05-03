@@ -5,22 +5,17 @@ library('shinydashboard')
 library('dplyr')
 library('visNetwork')
 library('shinyWidgets')
-library('missRanger')
 library('tools')
 library('shinyalert')
 library('shinycssloaders')
 library('rintrojs')
 library('arules')
-library('rcompanion')
 library('psych')
-library('DescTools')
 library("DT")
 library("linkcomm")
 library('igraph')
-library("parallel")
-library("snow")
 library("shinyBS")
-library('gRain')
+library("HydeNet")
 source('error.bar.R')
 source('graph.custom.R')
 source('custom.Modules.R')
@@ -100,7 +95,9 @@ dashboardPage(skin = "blue",
                                                                                 hr(),
                                                                                 shiny::h4("No. of resampling iterations for error bars"),
                                                                                 textInput("numInterval", label = NULL,placeholder = 25),
-                                                                                label = "Inference",circle = F, status = "primary", icon = icon("bar-chart-o"), width = "500px",tooltip = tooltipOptions(title = "Learn Inferences")
+                                                                                selectInput('plotFont',label = "axis label font size",choices = c(0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10),selected = 1.5),
+                                                                                selectInput('valueFont',label = "plot value font size",choices = c(0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10),selected = 1.5),
+                                                                                label = "Inference Learning",circle = F, status = "primary", icon = icon("bar-chart-o"), width = "500px",tooltip = tooltipOptions(title = "Learn Inferences")
                                                                               )),
                                                                               shiny::column(9,shinyWidgets::radioGroupButtons(inputId = "bayesianOption",
                                                                                                                               choices = c("Bayesian Network","Fitted Local Distributions", "Infer Decisions"),
@@ -115,20 +112,20 @@ dashboardPage(skin = "blue",
 
                                                                                               shiny::column(2,
                                                                                                             div(
-                                                                                                                h5("Nth Neigbors:"))),
+                                                                                                                h5("Nth Neigbors(of selection)"))),
 
-                                                                                              shiny::column(3,style="padding-right:0px",
+                                                                                              shiny::column(2,style="padding-right:0px",
                                                                                                             shiny::selectInput("neighbornodes",label = NULL,choices = "")),
                                                                                               shiny::column(1,
                                                                                                             div(style = "position:absolute;right:0em;",
                                                                                                                 h5("Modules:"))),
-                                                                                              shiny::column(2,style="padding-right:0px",
+                                                                                              shiny::column(1,style="padding-right:0px",
                                                                                                             shiny::selectInput("moduleSelection",label = NULL,"graph")),
-                                                                                              shiny::column(1,style="margin-right:20px",dropdownButton(
+                                                                                              shiny::column(2,style="margin-right:20px",dropdownButton(
                                                                                                 shiny::fluidRow(shiny::column(6,selectInput('moduleAlgo',label = NULL,choices = c("ward.D","ward.D2", "single", "complete", "average", "mcquitty", "median","centroid"))),shiny::column(1,bsButton("Bcommunities","Build Modules", style="primary"))),
-                                                                                                label = "Modules",circle = F, status = "primary", width = "300px",tooltip = tooltipOptions(title = "Build modules in the graph")
+                                                                                                label = "Module Detection",circle = F, status = "primary", width = "300px",tooltip = tooltipOptions(title = "Build modules in the graph")
                                                                                               )),
-                                                                                              shiny::column(1,style = "margin-right:8px",
+                                                                                              shiny::column(2,style = "margin-right:8px",
                                                                                                             dropdownButton(
                                                                                                               div(id="Bgraph",
                                                                                                                   h4('Group of variables:'),
@@ -163,9 +160,10 @@ dashboardPage(skin = "blue",
                                                                                                                   hr(),
                                                                                                                   div(id="graphLayout",
                                                                                                                       h4("Select Graph Layout"),
-                                                                                                                      shiny::selectInput('graph_layout',label = NULL,"layout_nicely"))
+                                                                                                                      shiny::selectInput('graph_layout',label = NULL,"layout_nicely")),
+                                                                                                                  selectInput('bayesFont',label = "Node Font",choices = c(1:100),selected = 20)
                                                                                                               ),
-                                                                                                              label = "Settings",circle = F, status = "primary", icon = icon("gear"), width = "400px",tooltip = tooltipOptions(title = "graph settings")
+                                                                                                              label = "Visual Settings",circle = F, status = "primary", icon = icon("gear"), width = "400px",tooltip = tooltipOptions(title = "graph settings")
                                                                                                             )
                                                                                               ),
                                                                                               shiny::column(1, bsButton('graphBtn', 'Refresh', icon = icon("refresh"),style = "primary"))),
@@ -188,7 +186,36 @@ dashboardPage(skin = "blue",
                                                                               withSpinner(plotOutput("parameterPlot",height = "450px"),color="#2E86C1")
                                                                             )
                                                                             )
-                                                                         )
+                                                                         ),
+                                                                 tabPanel("Decision Networks",
+                                                                          shinyWidgets::radioGroupButtons(inputId = "decisionOption",
+                                                                                                          choices = c("Decision Network","Policy Table"),
+                                                                                                          selected = "Decision Network",
+                                                                                                          justified = FALSE
+                                                                          ),
+                                                                          conditionalPanel(
+                                                                            "input.decisionOption=='Decision Network'",
+                                                                            shiny::fluidRow(
+                                                                              shiny::column(2,dropdownButton(
+                                                                                shiny::fluidRow(shiny::column(6,selectInput("parents",label = "Create payoff Node For:",choices = "",multiple = F))),
+                                                                                shiny::fluidRow(shiny::column(10,rHandsontableOutput("payoff"))),
+                                                                                br(),
+                                                                                shiny::fluidRow(shiny::column(6,actionButton("buildDecisionNet2",'build decision net', class = "butt"))),
+                                                                                h5("Set Decision Node"),
+                                                                                shiny::fluidRow(shiny::column(6,selectInput("decisionNode",label = NULL,choices = c())),shiny::column(6,actionButton("set_decision","Set Node",class = "butt"))),
+                                                                                br(),
+                                                                                shiny::fluidRow(shiny::column(6,actionButton("set_policy","Best Policy",class="butt"))),
+                                                                                br(),
+
+                                                                                label = "Build Network",circle = F, status = "primary", icon = icon("gear"), width = "500px",tooltip = tooltipOptions(title = "Build Network")
+                                                                              ))),
+                                                                            shinycssloaders::withSpinner(visNetworkOutput("decisionPlot",height = "450px"),color="#2E86C1")
+                                                                          ),
+                                                                          conditionalPanel(
+                                                                            "input.decisionOption=='Policy Table'",
+                                                                            shinycssloaders::withSpinner(DT::dataTableOutput("policyPlot",height = "150px"),color="#2E86C1")
+                                                                          )
+                                                                 )
                                                                  )
 
 
@@ -196,6 +223,7 @@ dashboardPage(skin = "blue",
                               )
 )
 )
+
 
 
 )

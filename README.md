@@ -1,6 +1,6 @@
 # wiseR
-Interactive Learning, Inference and Validation of Bayesian Networks. The app is private for the time being. It will be available for public use soon as the work is under review for publication.
+A Shiny application for end-to-end Bayesian Decision Network analysis and deployment. Includes functionalities for learning structure, exact inference, approximate inference, data-driven decision network, policy optimization, visualization layouts, cytoscape export, correlation networks, modularity detection and web-deployment of the learned models as Shiny applications. 
 
-Correspondance: tavpriteshsethi@iiitd.ac.in
+An example use of this package is to learn the best policy that will minimize bad patient-outcomes from a complex multivariate dataset where variables may be expected to have interaction among diseases and physiology. The nature and strength of these interactions is learned in the structure-learning step and these are quantified using inference-learning. The user can then set utility of a particular outcome, e.g. setting high preference for zero episodes of sepsis in the ICU and infer the best possible combination of actions that will minimize the probability of sepsis in the given setting. 
 
-Authors: [Shubham Maheshwari](https://github.com/shubham14101), [Anant Mittal](https://github.com/anant15), [Tavpritesh Sethi](https://github.com/Tavpritesh)
+The CRAN release of the package can be installed by running install.packages("wiseR") and the development version can be installed by running devtools::install_github("SAFE-ICU/wiseR")

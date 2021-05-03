@@ -5,28 +5,30 @@ library('shinydashboard')
 library('dplyr')
 library('visNetwork')
 library('shinyWidgets')
-library('missRanger')
 library('tools')
 library('shinyalert')
 library('shinycssloaders')
 library('rintrojs')
 library('arules')
-library('rcompanion')
 library('psych')
-library('DescTools')
 library("DT")
 library("linkcomm")
 library('igraph')
-library("parallel")
-library("snow")
 library("shinyBS")
+library("HydeNet")
 source('error.bar.R')
 source('graph.custom.R')
 source('custom.Modules.R')
 source('dashboardthemes.R')
+source('dependency.R')
+source('graph.custom.decision.R')
 
 
 shinyServer(function(input, output,session) {
+  withProgress(message = "Starting app for the first time, installing one-time dependencies, please be patient...", value = 0, {
+    dependency()
+  })
+  library('gRain')
   withProgress(message = "Initializing Dashboard", value = 0, {
   #Data upload limit and other options
   options(shiny.maxRequestSize=1500*1024^2)
@@ -39,6 +41,7 @@ shinyServer(function(input, output,session) {
   sanity<-1
   confidence<-1
   check<-1
+  reset<-2
   exactCheck<-1
   #Initialization
   rvs <<- reactiveValues(evidence = list(),values = list(),evidenceObserve = list(),valueObserve = list())
@@ -56,10 +59,10 @@ shinyServer(function(input, output,session) {
   #structure initialization
   bn.hc.boot.fit <<- bn.fit(bn.hc.boot.average,DiscreteData[,names(bn.hc.boot.average$nodes)],method = "bayes")
   NetworkGraph <<- data.frame(directed.arcs(bn.hc.boot.average))
-  nodeNames <<- names(bn.hc.boot.average$nodes)
-  EventNode <<- nodeNames[1]
-  EvidenceNode <<- c()
-  shapeVector<<- rep('dot',length(nodeNames))
+  nodeNames <- names(bn.hc.boot.average$nodes)
+  EventNode <- nodeNames[1]
+  EvidenceNode <- c()
+  shapeVector<- rep('dot',length(nodeNames))
   updateSelectInput(session,'event',choices = nodeNames)
   updateSelectizeInput(session,'varselect',choices = nodeNames)
   updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
@@ -74,8 +77,12 @@ shinyServer(function(input, output,session) {
   graph<-graph_from_edgelist(as.matrix(NetworkGraph),directed = TRUE)
   updateSelectInput(session,"neighbornodes",choices = "")
   updateSliderInput(session,"NumBar",min = 1, max = nlevels(DiscreteData[,nodeNames[1]]),value = nlevels(DiscreteData[,nodeNames[1]]))
-  output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
+  output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,input$bayesFont)})
   })
+  nodeNamesB<<-nodeNames
+  updateSelectInput(session,"parents",choices = nodeNamesB)
+  output$decisionPlot<-renderVisNetwork({validate("Build Decision Network using app")})
+  output$policyPlot<-DT::renderDataTable({NULL})
   #observe events
   observeEvent(input$paramSelect,{
     tryCatch({
@@ -215,8 +222,9 @@ shinyServer(function(input, output,session) {
                          xlab = "",
                          ylab = "Probabilities",
                          ylim = c(0,1),
-                         las=2)
-          text(x = barx,y = round(probs,digits = 4),label = round(probs,digits = 4), pos = 3, cex = 0.8, col = "black")
+                         las=2,
+                         cex.names=as.numeric(input$plotFont))
+          text(x = barx,y = round(probs,digits = 4),label = round(probs,digits = 4), pos = 3, cex = as.numeric(input$valueFont), col = "black")
         })
         updateRadioGroupButtons(session,'bayesianOption',selected = "Infer Decisions")
       },error = function(e){
@@ -279,8 +287,9 @@ shinyServer(function(input, output,session) {
                           xlab = "",
                           ylab = "Probabilities",
                           ylim = c(0,1),
-                          las=2)
-          text(x = barx,y = round(ee$mean[1:input$NumBar],digits = 4),label = round(ee$mean[1:input$NumBar],digits = 4), pos = 3, cex = 0.8, col = "black")
+                          las=2,
+                          cex.names=as.numeric(input$plotFont))
+          text(x = barx,y = round(ee$mean[1:input$NumBar],digits = 4),label = round(ee$mean[1:input$NumBar],digits = 4), pos = 3, cex = as.numeric(input$valueFont), col = "black")
           error.bar(barx,ee$mean[1:input$NumBar], 1.96*ee$sd[1:input$NumBar]/sqrt(input$plotStrengthBtn))})
         updateRadioGroupButtons(session,'bayesianOption',selected = "Infer Decisions")
 
@@ -338,8 +347,9 @@ shinyServer(function(input, output,session) {
                            xlab = "",
                            ylab = "Probabilities",
                            ylim = c(0,1),
-                           las=2)
-            text(x = barx,y = round(probs,digits = 4),label = round(probs,digits = 4), pos = 3, cex = 0.8, col = "black")
+                           las=2,
+                           cex.names=as.numeric(input$plotFont))
+            text(x = barx,y = round(probs,digits = 4),label = round(probs,digits = 4), pos = 3, cex = as.numeric(input$valueFont), col = "black")
           })
           updateRadioGroupButtons(session,'bayesianOption',selected = "Infer Decisions")
 
@@ -402,8 +412,9 @@ shinyServer(function(input, output,session) {
                             xlab = "",
                             ylab = "Probabilities",
                             ylim = c(0,1),
-                            las=2)
-            text(x = barx,y = round(ee$mean[nm],digits = 4),label = round(ee$mean[nm],digits = 4), pos = 3, cex = 0.8, col = "black")
+                            las=2,
+                            cex.names=as.numeric(input$plotFont))
+            text(x = barx,y = round(ee$mean[nm],digits = 4),label = round(ee$mean[nm],digits = 4), pos = 3, cex = as.numeric(input$valueFont), col = "black")
             error.bar(barx,ee$mean[nm], 1.96*ee$sd[nm]/sqrt(input$plotStrengthBtn))})
           updateRadioGroupButtons(session,'bayesianOption',selected = "Infer Decisions")
         },error = function(e){
@@ -460,7 +471,7 @@ shinyServer(function(input, output,session) {
           EvidenceNode <<- c()
           shapeVector<<- rep('dot',length(nodeNames))
           updateSelectInput(session,'event',choices = nodeNames)
-          output$netPlot<-renderVisNetwork({graph.custom(pruneGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
+          output$netPlot<-renderVisNetwork({graph.custom(pruneGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,input$bayesFont)})
           updateSelectizeInput(session,'varselect',choices = nodeNames)
           updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
                                                             "ellipse", "database", "text", "diamond"))
@@ -501,7 +512,7 @@ shinyServer(function(input, output,session) {
           EvidenceNode <<- c()
           shapeVector<<- rep('dot',length(nodeNames))
           updateSelectInput(session,'event',choices = nodeNames)
-          output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
+          output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,input$bayesFont)})
           updateSelectInput(session,'event',choices = nodeNames)
           updateSelectizeInput(session,'varselect',choices = nodeNames)
           updateSelectInput(session,'varshape',choices = c( "dot","square", "triangle", "box", "circle", "star",
@@ -577,7 +588,7 @@ shinyServer(function(input, output,session) {
       {
         EventNode = input$event
       }
-      output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
+      output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,input$bayesFont)})
       updateSelectInput(session,"neighbornodes",choices = "")
     },error = function(e){
       shinyalert(toString(e), type = "error")
@@ -599,7 +610,7 @@ shinyServer(function(input, output,session) {
       {
         EventNode = input$event
       }
-      output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
+      output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,input$bayesFont)})
       updateSelectInput(session,"neighbornodes",choices = "")
     },error = function(e){
       shinyalert(toString(e), type = "error")
@@ -621,7 +632,7 @@ shinyServer(function(input, output,session) {
       {
         EventNode = input$event
       }
-      output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
+      output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,input$bayesFont)})
       updateSelectInput(session,"neighbornodes",choices = "")
     },error = function(e){
       shinyalert(toString(e), type = "error")
@@ -644,7 +655,7 @@ shinyServer(function(input, output,session) {
       {
         EventNode = input$event
       }
-      output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
+      output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,input$bayesFont)})
       updateSelectInput(session,"neighbornodes",choices = "")
     },error = function(e){
       shinyalert(toString(e), type = "error")
@@ -668,7 +679,7 @@ shinyServer(function(input, output,session) {
       {
         EventNode = input$event
       }
-      output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
+      output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,input$bayesFont)})
       updateSelectInput(session,"neighbornodes",choices = "")
     },error = function(e){
       shinyalert(toString(e), type = "error")
@@ -694,12 +705,115 @@ shinyServer(function(input, output,session) {
         {
           EventNode = input$event
         }
-        output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout)})
+        output$netPlot<-renderVisNetwork({graph.custom(NetworkGraph,nodeNames,shapeVector,EvidenceNode,EventNode,input$degree,input$graph_layout,input$bayesFont)})
         updateSelectInput(session,"neighbornodes",choices = "")
       },error = function(e){
         shinyalert(toString(e), type = "error")
 
       })
     }
+  })
+  observeEvent(input$parents,{
+    tryCatch({
+      if(reset==2)
+      {
+        DF<<- data.frame(Variable_states = levels(DiscreteData[,input$parents]),payoff = 1)
+        output$payoff <- renderRHandsontable({
+          rhandsontable(DF, stretchH = "all")
+        })
+
+      }
+      output$policyPlot<-DT::renderDataTable({NULL},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'),rownames=FALSE)
+    },error=function(e){
+      print(e)
+    })
+
+  })
+  observeEvent(input$buildDecisionNet2,{
+    tryCatch({
+      if(reset==2 && input$parents!="")
+      {
+        model <- as.character(bn.hc.boot.average)
+        model <- model <- gsub(model,pattern = "\\:",replacement = "*",x = model)
+        model <- gsub(model,pattern = "\\]\\[",replacement = "+",x = model)
+        model <- gsub(model,pattern = "\\]|\\[",replacement = "",x = model)
+        model <- as.formula(paste("~",model,sep=""))
+        strAdd = paste("Payoff"," | ",input$parents,sep = "")
+        model <- as.formula(paste(paste(as.character(model)[1],as.character(model)[2],sep = ""),strAdd,sep = " + "))
+        newData<<-DiscreteData
+        newData[["Payoff"]] = 1
+        DF<<-hot_to_r(input$payoff)
+        for(l in levels(DiscreteData[[input$parents]]))
+        {
+          ind = which(DiscreteData[[input$parents]]==l)
+          ind2 = which(DF$Variable_states == l)
+          newData[ind,ncol(newData)] = as.numeric(DF[ind2,2])
+        }
+        newData<<-newData
+        #print(newData$Payoff)
+        Dnet<<-HydeNetwork(model,data = newData)
+        decisionNodes <<-c()
+        utilityNodes <<-c()
+        updateSelectInput(session,"decisionNode",choices = c(nodeNamesB,"Payoff"))
+        updateSelectInput(session,"utilityNode",choices = c(nodeNamesB,"Payoff"))
+        updateSelectInput(session,"policyNode",choices = c(nodeNamesB,"Payoff"))
+        netName<<-c(nodeNamesB,"Payoff")
+        netGraph<<-directed.arcs(bn.hc.boot.average)
+        netGraph<<- rbind(netGraph,c(input$parents,"Payoff"))
+        netGraph<<-netGraph
+        utilityNodes<<-c(utilityNodes,"Payoff")
+        Dnet[["nodeUtility"]][as.character("Payoff")]<<-TRUE
+        utilityVar<<-"Payoff"
+        Dnet<<-Dnet
+        output$decisionPlot<<-renderVisNetwork({graph.custom.decision(netGraph,netName,decisionNodes,utilityNodes,TRUE)})
+      }
+
+    },error=function(e){
+      print(e)
+    })
+
+  })
+  observeEvent(input$set_decision,{
+    if(reset==2)
+    {
+      decisionNodes<<-c(decisionNodes,input$decisionNode)
+      Dnet[["nodeDecision"]][as.character(input$decisionNode)]<<-TRUE
+      Dnet<<-Dnet
+      output$decisionPlot<<-renderVisNetwork({graph.custom.decision(netGraph,netName,decisionNodes,utilityNodes,TRUE)})
+    }
+  })
+  observeEvent(input$set_policy,{
+    withProgress(message = "Building Policy table", value = 0, {
+      tryCatch({
+        policyVars <<- utilityVar
+        policies<<-policyMatrix(Dnet)
+        invisible(CNets <- compileDecisionModel(Dnet, policyMatrix = policies))
+        samples <- lapply(CNets,HydeSim,variable.names = policyVars,n.iter=1000, trace=F)
+        inference <<-lapply(samples, function(l) mean(as.numeric(l[[utilityVar]])))
+        inference<<-unlist(inference)
+        tabP = as.data.frame(policies)
+        colnames(tabP) = colnames(policies)
+        for(i in 1:ncol(tabP))
+        {
+          for(j in 1:nrow(tabP))
+          {
+            v = as.numeric(tabP[j,i])
+            tabP[j,i] <- levels(DiscreteData[[colnames(tabP)[[i]]]])[v]
+            tabP<<-tabP
+          }
+        }
+        tabP<<-tabP
+        tabP$payoff<-inference
+        tabP<<-tabP
+        sortOrder = order(tabP$payoff,decreasing = T)
+        tabP = dplyr::arrange(tabP,dplyr::desc(tabP$payoff))
+        tabP<<-tabP
+        output$policyPlot<-DT::renderDataTable({tabP},options = list(scrollX = TRUE,pageLength = 10),selection = list(target = 'column'),rownames=FALSE)
+        updateRadioGroupButtons(session,"decisionOption",selected = "Policy Table")
+      },error=function(e){
+        print(e)
+        shinyalert::shinyalert(e,type = "error")
+      })
+    })
   })
 })
